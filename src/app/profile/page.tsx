@@ -1,55 +1,53 @@
 'use client';
 
-import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
-import { useAuth } from '@/context/authProvider';
-import { db, auth } from '@/firebase/config';
-import { UserData } from '@/models/UserData';
+
+import { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
+import Button from "@/components/button";
+import Input from "@/components/input";
+import Navbar from "@/components/navbar";
+import { useAuth } from "@/context/authProvider";
+import { db, auth } from "@/firebase/config";
+import { PathItem } from "@/models/PathItem";
+import { signOut } from "firebase/auth";
+import { doc, updateDoc } from "firebase/firestore";
+import { FaSignOutAlt } from "react-icons/fa";
 
 
 
 export default function ProfilePage() {
-    const { user } = useAuth();
+    // Ottiene TUTTO dal contesto: stato di caricamento, utente e dati del profilo
     const router = useRouter();
+    const { user, userData, loading } = useAuth();
 
-    const [userData, setUserData] = useState<UserData | null>(null);
+    // Stati locali solo per il form
     const [firstName, setFirstName] = useState<string>('');
     const [lastName, setLastName] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isUpdating, setIsUpdating] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+    const breadcrumbPaths: PathItem[] = [
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Profilo', href: '/profile' }
+    ];
+
+    // Effetto per proteggere la rotta: attende la fine del caricamento
     useEffect(() => {
-        if (user === null) {
+        // Agisce solo quando il caricamento iniziale è terminato
+        if (!loading && !user) {
             router.push('/login');
-            return;
         }
-        if (user) {
-            const fetchUserData = async () => {
-                try {
-                    const userDocRef = doc(db, 'users', user.uid);
-                    const userDoc = await getDoc(userDocRef);
-                    if (userDoc.exists()) {
-                        const data = userDoc.data() as UserData;
-                        setUserData(data);
-                        setFirstName(data.firstName);
-                        setLastName(data.lastName);
-                    } else {
-                        setError("Dati utente non trovati.");
-                    }
-                } catch (err) {
-                    setError("Impossibile caricare i dati del profilo.");
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-            fetchUserData();
+    }, [user, loading]);
+
+    // Effetto per popolare i campi del form quando i dati dal contesto sono pronti
+    useEffect(() => {
+        if (userData) {
+            setFirstName(userData.firstName);
+            setLastName(userData.lastName);
         }
-    }, [user, router]);
+    }, [userData]);
+
 
     const handleUpdateProfile = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -61,10 +59,14 @@ export default function ProfilePage() {
 
         try {
             const userDocRef = doc(db, "users", user.uid);
-            await updateDoc(userDocRef, { firstName, lastName });
+            await updateDoc(userDocRef, {
+                firstName: firstName,
+                lastName: lastName,
+            });
             setSuccessMessage("Profilo aggiornato con successo!");
-            setTimeout(() => setSuccessMessage(null), 3000); // Nasconde il messaggio dopo 3 secondi
+            location.reload();
         } catch (err) {
+            console.error("Errore di aggiornamento:", err);
             setError("Impossibile aggiornare il profilo. Riprova.");
         } finally {
             setIsUpdating(false);
@@ -80,100 +82,87 @@ export default function ProfilePage() {
         }
     };
 
-    if (isLoading) {
+    // Schermata di caricamento mostrata finché il contesto non ha finito
+    if (loading) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
-                <p className="text-lg text-gray-700 dark:text-gray-200 animate-pulse">Caricamento...</p>
+                <p className="text-lg text-gray-700 dark:text-gray-200">Caricamento...</p>
             </div>
         );
     }
 
-    return (
-        <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
-            {/* --- Barra di Navigazione --- */}
-            <header className="w-full bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
-                <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <Link href="/dashboard" className="text-lg font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
-                            ← Torna alla Dashboard
-                        </Link>
-                        <button
-                            onClick={handleLogout}
-                            className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                        >
-                            Logout
-                        </button>
-                    </div>
-                </nav>
-            </header>
+    // Non renderizzare nulla se l'utente non è autenticato (per evitare flash di contenuto)
+    if (!user) {
+        return null;
+    }
 
-            {/* --- Contenuto Principale --- */}
-            <main className="flex-grow flex items-center justify-center p-4">
-                <div className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 space-y-8">
-                    <div>
-                        <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+    return (
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+            <Navbar
+                backPath="/dashboard"
+                breadcrumb={breadcrumbPaths}
+            />
+            <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8">
+                    <div className="text-start mb-8">
+                        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
                             Il Tuo Profilo
-                        </h2>
-                        <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-                            Aggiorna le tue informazioni personali.
+                        </h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">
+                            Gestisci le tue informazioni personali.
                         </p>
                     </div>
 
-                    <form className="mt-8 space-y-6" onSubmit={handleUpdateProfile}>
-                        <div className="rounded-md shadow-sm -space-y-px">
-                            <div>
-                                <label htmlFor="email" className="sr-only">Email</label>
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    value={userData?.email || ''}
-                                    disabled
-                                    className="appearance-none rounded-t-md relative block w-full px-3 py-3 border border-gray-300 bg-gray-200 text-gray-500 placeholder-gray-500 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
-                                    placeholder="Indirizzo Email"
+                    <form className="space-y-6" onSubmit={handleUpdateProfile}>
+                        <Input
+                            id="email"
+                            label="Indirizzo Email"
+                            type="email"
+                            value={userData?.email || ''}
+                            disabled
+                        />
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="w-full sm:w-1/2">
+                                <Input
+                                    id="firstName"
+                                    label="Nome"
+                                    type="text"
+                                    value={firstName}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
+                                    required
                                 />
                             </div>
-                            <div className="flex gap-px">
-                                <div className="w-1/2">
-                                    <label htmlFor="firstName" className="sr-only">Nome</label>
-                                    <input
-                                        id="firstName"
-                                        name="firstName"
-                                        type="text"
-                                        value={firstName}
-                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
-                                        required
-                                        className="appearance-none rounded-bl-md relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                                        placeholder="Nome"
-                                    />
-                                </div>
-                                <div className="w-1/2">
-                                    <label htmlFor="lastName" className="sr-only">Cognome</label>
-                                    <input
-                                        id="lastName"
-                                        name="lastName"
-                                        type="text"
-                                        value={lastName}
-                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
-                                        required
-                                        className="appearance-none rounded-br-md relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                                        placeholder="Cognome"
-                                    />
-                                </div>
+                            <div className="w-full sm:w-1/2">
+                                <Input
+                                    id="lastName"
+                                    label="Cognome"
+                                    type="text"
+                                    value={lastName}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
+                                    required
+                                />
                             </div>
                         </div>
 
                         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
                         {successMessage && <p className="text-green-500 text-sm text-center">{successMessage}</p>}
 
-                        <div>
-                            <button
+                        <div className="flex justify-end gap-4 md:flex-row flex-col">
+                            <Button
+                                className='md:w-auto w-full'
                                 type="submit"
                                 disabled={isUpdating}
-                                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:bg-purple-400 disabled:cursor-not-allowed"
                             >
                                 {isUpdating ? 'Salvataggio...' : 'Salva Modifiche'}
-                            </button>
+                            </Button>
+                            <Button
+                                className='md:w-auto w-full'
+                                variant="secondary"
+                                onClick={handleLogout}
+                            >
+                                <FaSignOutAlt />
+                                <span className="ml-2">Logout</span>
+                            </Button>
                         </div>
                     </form>
                 </div>

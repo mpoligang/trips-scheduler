@@ -7,7 +7,7 @@ import { ButtonHTMLAttributes, ReactNode } from 'react';
 // 1. Definiamo le varianti del bottone con CVA
 const buttonVariants = cva(
   // Classi base condivise da tutte le varianti
-  'cursor-pointer inline-flex items-center justify-center rounded-lg font-semibold focus:outline-none focus:ring-4 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed',
+  'cursor-pointer inline-flex items-center justify-center rounded-lg font-semibold focus:outline-none  transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
@@ -16,10 +16,10 @@ const buttonVariants = cva(
           'bg-gradient-to-br from-purple-600 to-indigo-700 text-white hover:opacity-90 focus:ring-purple-600 focus:ring-opacity-50',
         // Variante secondaria (es. login con Google)
         secondary:
-          'bg-transparent border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-gray-500 focus:ring-opacity-20',
+          'bg-transparent border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 ',
         // Variante solo per le icone (senza bordo, con sfondo al hover)
         icon:
-          'bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-gray-500 focus:ring-opacity-20',
+          'bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ',
       },
       size: {
         default: 'py-3 px-5 text-sm w-full',

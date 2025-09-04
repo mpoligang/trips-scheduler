@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
+import "leaflet-geosearch/dist/geosearch.css";
 import { AuthProvider } from "@/context/authProvider";
 
 const inter = Inter({ subsets: ["latin"] });

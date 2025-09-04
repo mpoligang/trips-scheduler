@@ -16,8 +16,7 @@ export default function ForgotPasswordPage() {
     // Gestore per l'invio della richiesta di reset password
     const handleResetPassword = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (isLoading) return;
-
+        if (isLoading) { return };
         setError(null);
         setSuccessMessage(null);
         setIsLoading(true);

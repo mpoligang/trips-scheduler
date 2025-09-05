@@ -103,8 +103,6 @@ export default function ProfilePage() {
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8">
                     <PageTitle title="Il Tuo Profilo" subtitle="Gestisci le tue informazioni personali." />
-
-
                     <form className="space-y-6" onSubmit={handleUpdateProfile}>
                         <Input
                             id="email"

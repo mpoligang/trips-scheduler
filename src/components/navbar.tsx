@@ -30,7 +30,7 @@ export default function Navbar({ backPath, breadcrumb }: NavbarProps) {
                     </Link>
                     <div className="flex items-center justify-between w-full">
                         <Breadcrumb className='ml-4' paths={breadcrumb} />
-                        <Link href='/profile'>
+                        <Link href='/dashboard/profile'>
                             <Avatar />
                         </Link>
                     </div>

@@ -14,6 +14,8 @@ import { Trip } from '@/models/Trip';
 import Button from '@/components/button';
 import { db } from '@/firebase/config';
 import PageTitle from '@/components/page-title';
+import EmptyData from '@/components/empty-data';
+import Loader from '@/components/loader';
 
 // Carica la mappa dinamicamente per evitare problemi con il rendering lato server
 const StagesMap = dynamic(() => import('@/components/map-bound'), {
@@ -50,7 +52,7 @@ export default function TripDetailPage() {
     // Breadcrumb dinamico
     const breadcrumbPaths: PathItem[] = [
         { label: 'Dashboard', href: '/dashboard' },
-        { label: trip ? trip.name : 'Dettagli Viaggio', href: `/trip/metadata/${tripId}` }
+        { label: trip ? trip.name : 'Dettagli Viaggio', href: `#` }
     ];
 
     // Recupera e ascolta le modifiche al viaggio in tempo reale
@@ -106,7 +108,7 @@ export default function TripDetailPage() {
     };
 
     if (loading || isLoadingTrip) {
-        return <div className="flex h-screen items-center justify-center">Caricamento...</div>;
+        return <Loader />;
     }
 
     if (error) {
@@ -159,7 +161,7 @@ export default function TripDetailPage() {
                     <Button
                         variant="secondary"
                         className="w-full sm:w-auto"
-                        onClick={() => { router.push(`/trip/detail/${tripId}/stage/new`) }}
+                        onClick={() => { router.push(`/dashboard/trips/${tripId}/detail/stage/new`) }}
                     >
                         <FaPlus className="mr-2" />
                         Aggiungi Tappa
@@ -202,10 +204,9 @@ export default function TripDetailPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-10">
-                                    <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Nessuna tappa ancora</h3>
-                                    <p className="text-gray-500 dark:text-gray-400 mt-2">Inizia ad aggiungere le tappe del tuo viaggio.</p>
-                                </div>
+                                <EmptyData title='Nessuna tappa ancora' subtitle='Inizia ad aggiungere le tappe del tuo viaggio.' />
+
+
                             )}
                         </div>
                     </div>

@@ -13,6 +13,8 @@ import { db } from '@/firebase/config';
 import Button from '@/components/button';
 import Input from '@/components/input';
 import PageTitle from '@/components/page-title';
+import Textarea from '@/components/textarea';
+import Loader from '@/components/loader';
 
 
 export default function TripFormPage() {
@@ -25,6 +27,7 @@ export default function TripFormPage() {
 
     const [name, setName] = useState('');
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [notes, setNotes] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(isEditMode); // Carica solo in modalità modifica
@@ -38,12 +41,11 @@ export default function TripFormPage() {
     // Effetto per caricare i dati del viaggio in modalità modifica
     useEffect(() => {
         if (isEditMode && user) {
-
-            fetchTripData();
+            getData();
         }
     }, [isEditMode, tripId, user]);
 
-    const fetchTripData = async () => {
+    const getData = async () => {
         const tripDocRef = doc(db, 'trips', tripId);
         const tripDoc = await getDoc(tripDocRef);
         if (tripDoc.exists()) {
@@ -69,11 +71,12 @@ export default function TripFormPage() {
         setIsSubmitting(true);
         setError(null);
 
-        const tripData = {
+        const tripData: Trip = {
             name,
             startDate: Timestamp.fromDate(dateRange.from),
             endDate: Timestamp.fromDate(dateRange.to),
-            owner: user.uid
+            owner: user.uid,
+            notes,
         };
 
         try {
@@ -103,7 +106,7 @@ export default function TripFormPage() {
     }
 
     if (loading || isLoadingData) {
-        return <div className="flex h-screen items-center justify-center">Caricamento...</div>;
+        return <Loader />;
     }
 
     return (
@@ -125,6 +128,7 @@ export default function TripFormPage() {
                             </label>
                             <DateRangePicker value={dateRange} onChange={setDateRange} />
                         </div>
+                        <Textarea id="notes" label="Note" value={notes} onChange={(e) => setNotes(e.target.value)} />
                         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
                         <div className="flex justify-end gap-4 pt-4 ">
                             <Button className='w-auto' variant="secondary" type="button" onClick={() => router.push('/dashboard')}>Annulla</Button>

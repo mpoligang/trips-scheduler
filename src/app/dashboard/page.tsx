@@ -13,6 +13,8 @@ import { useAuth } from '@/context/authProvider';
 import { db } from '@/firebase/config';
 import Button from '@/components/button';
 import PageTitle from '@/components/page-title';
+import EmptyData from '@/components/empty-data';
+import Loader from '@/components/loader';
 
 export default function DashboardPage() {
     const { user, loading } = useAuth();
@@ -42,9 +44,10 @@ export default function DashboardPage() {
         }
     }, [user]);
 
+
     // Funzione per aprire il modale
-    const handleOpenDeleteModal = (tripId: string) => {
-        const tripToDelete = trips.find(t => t.id === tripId);
+    const handleOpenDeleteModal = (trip: Trip) => {
+        const tripToDelete = trips.find(t => t.id === trip?.id);
         if (tripToDelete) {
             setSelectedTrip(tripToDelete);
             setIsDeleteModalOpen(true);
@@ -56,7 +59,7 @@ export default function DashboardPage() {
 
         setIsDeleting(true);
         try {
-            const tripDocRef = doc(db, 'trips', selectedTrip.id);
+            const tripDocRef = doc(db, 'trips', selectedTrip.id as string);
             await deleteDoc(tripDocRef);
         } catch (error) {
             console.error("Errore durante l'eliminazione:", error);
@@ -68,7 +71,7 @@ export default function DashboardPage() {
     };
 
     if (loading || !user) {
-        return <div className="flex h-screen items-center justify-center">Caricamento...</div>;
+        return <Loader />;
     }
 
     return (
@@ -93,7 +96,7 @@ export default function DashboardPage() {
                 <PageTitle title='I Miei Viaggi' subtitle='Organizza e visualizza le tue prossime avventure.'>
                     <Button
                         variant="secondary"
-                        onClick={() => router.push('/trip/metadata/new')}
+                        onClick={() => router.push('/dashboard/trips/new/metadata')}
                         className="w-full md:w-auto"
                     >
                         <FaPlus className="mr-2" />
@@ -111,14 +114,11 @@ export default function DashboardPage() {
                 ) : trips.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {trips.map(trip => (
-                            <TripCard key={trip.id} trip={trip} onDelete={() => handleOpenDeleteModal(trip.id)} />
+                            <TripCard key={trip.id} trip={trip} onDelete={() => handleOpenDeleteModal(trip)} />
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow">
-                        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Nessun viaggio ancora</h3>
-                        <p className="text-gray-500 dark:text-gray-400 mt-2">Inizia a pianificare la tua prossima avventura.</p>
-                    </div>
+                    <EmptyData title='Nessun viaggio ancora' subtitle='Inizia a pianificare la tua prossima avventura' />
                 )}
             </main>
         </div>

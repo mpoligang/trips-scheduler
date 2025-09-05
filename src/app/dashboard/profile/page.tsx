@@ -12,6 +12,8 @@ import { PathItem } from "@/models/PathItem";
 import { signOut } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
 import { FaSignOutAlt } from "react-icons/fa";
+import PageTitle from "@/components/page-title";
+import Loader from "@/components/loader";
 
 
 
@@ -84,11 +86,7 @@ export default function ProfilePage() {
 
     // Schermata di caricamento mostrata finché il contesto non ha finito
     if (loading) {
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
-                <p className="text-lg text-gray-700 dark:text-gray-200">Caricamento...</p>
-            </div>
-        );
+        return <Loader />;
     }
 
     // Non renderizzare nulla se l'utente non è autenticato (per evitare flash di contenuto)
@@ -104,14 +102,8 @@ export default function ProfilePage() {
             />
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8">
-                    <div className="text-start mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-                            Il Tuo Profilo
-                        </h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-2">
-                            Gestisci le tue informazioni personali.
-                        </p>
-                    </div>
+                    <PageTitle title="Il Tuo Profilo" subtitle="Gestisci le tue informazioni personali." />
+
 
                     <form className="space-y-6" onSubmit={handleUpdateProfile}>
                         <Input

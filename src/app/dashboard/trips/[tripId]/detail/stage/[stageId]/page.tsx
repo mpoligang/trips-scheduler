@@ -14,6 +14,7 @@ import { useAuth } from '@/context/authProvider';
 import { db } from '@/firebase/config';
 import { FaTrash } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
+import Loader from '@/components/loader';
 const MapPicker = dynamic(() => import('@/components/map'), { ssr: false });
 
 const formatDateForLabel = (date: Date | undefined): string => {
@@ -39,33 +40,35 @@ export default function StageFormPage() {
 
     const datePickerPlaceholder = (trip: Trip | null) => `Seleziona una data da ${formatDateForLabel((trip?.startDate as Timestamp)?.toDate())} a ${formatDateForLabel((trip?.endDate as Timestamp)?.toDate())}`
 
-    // Carica i dati del viaggio e della tappa (se in modalità modifica)
     useEffect(() => {
         if (user && tripId) {
-            const tripDocRef = doc(db, 'trips', tripId);
-            getDoc(tripDocRef).then(docSnap => {
-                if (docSnap.exists()) {
-                    const tripData = docSnap.data() as Trip;
-                    setTrip(tripData);
-
-                    // Se siamo in modalità modifica, carica i dati della tappa
-                    if (isEditMode) {
-                        const stageToEdit = tripData.stages?.find(s => s.id === stageId);
-                        if (stageToEdit) {
-                            setStageName(stageToEdit.name);
-                            setStageDate(new Date(stageToEdit.date));
-                            setStageLocation(stageToEdit.location);
-                        } else {
-                            setError("Tappa non trovata.");
-                        }
-                    }
-                } else {
-                    setError("Viaggio non trovato.");
-                }
-                setIsLoadingData(false);
-            });
+            getData();
         }
     }, [user, tripId, isEditMode, stageId]);
+
+
+    const getData = async (): Promise<void> => {
+        const tripDocRef = doc(db, 'trips', tripId);
+        const docSnap = await getDoc(tripDocRef)
+        if (docSnap && docSnap.exists()) {
+            const tripData = docSnap.data() as Trip;
+            setTrip(tripData);
+            if (isEditMode) {
+                const stageToEdit = tripData.stages?.find(s => s.id === stageId);
+                if (stageToEdit) {
+                    setStageName(stageToEdit.name);
+                    setStageDate(new Date(stageToEdit.date));
+                    setStageLocation(stageToEdit.location);
+                } else {
+                    setError("Tappa non trovata.");
+                }
+            }
+        } else {
+            setError("Viaggio non trovato.");
+        }
+        setIsLoadingData(false);
+    }
+
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -99,7 +102,7 @@ export default function StageFormPage() {
                 await updateDoc(tripDocRef, { stages: arrayUnion(newStage) });
             }
 
-            router.push(`/trip/detail/${tripId}`);
+            router.push(`/dashboard/trips/${tripId}/detail`);
 
         } catch (err) {
             console.error("Errore nel salvataggio della tappa:", err);
@@ -111,17 +114,17 @@ export default function StageFormPage() {
 
     const breadcrumbPaths: PathItem[] = [
         { label: 'Dashboard', href: '/dashboard' },
-        { label: trip?.name || 'Viaggio', href: `/trip/detail/${tripId}` },
+        { label: trip?.name || 'Viaggio', href: `/dashboard/trips/${tripId}/detail` },
         { label: isEditMode ? 'Modifica Tappa' : 'Aggiungi Tappa', href: '#' }
     ];
 
     if (loading || isLoadingData) {
-        return <div className="flex h-screen items-center justify-center">Caricamento...</div>;
+        return <Loader />;
     }
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <Navbar backPath={`/trip/metadata/${tripId}`} breadcrumb={breadcrumbPaths} />
+            <Navbar backPath={`/dashboard/trips/${tripId}/detail`} breadcrumb={breadcrumbPaths} />
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="w-full  bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 flex flex-col gap-8">
                     <div>

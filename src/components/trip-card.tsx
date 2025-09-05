@@ -32,14 +32,14 @@ export default function TripCard({ trip, onDelete }: TripCardProps) {
             </div>
             {/* --- Footer Aggiornato --- */}
             <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center sm:flex-row flex-col">
-                <Link className="sm:w-auto w-full" href={`/trip/detail/${trip.id}`}>
+                <Link className="sm:w-auto w-full" href={`dashboard/trips/${trip.id}/detail`}>
                     <Button className="sm:w-auto w-full" variant="secondary" size="sm">
                         <FaEye />
                         <span className="ml-2">Dettagli</span>
                     </Button>
                 </Link>
                 <div className="flex mt-4 sm:mt-0">
-                    <Link className=" sm:mt-0" href={`/trip/metadata/${trip.id}`} aria-label="Modifica viaggio">
+                    <Link className=" sm:mt-0 w-full" href={`dashboard/trips/${trip.id}/metadata`} aria-label="Modifica viaggio">
                         <Button className="sm:w-auto w-full" variant="secondary" size="sm">
                             <FaPen />
                             <span className="ml-2">Modifica</span>

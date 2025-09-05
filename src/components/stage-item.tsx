@@ -32,7 +32,7 @@ export default function StageItem({ stage, tripId, onDelete }: StageItemProps) {
                         <span className="ml-2">Indicazioni</span>
                     </Button>
                 </a>
-                <Link href={`/trip/detail/${tripId}/stage/${stage.id}`} aria-label="Modifica tappa">
+                <Link href={`/dashboard/trips/${tripId}/detail/stage/${stage.id}`} aria-label="Modifica tappa">
                     <Button variant="secondary" size="sm" className="w-full justify-center md:w-auto"><FaPen /> <span className="ml-2">Modifica</span> </Button>
                 </Link>
                 <Button

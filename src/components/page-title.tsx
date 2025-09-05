@@ -1,7 +1,7 @@
 
 interface PageTitleProps {
     title: string;
-    subtitle: string;
+    subtitle?: string;
     children?: React.ReactNode; // Usa ReactNode per la massima flessibilità
 }
 

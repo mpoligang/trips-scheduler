@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { FaMapMarkerAlt, FaPen, FaTrash, FaDirections } from "react-icons/fa";
 import Button from "./button";
+import { Stage } from "@/models/Stage";
 
 interface StageItemProps {
-    stage: any;
+    stage: Stage;
     tripId: string;
     onDelete: (stageId: string) => void;
 }

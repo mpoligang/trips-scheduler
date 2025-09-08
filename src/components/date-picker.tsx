@@ -3,7 +3,7 @@
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, Matcher } from "react-day-picker";
 import { FaCalendarAlt, FaTimes } from "react-icons/fa";
 
 export default function SingleDatePicker({
@@ -15,7 +15,7 @@ export default function SingleDatePicker({
     label?: string;
     selected: Date | undefined;
     onSelect: (date: Date | undefined) => void;
-    disabledDays?: any;
+    disabledDays?: Matcher | Matcher[];
 }) {
     const displayValue = selected ? format(selected, 'dd MMM yyyy', { locale: it }) : (label || '');
 

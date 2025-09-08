@@ -2,6 +2,7 @@ import { Trip } from "@/models/Trip";
 import Link from "next/link";
 import { FaCalendarAlt, FaEye, FaPen, FaTrash } from "react-icons/fa";
 import Button from "./button";
+import { Timestamp } from "firebase/firestore";
 
 interface TripCardProps {
     trip: Trip;
@@ -9,7 +10,7 @@ interface TripCardProps {
 }
 
 // Funzione helper per formattare correttamente i Timestamp di Firestore
-const formatDate = (timestamp: any) => {
+const formatDate = (timestamp: Timestamp) => {
     if (!timestamp || typeof timestamp.toDate !== 'function') {
         return 'Data non valida';
     }

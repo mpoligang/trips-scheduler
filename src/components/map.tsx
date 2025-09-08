@@ -3,9 +3,11 @@
 import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
-import L from 'leaflet';
+import L, { LeafletEventHandlerFn } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-geosearch/dist/geosearch.css';
+import { GeoSearch } from '@/models/GeoSearch';
+import { GeoLocation } from '@/models/GeoLocation';
 
 // Corregge il problema delle icone di default
 delete (L.Icon.Default.prototype as any)._getIconUrl;

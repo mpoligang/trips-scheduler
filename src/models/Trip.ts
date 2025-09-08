@@ -1,4 +1,5 @@
 import { Timestamp } from "firebase/firestore";
+import { Stage } from "./Stage";
 
 export interface Trip {
     id?: string;
@@ -6,6 +7,6 @@ export interface Trip {
     startDate: Timestamp;
     endDate: Timestamp;
     owner: string;
-    stages?: any[];
+    stages?: Stage[];
     notes: string;
 }

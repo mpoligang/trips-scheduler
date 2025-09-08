@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Stage } from '@/models/Stage';
 
 // Corregge il problema delle icone di default di Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -14,7 +15,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Componente per centrare e zoomare la mappa per contenere tutte le tappe
-function MapBounds({ stages }: { stages: any[] }) {
+function MapBounds({ stages }: { stages: Stage[] }) {
     const map = useMap();
     useEffect(() => {
         if (stages && stages.length > 0) {
@@ -26,7 +27,7 @@ function MapBounds({ stages }: { stages: any[] }) {
 }
 
 interface StagesMapProps {
-    stages: any[];
+    stages: Stage[];
 }
 
 export default function StagesMap({ stages }: StagesMapProps) {

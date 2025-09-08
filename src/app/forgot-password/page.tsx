@@ -6,6 +6,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import Button from '@/components/button';
 import Input from '@/components/input';
 import { auth } from '@/firebase/config';
+import { FirebaseError } from 'firebase/app';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState<string>('');
@@ -24,9 +25,10 @@ export default function ForgotPasswordPage() {
         try {
             await sendPasswordResetEmail(auth, email);
             setSuccessMessage("Email inviata! Controlla la tua casella di posta per le istruzioni.");
-        } catch (err: any) {
-            console.error("Errore reset password:", err.code);
-            if (err.code === 'auth/user-not-found') {
+        } catch (err: unknown) {
+            const code = (err as FirebaseError).code
+            console.error("Errore reset password:", code);
+            if (code === 'auth/user-not-found') {
                 setError("Nessun utente trovato con questo indirizzo email.");
             } else {
                 setError("Si è verificato un errore. Riprova più tardi.");

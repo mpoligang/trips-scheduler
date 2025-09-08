@@ -52,8 +52,8 @@ export default function TripFormPage() {
             const data = tripDoc.data() as Trip;
             setName(data.name);
             setDateRange({
-                from: (data.startDate as any).toDate(),
-                to: (data.endDate as any).toDate(),
+                from: (data.startDate as Timestamp).toDate(),
+                to: (data.endDate as Timestamp).toDate(),
             });
         } else {
             setError("Viaggio non trovato.");

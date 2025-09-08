@@ -8,6 +8,7 @@ import { FaGoogle } from 'react-icons/fa';
 import { auth, db } from '@/firebase/config';
 import Button from '@/components/button';
 import Input from '@/components/input';
+import { FirebaseError } from 'firebase/app';
 
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
@@ -44,11 +45,12 @@ export default function RegisterPage() {
             });
 
             router.push('/dashboard');
-        } catch (err: { code: string }) {
-            console.error("Errore Firebase:", err.code);
-            if (err.code === 'auth/email-already-in-use') {
+        } catch (err: unknown) {
+            const code = (err as FirebaseError).code
+            console.error("Errore Firebase:", code);
+            if (code === 'auth/email-already-in-use') {
                 setError("Questo indirizzo email è già in uso.");
-            } else if (err.code === 'auth/weak-password') {
+            } else if (code === 'auth/weak-password') {
                 setError("La password deve essere di almeno 6 caratteri.");
             } else {
                 setError("Si è verificato un errore durante la registrazione.");
@@ -89,7 +91,7 @@ export default function RegisterPage() {
 
             router.push('/dashboard');
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Errore con Google Sign-In:", error);
             setError("Impossibile registrarsi con Google. Riprova.");
         } finally {

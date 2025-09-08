@@ -16,6 +16,7 @@ import { db } from '@/firebase/config';
 import PageTitle from '@/components/page-title';
 import EmptyData from '@/components/empty-data';
 import Loader from '@/components/loader';
+import { Stage } from '@/models/Stage';
 
 // Carica la mappa dinamicamente per evitare problemi con il rendering lato server
 const StagesMap = dynamic(() => import('@/components/map-bound'), {
@@ -87,10 +88,10 @@ export default function TripDetailPage() {
     };
 
     const handleConfirmDelete = async () => {
-        if (!user || !tripId || !selectedStageId) return;
+        if (!user || !tripId || !selectedStageId) { return };
 
         const stageToDelete = trip?.stages?.find(s => s.id === selectedStageId);
-        if (!stageToDelete) return;
+        if (!stageToDelete) { return };
 
         setIsDeleting(true);
         try {
@@ -132,7 +133,7 @@ export default function TripDetailPage() {
         }
         acc[date].push(stage);
         return acc;
-    }, {} as Record<string, any[]>);
+    }, {} as Record<string, Stage[]>);
 
     const sortedDates = groupedStages ? Object.keys(groupedStages).sort() : [];
 
@@ -191,7 +192,7 @@ export default function TripDetailPage() {
                                                 {formatDateForGroup(date)}
                                             </h4>
                                             <ul className="space-y-4 mt-3">
-                                                {groupedStages[date].map((stage: any) => (
+                                                {groupedStages && groupedStages[date].map((stage) => (
                                                     <StageItem
                                                         key={stage.id}
                                                         stage={stage}

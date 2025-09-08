@@ -8,6 +8,7 @@ import { FaGoogle } from 'react-icons/fa';
 import { auth, db } from '@/firebase/config';
 import Button from '@/components/button';
 import Input from '@/components/input';
+import { FirebaseError } from 'firebase/app';
 
 export default function LoginPage() {
     const [email, setEmail] = useState<string>('');
@@ -27,8 +28,8 @@ export default function LoginPage() {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             router.push('/dashboard');
-        } catch (err: any) {
-            console.error("Errore di login:", err.code);
+        } catch (err: unknown) {
+            console.error("Errore di login:", (err as FirebaseError).code);
             setError("Email o password non validi. Riprova.");
         } finally {
             setIsLoading(false);
@@ -66,7 +67,7 @@ export default function LoginPage() {
 
             router.push('/dashboard');
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Errore con Google Sign-In:", error);
             setError("Impossibile accedere con Google. Riprova.");
         } finally {

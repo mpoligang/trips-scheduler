@@ -288,7 +288,7 @@ export default function TripDetailPage() {
                 icon={<FaExclamationTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />}
             >
                 <p>
-                    Stai per eliminare l'alloggio <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedAccommodation?.name}</strong>. Questa azione è irreversibile.
+                    {`Stai per eliminare l'alloggio`} <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedAccommodation?.name}</strong>. Questa azione è irreversibile.
                 </p>
             </ConfirmationModal>
 

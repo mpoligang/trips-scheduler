@@ -7,11 +7,9 @@ import Breadcrumb from './breadcrumb';
 import { PathItem } from '@/models/PathItem';
 import Avatar from './userAvatar';
 
-// Definizione delle props per il componente Navbar
 interface NavbarProps {
     backPath: string;
     breadcrumb: PathItem[];
-    // onLogout: () => void;
 }
 
 /**
@@ -20,7 +18,8 @@ interface NavbarProps {
  */
 export default function Navbar({ backPath, breadcrumb }: NavbarProps) {
     return (
-        <header className="w-full bg-white dark:bg-gray-800 shadow-md sticky top-0 z-10">
+        // MODIFICA: Aumentato lo z-index per essere sopra la mappa ma sotto il modale
+        <header className="w-full bg-white dark:bg-gray-800 shadow-md sticky top-0 z-8888">
             <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center h-16">
                     <Link href={backPath} passHref>

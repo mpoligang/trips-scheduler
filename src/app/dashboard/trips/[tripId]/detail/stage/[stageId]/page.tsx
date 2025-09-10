@@ -15,6 +15,9 @@ import { db } from '@/firebase/config';
 import { FaTrash } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 import Loader from '@/components/loader';
+import { Stage } from '@/models/Stage';
+import Dropdown from '@/components/dropdown';
+
 const MapPicker = dynamic(() => import('@/components/map'), { ssr: false });
 
 const formatDateForLabel = (date: Date | undefined): string => {
@@ -34,23 +37,24 @@ export default function StageFormPage() {
     const [stageName, setStageName] = useState('');
     const [stageDate, setStageDate] = useState<Date | undefined>();
     const [stageLocation, setStageLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+    const [stageDestination, setStageDestination] = useState<{ id: string; name: string } | null>(null); // Stato per la destinazione selezionata
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
 
-    const datePickerPlaceholder = (trip: Trip | null) => `Seleziona una data da ${formatDateForLabel((trip?.startDate as Timestamp)?.toDate())} a ${formatDateForLabel((trip?.endDate as Timestamp)?.toDate())}`
+    const datePickerPlaceholder = (trip: Trip | null) => `Seleziona una data da ${formatDateForLabel((trip?.startDate as Timestamp)?.toDate())} a ${formatDateForLabel((trip?.endDate as Timestamp)?.toDate())}`;
 
     useEffect(() => {
+
         if (user && tripId) {
             getData();
         }
     }, [user, tripId, isEditMode, stageId]);
 
-
     const getData = async (): Promise<void> => {
         const tripDocRef = doc(db, 'trips', tripId);
-        const docSnap = await getDoc(tripDocRef)
-        if (docSnap && docSnap.exists()) {
+        const docSnap = await getDoc(tripDocRef);
+        if (docSnap?.exists()) {
             const tripData = docSnap.data() as Trip;
             setTrip(tripData);
             if (isEditMode) {
@@ -59,6 +63,9 @@ export default function StageFormPage() {
                     setStageName(stageToEdit.name);
                     setStageDate(new Date(stageToEdit.date));
                     setStageLocation(stageToEdit.location);
+                    if (stageToEdit.destination) {
+                        setStageDestination({ id: stageToEdit.destination, name: stageToEdit.destination });
+                    }
                 } else {
                     setError("Tappa non trovata.");
                 }
@@ -67,12 +74,11 @@ export default function StageFormPage() {
             setError("Viaggio non trovato.");
         }
         setIsLoadingData(false);
-    }
-
+    };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!user || !trip || !stageName || !stageDate || !stageLocation) {
+        if (!user || !trip || !stageName || !stageDate || !stageLocation || !stageDestination) {
             setError("Tutti i campi sono obbligatori.");
             return;
         }
@@ -86,24 +92,21 @@ export default function StageFormPage() {
             if (isEditMode) {
                 const updatedStages = trip.stages?.map(stage =>
                     stage.id === stageId
-                        ? { ...stage, name: stageName, date: stageDate.toISOString().split('T')[0], location: stageLocation }
+                        ? { ...stage, name: stageName, date: stageDate.toISOString().split('T')[0], location: stageLocation, destination: stageDestination.name }
                         : stage
                 ) || [];
-
                 await updateDoc(tripDocRef, { stages: updatedStages });
-
             } else {
-                const newStage = {
+                const newStage: Stage = {
                     id: uuidv4(),
                     name: stageName,
                     date: stageDate.toISOString().split('T')[0],
                     location: stageLocation,
+                    destination: stageDestination.name,
                 };
                 await updateDoc(tripDocRef, { stages: arrayUnion(newStage) });
             }
-
             router.push(`/dashboard/trips/${tripId}/detail`);
-
         } catch (err) {
             console.error("Errore nel salvataggio della tappa:", err);
             setError("Impossibile salvare la tappa. Riprova.");
@@ -122,11 +125,13 @@ export default function StageFormPage() {
         return <Loader />;
     }
 
+    const destinationOptions = trip?.destinations?.map(d => ({ id: d, name: d })) || [];
+
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             <Navbar backPath={`/dashboard/trips/${tripId}/detail`} breadcrumb={breadcrumbPaths} />
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="w-full  bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 flex flex-col gap-8">
+                <div className="w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 flex flex-col gap-8">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Cerca un luogo sulla mappa</h2>
                         <MapPicker value={stageLocation} onLocationSelect={setStageLocation} />
@@ -135,12 +140,22 @@ export default function StageFormPage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Inserisci i dettagli della tappa</h2>
                         <Input placeholder='es. Visita al Colosseo' id="stage-name" label="Nome della Tappa" type="text" value={stageName} onChange={(e) => setStageName(e.target.value)} required />
+
+                        <Dropdown
+                            label="A quale destinazione appartiene questa tappa?"
+                            items={destinationOptions}
+                            selected={stageDestination}
+                            onSelect={setStageDestination}
+                            optionValue="id"
+                            optionLabel="name"
+                            placeholder="Seleziona una destinazione"
+                        />
+
                         <div>
                             <div className="flex justify-between items-center mb-2">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Data della tappa
                                 </label>
-
                             </div>
                             <SingleDatePicker
                                 label={datePickerPlaceholder(trip)}

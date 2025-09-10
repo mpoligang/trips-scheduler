@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import Button from '@/components/button';
 
-// Definiamo le props per rendere il modale flessibile
 interface ConfirmationModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -11,6 +10,7 @@ interface ConfirmationModalProps {
     children: ReactNode;
     confirmText?: string;
     cancelText?: string;
+    confirmVariant?: 'primary' | 'secondary' | 'destructive' | 'icon';
     icon?: ReactNode;
 }
 
@@ -28,7 +28,7 @@ export default function ConfirmationModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-[9999] flex justify-center items-center p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md p-8 text-center">
                 {/* L'icona viene mostrata solo se fornita */}
                 {icon && (
@@ -45,7 +45,6 @@ export default function ConfirmationModal({
                         {cancelText}
                     </Button>
                     <Button
-                        variant="secondary"
                         onClick={onConfirm}
                         disabled={isLoading}
                     >

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, onSnapshot, updateDoc, arrayRemove } from 'firebase/firestore';
 import dynamic from 'next/dynamic';
-import { FaPlus, FaExclamationTriangle, FaMapMarkerAlt, FaBed, FaCity } from 'react-icons/fa';
+import { FaPlus, FaExclamationTriangle, FaMapMarkerAlt, FaBed, } from 'react-icons/fa';
 
 // Assicurati che i percorsi siano corretti per la tua struttura
 import ConfirmationModal from '@/components/confirm-modal';

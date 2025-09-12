@@ -169,10 +169,10 @@ export default function TripDetailPage() {
                         <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => router.push(`/trip/${tripId}/stage/new`)}
+                            onClick={() => router.push(`/dashboard/trips/${tripId}/detail/stage/new`)}
                         >
                             <FaPlus className="mr-2" />
-                            Aggiungi Tappa
+                            Aggiungi
                         </Button>
                     </div>
                     {sortedDates.length > 0 ? (
@@ -226,7 +226,7 @@ export default function TripDetailPage() {
                             onClick={() => router.push(`/dashboard/trips/${tripId}/detail/accommodation/new`)}
                         >
                             <FaPlus className="mr-2" />
-                            Aggiungi Alloggio
+                            Aggiungi
                         </Button>
                     </div>
                     {sortedDestinations.length > 0 ? (
@@ -258,7 +258,19 @@ export default function TripDetailPage() {
                     )}
                 </div>
             )
-        }
+        },
+        {
+            label: 'Mappa del Viaggio',
+            content: (
+                <div>
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Mappa del Viaggio</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+                        <StagesMap stages={trip?.stages || []} />
+                    </div>
+                </div>
+            )
+        },
+
     ];
 
     return (
@@ -296,13 +308,6 @@ export default function TripDetailPage() {
                 <PageTitle title={trip?.name ?? ''} subtitle="Pianifica i dettagli della tua avventura." />
 
                 <div className="flex flex-col gap-8">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Mappa del Viaggio</h2>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
-                            <StagesMap stages={trip?.stages || []} />
-                        </div>
-                    </div>
-
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                         <Tabs tabs={tabs} />
                     </div>

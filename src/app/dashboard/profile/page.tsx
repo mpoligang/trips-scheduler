@@ -14,6 +14,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { FaSignOutAlt } from "react-icons/fa";
 import PageTitle from "@/components/page-title";
 import Loader from "@/components/loader";
+import PageContainer from "@/components/page-container";
 
 
 
@@ -100,63 +101,61 @@ export default function ProfilePage() {
                 backPath="/dashboard"
                 breadcrumb={breadcrumbPaths}
             />
-            <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8">
-                    <PageTitle title="Il Tuo Profilo" subtitle="Gestisci le tue informazioni personali." />
-                    <form className="space-y-6" onSubmit={handleUpdateProfile}>
-                        <Input
-                            id="email"
-                            label="Indirizzo Email"
-                            type="email"
-                            value={userData?.email || ''}
-                            disabled
-                        />
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="w-full sm:w-1/2">
-                                <Input
-                                    id="firstName"
-                                    label="Nome"
-                                    type="text"
-                                    value={firstName}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="w-full sm:w-1/2">
-                                <Input
-                                    id="lastName"
-                                    label="Cognome"
-                                    type="text"
-                                    value={lastName}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
-                                    required
-                                />
-                            </div>
+            <PageContainer>
+                <PageTitle title="Il Tuo Profilo" subtitle="Gestisci le tue informazioni personali." />
+                <form className="space-y-6" onSubmit={handleUpdateProfile}>
+                    <Input
+                        id="email"
+                        label="Indirizzo Email"
+                        type="email"
+                        value={userData?.email || ''}
+                        disabled
+                    />
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="w-full sm:w-1/2">
+                            <Input
+                                id="firstName"
+                                label="Nome"
+                                type="text"
+                                value={firstName}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
+                                required
+                            />
                         </div>
-
-                        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                        {successMessage && <p className="text-green-500 text-sm text-center">{successMessage}</p>}
-
-                        <div className="flex justify-end gap-4 md:flex-row flex-col">
-                            <Button
-                                className='md:w-auto w-full'
-                                type="submit"
-                                disabled={isUpdating}
-                            >
-                                {isUpdating ? 'Salvataggio...' : 'Salva Modifiche'}
-                            </Button>
-                            <Button
-                                className='md:w-auto w-full'
-                                variant="secondary"
-                                onClick={handleLogout}
-                            >
-                                <FaSignOutAlt />
-                                <span className="ml-2">Logout</span>
-                            </Button>
+                        <div className="w-full sm:w-1/2">
+                            <Input
+                                id="lastName"
+                                label="Cognome"
+                                type="text"
+                                value={lastName}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
+                                required
+                            />
                         </div>
-                    </form>
-                </div>
-            </main>
+                    </div>
+
+                    {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                    {successMessage && <p className="text-green-500 text-sm text-center">{successMessage}</p>}
+
+                    <div className="flex justify-end gap-4 md:flex-row flex-col">
+                        <Button
+                            className='md:w-auto w-full'
+                            type="submit"
+                            disabled={isUpdating}
+                        >
+                            {isUpdating ? 'Salvataggio...' : 'Salva Modifiche'}
+                        </Button>
+                        <Button
+                            className='md:w-auto w-full'
+                            variant="secondary"
+                            onClick={handleLogout}
+                        >
+                            <FaSignOutAlt />
+                            <span className="ml-2">Logout</span>
+                        </Button>
+                    </div>
+                </form>
+            </PageContainer>
         </div>
     );
 }

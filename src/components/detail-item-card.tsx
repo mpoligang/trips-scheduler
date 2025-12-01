@@ -39,7 +39,7 @@ export default function DetailItemCard({
     ];
 
     return (
-        <li className="flex flex-row items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg gap-4">
+        <li className="flex flex-row items-center  p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg gap-4">
             <div className="flex items-center w-full">
                 <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-purple-100 dark:bg-purple-900/50 rounded-full">
                     {icon}
@@ -49,9 +49,7 @@ export default function DetailItemCard({
                     {/* <p className="text-sm text-gray-500 dark:text-gray-400 ">{subtitle}</p> */}
                 </div>
             </div>
-            <div className=" flex w-full justify-end">
-                <ContextMenu items={menuItems} />
-            </div>
+            <ContextMenu items={menuItems} />
         </li>
     );
 }

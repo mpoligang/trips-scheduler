@@ -21,6 +21,7 @@ import EmptyData from '@/components/empty-data';
 import Loader from '@/components/loader';
 import Tabs, { TabItem } from '@/components/tabs';
 import { Accommodation } from '@/models/AccomModation';
+import PageContainer from '@/components/page-container';
 
 // Carica la mappa dinamicamente
 const StagesMap = dynamic(() => import('@/components/map-bound'), {
@@ -301,16 +302,14 @@ export default function TripDetailPage() {
                     {`Stai per eliminare l'alloggio`} <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedAccommodation?.name}</strong>. Questa azione è irreversibile.
                 </p>
             </ConfirmationModal>
-
-            <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <PageTitle title={trip?.name ?? ''} subtitle="Pianifica i dettagli della tua avventura." />
+            <PageContainer>
 
                 <div className="flex flex-col gap-8">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
                         <Tabs tabs={tabs} />
                     </div>
                 </div>
-            </main>
+            </PageContainer>
         </div>
     );
 }

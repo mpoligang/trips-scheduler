@@ -15,6 +15,7 @@ import Button from '@/components/button';
 import PageTitle from '@/components/page-title';
 import EmptyData from '@/components/empty-data';
 import Loader from '@/components/loader';
+import PageContainer from '@/components/page-container';
 
 export default function DashboardPage() {
     const { user, loading } = useAuth();
@@ -93,11 +94,13 @@ export default function DashboardPage() {
 
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-                <PageTitle title='I Miei Viaggi' subtitle='Organizza e visualizza le tue prossime avventure.'>
+                <PageTitle title='I Miei Viaggi' subtitle='Organizza e visualizza le tue prossime avventure.' className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
                     <Button
+
                         variant="secondary"
+                        size={"sm"}
                         onClick={() => router.push('/dashboard/trips/new/metadata')}
-                        className="w-full md:w-auto"
+                        className="w-full md:w-auto whitespace-nowrap"
                     >
                         <FaPlus className="mr-2" />
                         Aggiungi Viaggio

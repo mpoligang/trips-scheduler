@@ -119,7 +119,7 @@ export default function SearchLocation({
                 <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {label}
                 </label>
-                <p className="w-full py-2 text-gray-800 dark:text-gray-200 font-semibold truncate">
+                <p className="w-full py-2 text-gray-800 dark:text-gray-200 font-semibold ">
                     {value ? value.address : '-'}
                 </p>
             </div>

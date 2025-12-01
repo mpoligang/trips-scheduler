@@ -10,11 +10,11 @@ export default function PageContainer({ children, className }: PageContainerProp
     return (
         <main
             className={twMerge(
-                "container mx-auto px-4 sm:px-6 lg:px-8 py-8",
+                "container mx-auto px-4 sm:px-6 lg:px-8 md:py-8 py-5",
                 className
             )}
         >
-            <div className='w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8'>
+            <div className='w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg md:p-8 p-4'>
                 {children}
             </div>
         </main>

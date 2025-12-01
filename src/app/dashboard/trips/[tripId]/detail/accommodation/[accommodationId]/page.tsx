@@ -178,6 +178,7 @@ export default function AccommodationFormPage() {
             label: 'Dettaglio Alloggio',
             content: (
                 <>
+
                     <PageTitle
                         title={isNew ? 'Aggiungi un Alloggio' : name}
                         subtitle={isNew ? "Inserisci i dettagli del luogo in cui pernotterai." : "Visualizza o modifica i dettagli del tuo soggiorno."}
@@ -201,9 +202,9 @@ export default function AccommodationFormPage() {
 
 
                     </PageTitle>
-                    <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+                    <form onSubmit={handleSubmit}>
                         <div>
-                            <div className="space-y-6">
+                            <div className="space-y-3">
                                 <Input
                                     id="acc-name"
                                     label="Nome dell'alloggio"
@@ -322,10 +323,7 @@ export default function AccommodationFormPage() {
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             <Navbar backPath={appRoutes.tripDetails(tripId)} breadcrumb={breadcrumbPaths} />
             <PageContainer>
-
-
                 <Tabs tabs={tabs} />
-
             </PageContainer>
         </div>
     );

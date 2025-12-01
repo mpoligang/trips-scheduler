@@ -40,7 +40,7 @@ export default function ProfilePage() {
         if (!loading && !user) {
             router.push('/login');
         }
-    }, [user, loading]);
+    }, [user, loading, router]);
 
     // Effetto per popolare i campi del form quando i dati dal contesto sono pronti
     useEffect(() => {

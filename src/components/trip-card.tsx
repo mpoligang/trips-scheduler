@@ -1,12 +1,16 @@
+'use client';
+
 import { Trip } from "@/models/Trip";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FaCalendarAlt, FaEye, FaPen, FaTrash } from "react-icons/fa";
-import Button from "./button";
 import { Timestamp } from "firebase/firestore";
+import ContextMenu, { ContextMenuItem } from "./context-menu";
+import Button from "./button";
 
 interface TripCardProps {
-    trip: Trip;
-    onDelete: () => void
+    readonly trip: Trip;
+    readonly onDelete: () => void;
 }
 
 // Funzione helper per formattare correttamente i Timestamp di Firestore
@@ -22,37 +26,40 @@ const formatDate = (timestamp: Timestamp) => {
 };
 
 export default function TripCard({ trip, onDelete }: TripCardProps) {
+    const router = useRouter();
+
+    // Definizione delle opzioni del menu
+    const menuItems: ContextMenuItem[] = [
+        {
+            label: 'Modifica',
+            icon: <FaPen />,
+            onClick: () => router.push(`/dashboard/trips/${trip.id}/metadata`),
+        },
+        {
+            label: 'Elimina',
+            icon: <FaTrash />,
+            onClick: onDelete,
+            className: 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20',
+        },
+    ];
+
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col justify-between  hover:shadow-xl">
-            <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{trip.name}</h3>
+        <Link href={`/dashboard/trips/${trip.id}/detail`} className="bg-white p-6 dark:bg-gray-800 rounded-lg shadow-lg flex flex-col justify-between hover:shadow-xl transition-shadow duration-300">
+            <div className="flex items-start ">
+
+                <div className="flex flex-col w-full">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white">{trip.name}</h3>
+
+                </div>
+                <ContextMenu items={menuItems} />
+
+            </div>
+            <div className="border-t border-gray-100 dark:border-gray-700 mt-4 pt-4">
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-300">
-                    <FaCalendarAlt className="mr-2 text-white " />
+                    <FaCalendarAlt className="mr-2 text-purple-500 dark:text-white" />
                     <span>{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</span>
                 </div>
             </div>
-            {/* --- Footer Aggiornato --- */}
-            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center sm:flex-row flex-col">
-                <Link className="sm:w-auto w-full" href={`dashboard/trips/${trip.id}/detail`}>
-                    <Button className="sm:w-auto w-full" variant="secondary" size="sm">
-                        <FaEye />
-                        <span className="ml-2">Dettagli</span>
-                    </Button>
-                </Link>
-                <div className="flex mt-4 sm:mt-0">
-                    <Link className=" sm:mt-0 w-full" href={`dashboard/trips/${trip.id}/metadata`} aria-label="Modifica viaggio">
-                        <Button className="sm:w-auto w-full" variant="secondary" size="sm">
-                            <FaPen />
-                            <span className="ml-2">Modifica</span>
-                        </Button>
-                    </Link>
-                    <Button className="sm:w-auto w-full ml-3" variant="secondary" size="sm" onClick={onDelete}>
-                        <FaTrash />
-                        <span className="ml-2">Elimina</span>
-                    </Button>
-                </div>
-            </div>
-        </div >
+        </Link>
     );
 }
-

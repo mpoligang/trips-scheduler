@@ -5,12 +5,14 @@ import SingleDatePicker from './date-picker';
 
 // Props del componente principale
 interface DateRangePickerProps {
+    id?: string;
     value: DateRange | undefined;
     onChange: (range: DateRange | undefined) => void;
+    readOnly?: boolean;
     className?: string;
 }
 
-export default function DateRangePicker({ value, onChange, className }: DateRangePickerProps) {
+export default function DateRangePicker({ value, onChange, readOnly, className }: Readonly<DateRangePickerProps>) {
     const handleStartDateChange = (date: Date | undefined) => {
         // Se la nuova data di inizio è dopo la data di fine, resetta anche la data di fine
         if (date && value?.to && date > value.to) {
@@ -29,11 +31,13 @@ export default function DateRangePicker({ value, onChange, className }: DateRang
             <SingleDatePicker
                 label="Data di Inizio"
                 selected={value?.from}
+                readOnly={readOnly}
                 onSelect={handleStartDateChange}
             />
             <SingleDatePicker
                 label="Data di Fine"
                 selected={value?.to}
+                readOnly={readOnly}
                 onSelect={handleEndDateChange}
                 disabledDays={{ before: value?.from || new Date() }}
             />

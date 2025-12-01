@@ -12,4 +12,5 @@ export interface Accommodation {
     startDate: Timestamp;
     endDate: Timestamp;
     link?: string;
+    cost?: number;
 }

@@ -14,6 +14,7 @@ interface DropdownProps<T extends Record<string, any>> {
     optionLabel: keyof T;  // Chiave per il nome da visualizzare (es. 'name')
     placeholder?: string;
     className?: string;
+    readOnly?: boolean; // Aggiunta la prop per la modalità di sola lettura
 }
 
 export default function Dropdown<T extends Record<string, any>>({
@@ -25,7 +26,25 @@ export default function Dropdown<T extends Record<string, any>>({
     optionLabel,
     placeholder = 'Seleziona un\'opzione...',
     className,
-}: DropdownProps<T>) {
+    readOnly, // Aggiunta la prop
+}: Readonly<DropdownProps<T>>) {
+
+    // Se il componente è in modalità readOnly, mostra solo il testo
+    if (readOnly) {
+        return (
+            <div className={twMerge("w-full", className)}>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    {label}
+                </label>
+                {/* Valore mostrato come testo semplice, senza padding orizzontale */}
+                <p className="w-full py-2 text-gray-800 dark:text-gray-200 font-semibold">
+                    {selected ? String(selected[optionLabel]) : '-'}
+                </p>
+            </div>
+        );
+    }
+
+    // Altrimenti, mostra il dropdown normale
     return (
         <Listbox as="div" value={selected} onChange={onSelect} className={twMerge("w-full relative", className)}>
             {({ open }) => (
@@ -69,3 +88,4 @@ export default function Dropdown<T extends Record<string, any>>({
         </Listbox>
     );
 }
+

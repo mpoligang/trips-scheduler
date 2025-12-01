@@ -195,9 +195,8 @@ export default function TripDetailPage() {
                                                             key={stage.id}
                                                             icon={<FaMapMarkerAlt className="h-5 w-5 text-purple-600 dark:text-purple-400" />}
                                                             title={stage.name}
-                                                            subtitle={stage.location.address}
                                                             directionsUrl={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(stage.location.address)}`}
-                                                            editUrl={`/dashboard/trips/${tripId}/detail/stage/${stage.id}`}
+                                                            onEdit={() => router.push(`/dashboard/trips/${tripId}/detail/stage/${stage.id}`)}
                                                             onDelete={() => handleOpenDeleteStageModal(stage.id)}
                                                         />
                                                     ))}
@@ -243,9 +242,8 @@ export default function TripDetailPage() {
                                                 key={accommodation.id}
                                                 icon={<FaBed className="h-5 w-5 text-purple-600 dark:text-purple-400" />}
                                                 title={accommodation.name}
-                                                subtitle={accommodation.location.address}
                                                 directionsUrl={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(accommodation.location.address)}`}
-                                                editUrl={`/dashboard/trips/${tripId}/detail/accommodation/${accommodation.id}`}
+                                                onEdit={() => router.push(`/dashboard/trips/${tripId}/detail/accommodation/${accommodation.id}`)}
                                                 onDelete={() => handleOpenDeleteAccModal(accommodation.id ?? '')}
                                             />
                                         ))}

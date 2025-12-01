@@ -12,7 +12,7 @@ interface TabsProps {
     tabs: TabItem[];
 }
 
-export default function Tabs({ tabs }: TabsProps) {
+export default function Tabs({ tabs }: Readonly<TabsProps>) {
     return (
         <TabGroup as="div" className="w-full">
             <TabList className="flex border-b border-gray-200 dark:border-gray-700">

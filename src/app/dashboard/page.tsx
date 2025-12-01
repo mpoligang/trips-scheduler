@@ -105,21 +105,30 @@ export default function DashboardPage() {
                 </PageTitle>
 
 
-                {isLoadingTrips ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg h-40"></div>
-                        ))}
-                    </div>
-                ) : trips.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {trips.map(trip => (
-                            <TripCard key={trip.id} trip={trip} onDelete={() => handleOpenDeleteModal(trip)} />
-                        ))}
-                    </div>
-                ) : (
-                    <EmptyData title='Nessun viaggio ancora' subtitle='Inizia a pianificare la tua prossima avventura' />
-                )}
+                {(() => {
+                    if (isLoadingTrips) {
+                        return (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                                {[new Array(6)].map((_, i) => {
+                                    const key = `loading-${i}`;
+                                    return <div key={key} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg h-40"></div>;
+                                })}
+                            </div>
+                        );
+                    } else if (trips.length > 0) {
+                        return (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {trips.map(trip => (
+                                    <TripCard key={trip.id} trip={trip} onDelete={() => handleOpenDeleteModal(trip)} />
+                                ))}
+                            </div>
+                        );
+                    } else {
+                        return (
+                            <EmptyData title='Nessun viaggio ancora' subtitle='Inizia a pianificare la tua prossima avventura' />
+                        );
+                    }
+                })()}
             </main>
         </div>
     );

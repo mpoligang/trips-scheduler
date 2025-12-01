@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
@@ -5,22 +7,44 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { DayPicker, Matcher } from "react-day-picker";
 import { FaCalendarAlt, FaTimes } from "react-icons/fa";
+import { twMerge } from "tailwind-merge";
+
+interface SingleDatePickerProps {
+    label?: string;
+    selected: Date | undefined;
+    onSelect: (date: Date | undefined) => void;
+    disabledDays?: Matcher | Matcher[];
+    readOnly?: boolean;
+    className?: string;
+}
 
 export default function SingleDatePicker({
     label,
     selected,
     onSelect,
     disabledDays,
-}: {
-    label?: string;
-    selected: Date | undefined;
-    onSelect: (date: Date | undefined) => void;
-    disabledDays?: Matcher | Matcher[];
-}) {
+    readOnly,
+    className,
+}: Readonly<SingleDatePickerProps>) {
     const displayValue = selected ? format(selected, 'dd MMM yyyy', { locale: it }) : (label || '');
 
+    // Se il componente è in modalità readOnly, mostra solo il testo
+    if (readOnly) {
+        return (
+            <div className={twMerge("w-full", className)}>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    {label}
+                </label>
+                <p className="w-full py-2 text-gray-800 dark:text-gray-200 font-semibold">
+                    {selected ? displayValue : '-'}
+                </p>
+            </div>
+        );
+    }
+
+    // Altrimenti, mostra il datepicker interattivo
     return (
-        <Popover className="relative w-full">
+        <Popover className={twMerge("relative w-full", className)}>
             {({ open }) => (
                 <>
                     {/* Wrapper per l'effetto gradiente, ora basato sullo stato 'open' */}

@@ -8,8 +8,8 @@ import { PathItem } from '@/models/PathItem'; // Importazione del tipo esternali
 
 // Props del componente Breadcrumb
 interface BreadcrumbProps {
-    paths: PathItem[];
-    className?: string; // Prop per la classe esterna
+    readonly paths: readonly PathItem[];
+    readonly className?: string; // Prop per la classe esterna
 }
 
 /**

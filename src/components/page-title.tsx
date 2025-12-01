@@ -1,8 +1,8 @@
 
 interface PageTitleProps {
-    title: string;
-    subtitle?: string;
-    children?: React.ReactNode; // Usa ReactNode per la massima flessibilità
+    readonly title: string;
+    readonly subtitle?: string;
+    readonly children?: React.ReactNode;
 }
 
 export default function PageTitle({ title, subtitle, children }: PageTitleProps) {

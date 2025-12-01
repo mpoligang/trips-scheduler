@@ -1,59 +1,56 @@
 import { ReactNode } from 'react';
-import Link from "next/link";
 import { FaPen, FaTrash, FaDirections } from "react-icons/fa";
-import Button from './button';
+import ContextMenu, { ContextMenuItem } from './context-menu';
 
 interface DetailItemCardProps {
-    icon: ReactNode;
-    title: string;
-    subtitle: string;
-    directionsUrl: string;
-    editUrl: string;
-    onDelete: () => void;
+    readonly icon: ReactNode;
+    readonly title: string;
+    readonly directionsUrl: string;
+    readonly onEdit: () => void;
+    readonly onDelete: () => void;
 }
 
 export default function DetailItemCard({
     icon,
     title,
-    subtitle,
     directionsUrl,
-    editUrl,
+    onEdit,
     onDelete,
 }: DetailItemCardProps) {
+
+    const menuItems: ContextMenuItem[] = [
+        {
+            label: 'Indicazioni',
+            icon: <FaDirections />,
+            onClick: () => window.open(directionsUrl, '_blank'),
+        },
+        {
+            label: 'Modifica',
+            icon: <FaPen />,
+            onClick: onEdit
+        },
+        {
+            label: 'Elimina',
+            icon: <FaTrash />,
+            onClick: onDelete,
+            // Aggiungiamo uno stile rosso per indicare un'azione distruttiva
+            className: 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20',
+        },
+    ];
+
     return (
-        <li className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg gap-4">
-            <div className="flex items-start">
+        <li className="flex flex-row items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg gap-4">
+            <div className="flex items-center w-full">
                 <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-purple-100 dark:bg-purple-900/50 rounded-full">
                     {icon}
                 </div>
                 <div className="ml-4">
                     <p className="font-bold text-gray-800 dark:text-white">{title}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 ">{subtitle}</p>
+                    {/* <p className="text-sm text-gray-500 dark:text-gray-400 ">{subtitle}</p> */}
                 </div>
             </div>
-            <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row self-end md:self-center">
-                <a href={directionsUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="secondary" size="sm" className="w-full justify-center md:w-auto">
-                        <FaDirections />
-                        <span className="ml-2">Indicazioni</span>
-                    </Button>
-                </a>
-                <Link href={editUrl} aria-label="Modifica elemento">
-                    <Button variant="secondary" size="sm" className="w-full justify-center md:w-auto">
-                        <FaPen />
-                        <span className="ml-2">Modifica</span>
-                    </Button>
-                </Link>
-                <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={onDelete}
-                    aria-label="Elimina elemento"
-                    className="w-full justify-center md:w-auto"
-                >
-                    <FaTrash />
-                    <span className="ml-2">Elimina</span>
-                </Button>
+            <div className=" flex w-full justify-end">
+                <ContextMenu items={menuItems} />
             </div>
         </li>
     );

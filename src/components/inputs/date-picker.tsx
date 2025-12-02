@@ -26,23 +26,8 @@ export default function SingleDatePicker({
     readOnly,
     className,
 }: Readonly<SingleDatePickerProps>) {
-    const displayValue = selected ? format(selected, 'dd MMM yyyy', { locale: it }) : (label || '');
+    const displayValue = selected ? format(selected, 'dd MMM yyyy', { locale: it }) : '';
 
-    // Se il componente è in modalità readOnly, mostra solo il testo
-    if (readOnly) {
-        return (
-            <div className={twMerge("w-full", className)}>
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    {label}
-                </label>
-                <p className="w-full py-2 text-gray-800 dark:text-gray-200 ">
-                    {selected ? displayValue : '-'}
-                </p>
-            </div>
-        );
-    }
-
-    // Altrimenti, mostra il datepicker interattivo
     return (
         <div className={twMerge("w-full", className)}>
             <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">

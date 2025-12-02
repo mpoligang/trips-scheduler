@@ -9,4 +9,14 @@ export interface Stage {
     };
     date: string;
     description?: string;
+    attachments?: Attachment[];
 }
+
+export interface Attachment {
+    id: string;
+    name: string;
+    url: string;
+    type: 'file' | 'link';
+    createdAt: string;
+}
+

@@ -119,9 +119,7 @@ export default function AccommodationFormPage() {
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             <Navbar backPath={appRoutes.tripDetails(tripId)} breadcrumb={breadcrumbPaths} />
             <PageContainer>
-                <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-                    <Tabs tabs={tabs} />
-                </div>
+                <Tabs tabs={tabs} />
             </PageContainer>
         </div>
     );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaLink, FaSpinner, FaExternalLinkAlt } from 'react-icons/fa';
-import Input from '@/components/input';
+import Input from '@/components/inputs/input';
 import { twMerge } from 'tailwind-merge';
 
 interface LinkPreviewData {
@@ -121,7 +121,7 @@ export default function LinkPreview({
                     </label>
                     {/* Se non c'è la card (o sta caricando), mostra il link come testo */}
                     {(!data || isLoading) && (
-                        <div className="w-full py-2 text-gray-800 dark:text-gray-200 font-semibold truncate">
+                        <div className="w-full py-2 text-gray-800 dark:text-gray-200  truncate">
                             {(() => {
                                 if (isLoading) {
                                     return (

@@ -5,24 +5,25 @@ import { useRouter, useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 import { Trip } from '@/models/Trip';
 import { PathItem } from '@/models/PathItem';
-import Navbar from '@/components/navbar';
-import Input from '@/components/input';
-import Button from '@/components/button';
-import SingleDatePicker from '@/components/date-picker';
+import Navbar from '@/components/navigations/navbar';
+import Input from '@/components/inputs/input';
+import Button from '@/components/actions/button';
+import SingleDatePicker from '@/components/inputs/date-picker';
 import { useAuth } from '@/context/authProvider';
 import { app, db } from '@/firebase/config';
 import { FaPen, FaMap, FaUndo, FaRobot } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
-import Loader from '@/components/loader';
+import Loader from '@/components/generics/loader';
 import { Stage } from '@/models/Stage';
-import Dropdown from '@/components/dropdown';
-import SearchLocation from '@/components/search-location';
-import PageContainer from '@/components/page-container';
-import PageTitle from '@/components/page-title';
-import ContextMenu from '@/components/context-menu';
+import Dropdown from '@/components/inputs/dropdown';
+import SearchLocation from '@/components/inputs/search-location';
+import PageContainer from '@/components/containers/page-container';
+import PageTitle from '@/components/generics/page-title';
+import ContextMenu from '@/components/actions/context-menu';
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 import { User } from 'firebase/auth';
-import Tabs, { TabItem } from '@/components/tabs';
+import Tabs, { TabItem } from '@/components/navigations/tabs';
+import ComingSoonFeature from '@/components/cards/coming-soon-features';
 
 const formatDateForLabel = (date: Date | undefined): string => {
     if (!date) return '';
@@ -239,11 +240,7 @@ export default function StageFormPage() {
                         />
 
                         <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Data della tappa
-                                </label>
-                            </div>
+
                             <SingleDatePicker
                                 label={datePickerPlaceholder(trip)}
                                 selected={stageDate}
@@ -253,7 +250,6 @@ export default function StageFormPage() {
                                     after: (trip.endDate as Timestamp).toDate()
                                 } : { before: new Date() }}
                                 readOnly={isReadOnly}
-                                className={isReadOnly ? "pointer-events-none opacity-80" : ""}
                             />
                         </div>
 
@@ -284,19 +280,12 @@ export default function StageFormPage() {
         {
             label: 'Informazioni AI',
             content: (
-                <div className="flex flex-col items-center justify-center py-16 text-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 mt-6">
-                    <div className="bg-purple-100 dark:bg-purple-900/30 p-4 rounded-full mb-4">
-                        <FaRobot className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                        Funzionalità in Sviluppo
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400 max-w-sm">
-                        Stiamo lavorando per integrare l&apos;intelligenza artificiale che ti aiuterà a scoprire dettagli e consigli su questa tappa.
-                    </p>
-                </div>
+                <ComingSoonFeature
+                    description="Stiamo lavorando per integrare l'intelligenza artificiale che ti aiuterà a scoprire dettagli e consigli su questa tappa."
+                />
             )
-        }
+        },
+
     ];
 
     return (

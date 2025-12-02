@@ -6,16 +6,16 @@ import { collection, onSnapshot, query, orderBy, doc, deleteDoc } from 'firebase
 import { PathItem } from '@/models/PathItem';
 import { Trip } from '@/models/Trip';
 import { FaPlus, FaExclamationTriangle } from 'react-icons/fa';
-import ConfirmationModal from '@/components/confirm-modal';
-import Navbar from '@/components/navbar';
-import TripCard from '@/components/trip-card';
+import ConfirmationModal from '@/components/modals/confirm-modal';
+import Navbar from '@/components/navigations/navbar';
+import TripCard from '@/components/cards/trip-card';
 import { useAuth } from '@/context/authProvider';
 import { db } from '@/firebase/config';
-import Button from '@/components/button';
-import PageTitle from '@/components/page-title';
-import EmptyData from '@/components/empty-data';
-import Loader from '@/components/loader';
-import PageContainer from '@/components/page-container';
+import Button from '@/components/actions/button';
+import PageTitle from '@/components/generics/page-title';
+import EmptyData from '@/components/cards/empty-data';
+import Loader from '@/components/generics/loader';
+import PageContainer from '@/components/containers/page-container';
 
 export default function DashboardPage() {
     const { user, loading } = useAuth();

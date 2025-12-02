@@ -21,7 +21,7 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
                     <label htmlFor={id} className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                         {label}
                     </label>
-                    <p className="w-full py-2 text-gray-800 dark:text-gray-200 font-semibold">
+                    <p className="w-full py-2 text-gray-800 dark:text-gray-200 ">
                         {props.value ? `${props.value} ${symbol}` : '-'}
                     </p>
                 </div>

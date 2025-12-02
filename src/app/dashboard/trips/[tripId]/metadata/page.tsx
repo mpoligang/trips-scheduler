@@ -6,17 +6,17 @@ import { collection, addDoc, doc, getDoc, updateDoc, serverTimestamp, Timestamp 
 import { PathItem } from '@/models/PathItem';
 import { DateRange } from 'react-day-picker';
 import { Trip } from '@/models/Trip';
-import DateRangePicker from '@/components/date-range-picker';
-import Navbar from '@/components/navbar';
+import DateRangePicker from '@/components/inputs/date-range-picker';
+import Navbar from '@/components/navigations/navbar';
 import { useAuth } from '@/context/authProvider';
 import { db } from '@/firebase/config';
-import Button from '@/components/button';
-import Input from '@/components/input';
-import PageTitle from '@/components/page-title';
-import Textarea from '@/components/textarea';
-import Loader from '@/components/loader';
+import Button from '@/components/actions/button';
+import Input from '@/components/inputs/input';
+import PageTitle from '@/components/generics/page-title';
+import Textarea from '@/components/inputs/textarea';
+import Loader from '@/components/generics/loader';
 import { FaPlus, FaTimes } from 'react-icons/fa';
-import PageContainer from '@/components/page-container';
+import PageContainer from '@/components/containers/page-container';
 
 export default function TripFormPage() {
     const { user, loading } = useAuth();

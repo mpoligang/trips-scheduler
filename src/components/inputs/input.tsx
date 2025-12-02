@@ -20,7 +20,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                     <p
                         id={id}
                         className={twMerge(
-                            "w-full py-2 text-gray-800 dark:text-gray-200 font-semibold",
+                            "w-full py-2 text-gray-800 dark:text-gray-200 ",
                             className
                         )}
                     >

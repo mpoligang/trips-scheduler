@@ -3,18 +3,18 @@
 
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import Button from "@/components/button";
-import Input from "@/components/input";
-import Navbar from "@/components/navbar";
+import Button from "@/components/actions/button";
+import Input from "@/components/inputs/input";
+import Navbar from "@/components/navigations/navbar";
 import { useAuth } from "@/context/authProvider";
 import { db, auth } from "@/firebase/config";
 import { PathItem } from "@/models/PathItem";
 import { signOut } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
 import { FaSignOutAlt } from "react-icons/fa";
-import PageTitle from "@/components/page-title";
-import Loader from "@/components/loader";
-import PageContainer from "@/components/page-container";
+import PageTitle from "@/components/generics/page-title";
+import Loader from "@/components/generics/loader";
+import PageContainer from "@/components/containers/page-container";
 
 
 

@@ -5,12 +5,10 @@ import { FaEllipsisV } from 'react-icons/fa';
 import { ReactNode } from 'react';
 import { twMerge } from 'tailwind-merge';
 
-// Interfaccia per singola voce del menu
 export interface ContextMenuItem {
     label: string;
     icon?: ReactNode;
     onClick: () => void;
-    // Permette di passare classi extra, utile per voci "pericolose" come Elimina (es. text-red-500)
     className?: string;
 }
 
@@ -23,8 +21,16 @@ export default function ContextMenu({ items, className }: Readonly<ContextMenuPr
     return (
         <Menu as="div" className={twMerge("relative inline-block text-left", className)}>
             <div>
-                {/* Bottone trigger con i tre puntini */}
-                <MenuButton className="flex items-center justify-center p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                <MenuButton
+                    onClick={(e) => {
+                        e.stopPropagation();
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.stopPropagation();
+                        }
+                    }}
+                    className="flex items-center justify-center p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
                     <FaEllipsisV />
                 </MenuButton>
             </div>
@@ -38,9 +44,11 @@ export default function ContextMenu({ items, className }: Readonly<ContextMenuPr
                     {items.map((item, index) => {
                         const key = `context-menu-item-${index}`;
                         return <MenuItem key={key}>
-                            {/* Il bottone interno eredita lo stato 'data-[focus]' da Headless UI quando selezionato */}
                             <button
-                                onClick={item.onClick}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    item.onClick();
+                                }}
                                 className={twMerge(
                                     "group flex w-full items-center gap-2 rounded-md py-2 px-3 text-sm text-gray-800 dark:text-gray-200 transition-colors",
                                     "data-[focus]:bg-purple-100 dark:data-[focus]:bg-purple-900/50 data-[focus]:text-purple-900 dark:data-[focus]:text-purple-100",

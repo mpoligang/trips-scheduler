@@ -1,0 +1,98 @@
+[debug] [2025-12-02T12:10:33.830Z] ----------------------------------------------------------------------
+[debug] [2025-12-02T12:10:33.831Z] Command:       /Users/michelangelopoli/.nvm/versions/node/v24.9.0/bin/node /Users/michelangelopoli/.nvm/versions/node/v24.9.0/bin/firebase deploy --only hosting
+[debug] [2025-12-02T12:10:33.832Z] CLI Version:   14.26.0
+[debug] [2025-12-02T12:10:33.832Z] Platform:      darwin
+[debug] [2025-12-02T12:10:33.832Z] Node Version:  v24.9.0
+[debug] [2025-12-02T12:10:33.832Z] Time:          Tue Dec 02 2025 13:10:33 GMT+0100 (Central European Standard Time)
+[debug] [2025-12-02T12:10:33.832Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-02T12:10:33.898Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-02T12:10:33.898Z] > authorizing via signed-in user (michelangelopoli21@gmail.com)
+[debug] [2025-12-02T12:10:33.898Z] [iam] checking project trip-scheduler-708e2 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-02T12:10:33.899Z] Checked if tokens are valid: false, expires at: 1764627741303
+[debug] [2025-12-02T12:10:33.899Z] Checked if tokens are valid: false, expires at: 1764627741303
+[debug] [2025-12-02T12:10:33.899Z] > refreshing access token with scopes: []
+[debug] [2025-12-02T12:10:33.899Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-02T12:10:33.899Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-02T12:10:34.168Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-02T12:10:34.168Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-02T12:10:34.180Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/trip-scheduler-708e2:testIamPermissions [none]
+[debug] [2025-12-02T12:10:34.181Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/trip-scheduler-708e2:testIamPermissions x-goog-quota-user=projects/trip-scheduler-708e2
+[debug] [2025-12-02T12:10:34.181Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/trip-scheduler-708e2:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-02T12:10:35.078Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/trip-scheduler-708e2:testIamPermissions 200
+[debug] [2025-12-02T12:10:35.078Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/trip-scheduler-708e2:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-02T12:10:35.078Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:35.078Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:35.079Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/trip-scheduler-708e2 [none]
+[debug] [2025-12-02T12:10:35.509Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/trip-scheduler-708e2 200
+[debug] [2025-12-02T12:10:35.509Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/trip-scheduler-708e2 {"projectId":"trip-scheduler-708e2","projectNumber":"576005986728","displayName":"trip-scheduler","name":"projects/trip-scheduler-708e2","resources":{"hostingSite":"trip-scheduler-708e2","realtimeDatabaseInstance":"trip-scheduler-708e2-default-rtdb"},"state":"ACTIVE","etag":"1_1544a04e-54d1-4a9b-92c1-1887f54a982a"}
+[debug] [2025-12-02T12:10:36.116Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:36.116Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:36.116Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/trip-scheduler-708e2/sites pageToken=&pageSize=10
+[debug] [2025-12-02T12:10:37.289Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/trip-scheduler-708e2/sites 200
+[debug] [2025-12-02T12:10:37.289Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/trip-scheduler-708e2/sites {"sites":[{"name":"projects/trip-scheduler-708e2/sites/trip-scheduler-708e2","defaultUrl":"https://trip-scheduler-708e2.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2025-12-02T12:10:37.290Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:37.290Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:37.290Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/trip-scheduler-708e2/sites 
+[debug] [2025-12-02T12:10:37.619Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/trip-scheduler-708e2/sites 200
+[debug] [2025-12-02T12:10:37.619Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/trip-scheduler-708e2/sites {"sites":[{"name":"projects/trip-scheduler-708e2/sites/trip-scheduler-708e2","defaultUrl":"https://trip-scheduler-708e2.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2025-12-02T12:10:37.619Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:37.619Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:37.619Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/trip-scheduler-708e2/webApps/-/config [none]
+[debug] [2025-12-02T12:10:38.149Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/trip-scheduler-708e2/webApps/-/config 200
+[debug] [2025-12-02T12:10:38.149Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/trip-scheduler-708e2/webApps/-/config {"projectId":"trip-scheduler-708e2","appId":"1:576005986728:web:262f2f41c39ab80691e59d","databaseURL":"https://trip-scheduler-708e2-default-rtdb.firebaseio.com","storageBucket":"trip-scheduler-708e2.firebasestorage.app","apiKey":"AIzaSyB5KOWbTgmhG1FDcv5UZKhxt1t75DdU_ko","authDomain":"trip-scheduler-708e2.firebaseapp.com","messagingSenderId":"576005986728","measurementId":"G-HP6ESKYG34","projectNumber":"576005986728","version":"2"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2025-12-02T12:10:39.451Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:39.451Z] Checked if tokens are valid: true, expires at: 1764681033168
+[debug] [2025-12-02T12:10:39.451Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/trip-scheduler-708e2/sites/trip-scheduler-708e2 [none]
+[debug] [2025-12-02T12:10:39.698Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/trip-scheduler-708e2/sites/trip-scheduler-708e2 200
+[debug] [2025-12-02T12:10:39.698Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/trip-scheduler-708e2/sites/trip-scheduler-708e2 {"name":"projects/trip-scheduler-708e2/sites/trip-scheduler-708e2","defaultUrl":"https://trip-scheduler-708e2.web.app","type":"DEFAULT_SITE"}
+[info]    ▲ Next.js 15.5.2
+
+[info]    - Environments: .env.local
+
+
+[info]    Creating an optimized production build ...
+
+[info]  ✓ Compiled successfully in 2.4s
+
+[info]    Linting and checking validity of types ...
+
+[info] 
+./src/app/dashboard/page.tsx
+18:8  Warning: 'PageContainer' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/trips/[tripId]/detail/page.tsx
+7:57  Warning: 'FaBed' is defined but never used.  @typescript-eslint/no-unused-vars
+161:11  Warning: 'sortedDestinations' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/trips/[tripId]/detail/stage/[stageId]/page.tsx
+13:10  Warning: 'app' is defined but never used.  @typescript-eslint/no-unused-vars
+14:32  Warning: 'FaRobot' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/page.tsx
+19:6  Warning: React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/cards/trip-card.tsx
+9:10  Warning: 'MouseEventHandler' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/inputs/link-preview.tsx
+173:33  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/inputs/search-location.tsx
+53:8  Warning: React Hook useEffect has a missing dependency: 'query'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+
+[info]    Collecting page data ...
+

@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
-import Button from './button';
+import Button from '../actions/button';
 import Breadcrumb from './breadcrumb';
 import { PathItem } from '@/models/PathItem';
-import Avatar from './userAvatar';
+import Avatar from '../generics/userAvatar';
 
 interface NavbarProps {
-    backPath: string;
-    breadcrumb: PathItem[];
+    readonly backPath: string;
+    readonly breadcrumb: readonly PathItem[];
 }
 
 /**

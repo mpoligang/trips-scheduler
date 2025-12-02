@@ -7,8 +7,7 @@ import { useAuth } from '@/context/authProvider';
 import { twMerge } from 'tailwind-merge';
 import dynamic from 'next/dynamic';
 
-// Carica la mappa dinamicamente
-const MapPicker = dynamic(() => import('@/components/map'), {
+const MapPicker = dynamic(() => import('@/components/maps/map'), {
     ssr: false,
     loading: () => <div className="h-[400px] w-full bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse mt-2"></div>
 });
@@ -49,10 +48,9 @@ export default function SearchLocation({
         if (value) {
             setQuery(value.address);
         } else if (!query) {
-            // Resetta solo se la query è vuota per evitare loop se l'utente sta scrivendo
             setQuery('');
         }
-    }, [value]); // Aggiunto 'query' alle dipendenze per rispettare le regole di React Hooks
+    }, [value]);
 
     // Logica di ricerca con Debounce
     useEffect(() => {
@@ -60,6 +58,8 @@ export default function SearchLocation({
             clearTimeout(searchTimeout.current);
         }
 
+        // Se la query è vuota o coincide già con il valore selezionato, svuotiamo i risultati
+        // Questo è ciò che farà chiudere la tendina dopo la selezione
         if (!query || query.trim() === '' || query === value?.address) {
             setResults([]);
             setIsLoading(false);
@@ -99,7 +99,7 @@ export default function SearchLocation({
         return () => {
             if (searchTimeout.current) clearTimeout(searchTimeout.current);
         };
-    }, [query, user, value]); // value è necessario per evitare di cercare se la query corrisponde già all'indirizzo selezionato
+    }, [query, user, value]);
 
     const handleSelect = (result: LocationResult) => {
         if (!result) return;
@@ -112,14 +112,13 @@ export default function SearchLocation({
         setQuery(result.display_name);
     };
 
-    // Modalità ReadOnly
     if (readOnly) {
         return (
             <div className={className}>
                 <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {label}
                 </label>
-                <p className="w-full py-2 text-gray-800 dark:text-gray-200 font-semibold ">
+                <p className="w-full py-2 text-gray-800 dark:text-gray-200  ">
                     {value ? value.address : '-'}
                 </p>
             </div>
@@ -133,6 +132,10 @@ export default function SearchLocation({
                 value={value ?? null}
                 onChange={(val: any) => handleSelect(val)}
             >
+                {/* Nota: 'open' qui riflette lo stato interno di Headless UI.
+                   Anche se clicchi fuori e 'open' diventa false, la lista rimarrà visibile
+                   grazie alla prop 'static' su ComboboxOptions finché ci sono results.
+                */}
                 {({ open }) => (
                     <>
                         {label && (
@@ -141,12 +144,9 @@ export default function SearchLocation({
                             </label>
                         )}
 
-                        {/* Wrapper Stile Gradiente */}
                         <div className={`relative rounded-lg p-[1.5px] transition-colors duration-300 ${open ? 'bg-gradient-to-br from-purple-600 to-indigo-700' : 'bg-transparent'}`}>
                             <div className="relative flex items-center bg-gray-50 dark:bg-gray-700 rounded-md">
-
                                 <ComboboxInput
-                                    // Usiamo un input normale per evitare conflitti di stile
                                     className="w-full pl-4 pr-20 py-2 bg-transparent border-none rounded-md text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 placeholder-gray-500 dark:placeholder-gray-400"
                                     displayValue={(item: any) => item?.address || query}
                                     onChange={(event) => setQuery(event.target.value)}
@@ -155,12 +155,10 @@ export default function SearchLocation({
                                 />
 
                                 <div className="absolute right-3 flex items-center gap-2 z-10">
-                                    {/* Spinner */}
                                     {isLoading && (
                                         <FaSpinner className="animate-spin h-4 w-4 text-purple-600 dark:text-purple-400" />
                                     )}
 
-                                    {/* Tasto Reset (X) */}
                                     {!isLoading && (query || value) && (
                                         <button
                                             onClick={(e) => {
@@ -177,7 +175,6 @@ export default function SearchLocation({
                                         </button>
                                     )}
 
-                                    {/* Tasto Toggle Mappa */}
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -194,22 +191,29 @@ export default function SearchLocation({
                             </div>
                         </div>
 
-                        {/* Lista Risultati */}
+                        {/* MODIFICA 1: Aggiunta prop 'static' e condizione di rendering manuale.
+                            La tendina resta nel DOM finché results.length > 0, ignorando il click-outside.
+                        */}
                         {results.length > 0 && (
                             <ComboboxOptions
+                                static
                                 anchor="bottom"
                                 transition
-                                className="w-[var(--input-width)] z-[9999] mt-2 origin-top rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] data-[closed]:scale-95 data-[closed]:opacity-0 focus:outline-none"
+                                className="w-[var(--input-width)] z-[9999] mt-2 origin-top rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none"
                             >
                                 <div className="max-h-60 overflow-y-auto p-1">
                                     {results.map((item) => (
                                         <ComboboxOption
                                             key={item.place_id}
                                             value={item}
-                                            className="group flex cursor-pointer items-center gap-3 rounded-md py-2 px-3 data-[focus]:bg-purple-100 dark:data-[focus]:bg-purple-900/50"
+                                            // MODIFICA 2: items-start invece di center, rimosso truncate, aggiunto whitespace-normal
+                                            className="group flex cursor-pointer items-start gap-3 rounded-md py-2 px-3 data-[focus]:bg-purple-100 dark:data-[focus]:bg-purple-900/50"
                                         >
-                                            <FaMapMarkerAlt className="flex-shrink-0 h-4 w-4 text-gray-400 group-data-[focus]:text-purple-600 dark:text-gray-500 dark:group-data-[focus]:text-purple-400" />
-                                            <span className="text-sm text-gray-800 dark:text-gray-200 truncate">
+                                            {/* Icona leggermente abbassata (mt-1) per allinearsi alla prima riga di testo */}
+                                            <FaMapMarkerAlt className="flex-shrink-0 h-4 w-4 mt-1 text-gray-400 group-data-[focus]:text-purple-600 dark:text-gray-500 dark:group-data-[focus]:text-purple-400" />
+
+                                            {/* Text wrapping abilitato */}
+                                            <span className="text-sm text-gray-800 dark:text-gray-200 whitespace-normal break-words leading-snug">
                                                 {item.display_name}
                                             </span>
                                         </ComboboxOption>
@@ -221,7 +225,6 @@ export default function SearchLocation({
                 )}
             </Combobox>
 
-            {/* Mappa Espandibile */}
             {showMap && (
                 <div className="mt-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
                     <MapPicker

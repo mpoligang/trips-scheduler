@@ -6,8 +6,8 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { FaGoogle } from 'react-icons/fa';
 import { auth, db } from '@/firebase/config';
-import Button from '@/components/button';
-import Input from '@/components/input';
+import Button from '@/components/actions/button';
+import Input from '@/components/inputs/input';
 import { FirebaseError } from 'firebase/app';
 
 export default function LoginPage() {

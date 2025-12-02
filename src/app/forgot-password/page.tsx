@@ -3,8 +3,8 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import Link from 'next/link';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import Button from '@/components/button';
-import Input from '@/components/input';
+import Button from '@/components/actions/button';
+import Input from '@/components/inputs/input';
 import { auth } from '@/firebase/config';
 import { FirebaseError } from 'firebase/app';
 

@@ -37,7 +37,7 @@ export default function Dropdown<T extends Record<string, any>>({
                     {label}
                 </label>
                 {/* Valore mostrato come testo semplice, senza padding orizzontale */}
-                <p className="w-full py-2 text-gray-800 dark:text-gray-200 font-semibold">
+                <p className="w-full py-2 text-gray-800 dark:text-gray-200 ">
                     {selected ? String(selected[optionLabel]) : '-'}
                 </p>
             </div>

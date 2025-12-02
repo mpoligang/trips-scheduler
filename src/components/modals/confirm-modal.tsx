@@ -1,17 +1,16 @@
 import { ReactNode } from 'react';
-import Button from '@/components/button';
+import Button from '@/components/actions/button';
 
 interface ConfirmationModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-    isLoading: boolean;
-    title: string;
-    children: ReactNode;
-    confirmText?: string;
-    cancelText?: string;
-    confirmVariant?: 'primary' | 'secondary' | 'destructive' | 'icon';
-    icon?: ReactNode;
+    readonly isOpen: boolean;
+    readonly onClose: () => void;
+    readonly onConfirm: () => void;
+    readonly isLoading: boolean;
+    readonly title: string;
+    readonly children: ReactNode;
+    readonly confirmText?: string;
+    readonly cancelText?: string;
+    readonly icon?: ReactNode;
 }
 
 export default function ConfirmationModal({

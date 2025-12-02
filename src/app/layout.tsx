@@ -19,7 +19,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it">
-      <body className={inter.className}>
+      {/* MODIFICA QUI: Aggiungi le classi di background direttamente al body */}
+      <body className={`${inter.className} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100`}>
         <AuthProvider>
           {children}
         </AuthProvider>

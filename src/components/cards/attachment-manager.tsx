@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// 1. Aggiunto deleteObject agli import
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { FaPaperclip, FaLink, FaFilePdf, FaImage, FaTimes, FaSpinner } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,17 +10,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { storage, db } from '@/firebase/config';
 import { Attachment, Stage } from '@/models/Stage';
 import { Trip } from '@/models/Trip';
-import EmptyData from './empty-data';
-import Button from '../actions/button';
-import Input from '../inputs/input';
-
+import Button from '@/components/actions/button';
+import Input from '@/components/inputs/input';
+import EmptyData from '@/components/cards/empty-data';
+import { EntityKeys } from '@/utils/entityKeys';
 
 interface AttachmentsManagerProps {
     readonly tripId: string;
-    readonly stageId?: string; // Necessario per salvare su DB
+    readonly stageId?: string;
     readonly attachments: Attachment[];
     readonly setAttachments: (attachments: Attachment[]) => void;
-    readonly readOnly: boolean;
 }
 
 export default function AttachmentsManager({
@@ -27,32 +27,30 @@ export default function AttachmentsManager({
     stageId,
     attachments,
     setAttachments,
-    readOnly
 }: AttachmentsManagerProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [isUploading, setIsUploading] = useState(false);
+    // Stato per gestire il caricamento durante la cancellazione
+    const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
     const [newLinkUrl, setNewLinkUrl] = useState('');
     const [isAddingLink, setIsAddingLink] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Funzione helper per salvare su Firestore
-    const persistAttachmentToDb = async (newAttachment: Attachment) => {
-        // Se siamo in creazione (stageId non esiste ancora), non possiamo salvare su DB ora.
-        // Il salvataggio avverrà quando l'utente clicca su "Salva" nel form principale.
-        if (!stageId) return;
+    // Funzione per aggiornare l'allegato nel DB
+    const updateStageAttachmentsInDb = async (updatedAttachments: Attachment[]) => {
+        if (!stageId) { return; }
 
         try {
-            const tripRef = doc(db, 'trips', tripId);
+            const tripRef = doc(db, EntityKeys.tripsKey, tripId);
             const tripSnap = await getDoc(tripRef);
 
             if (tripSnap.exists()) {
                 const tripData = tripSnap.data() as Trip;
-                // Trova la tappa corretta e aggiungi l'allegato
+
                 const updatedStages = tripData.stages?.map((s: Stage) => {
                     if (s.id === stageId) {
-                        const currentAttachments = s.attachments || [];
-                        return { ...s, attachments: [...currentAttachments, newAttachment] };
+                        return { ...s, attachments: updatedAttachments };
                     }
                     return s;
                 }) || [];
@@ -60,36 +58,9 @@ export default function AttachmentsManager({
                 await updateDoc(tripRef, { stages: updatedStages });
             }
         } catch (err) {
-            console.error("Errore salvataggio allegato su DB:", err);
-            // Non mostriamo errore all'utente qui per non interrompere il flusso, 
-            // l'allegato è comunque nello stato locale.
-        }
-    };
-
-    // Funzione helper per rimuovere da Firestore
-    const removeAttachmentFromDb = async (attachmentId: string) => {
-        if (!stageId) return;
-
-        try {
-            const tripRef = doc(db, 'trips', tripId);
-            const tripSnap = await getDoc(tripRef);
-
-            if (tripSnap.exists()) {
-                const tripData = tripSnap.data() as Trip;
-                const updatedStages = tripData.stages?.map((s: Stage) => {
-                    if (s.id === stageId) {
-                        return {
-                            ...s,
-                            attachments: s.attachments?.filter(a => a.id !== attachmentId) || []
-                        };
-                    }
-                    return s;
-                }) || [];
-
-                await updateDoc(tripRef, { stages: updatedStages });
-            }
-        } catch (err) {
-            console.error("Errore rimozione allegato da DB:", err);
+            console.error("Errore aggiornamento DB:", err);
+            setError("Errore nel salvataggio su database.");
+            throw err; // Rilanciamo l'errore per gestirlo nelle funzioni chiamanti
         }
     };
 
@@ -102,6 +73,7 @@ export default function AttachmentsManager({
         setError(null);
 
         try {
+            // 1. Carica su Storage
             const fileRef = ref(storage, `trips/${tripId}/attachments/${uuidv4()}_${file.name}`);
             await uploadBytes(fileRef, file);
             const url = await getDownloadURL(fileRef);
@@ -114,8 +86,12 @@ export default function AttachmentsManager({
                 createdAt: new Date().toISOString()
             };
 
-            setAttachments([...attachments, newAttachment]);
-            await persistAttachmentToDb(newAttachment); // Salva subito su DB
+            // 2. Aggiorna stato locale
+            const newAttachmentsList = [...attachments, newAttachment];
+            setAttachments(newAttachmentsList);
+
+            // 3. Aggiorna Database
+            await updateStageAttachmentsInDb(newAttachmentsList);
 
         } catch (err) {
             console.error("Errore upload:", err);
@@ -143,24 +119,54 @@ export default function AttachmentsManager({
             createdAt: new Date().toISOString()
         };
 
-        setAttachments([...attachments, newAttachment]);
-        await persistAttachmentToDb(newAttachment); // Salva subito su DB
+        const newAttachmentsList = [...attachments, newAttachment];
+        setAttachments(newAttachmentsList);
+        await updateStageAttachmentsInDb(newAttachmentsList);
 
         setNewLinkUrl('');
         setIsAddingLink(false);
     };
 
-    // Rimozione Allegato
+    // --- NUOVA GESTIONE RIMOZIONE (Storage + DB) ---
     const handleRemoveAttachment = async (id: string) => {
-        setAttachments(attachments.filter(a => a.id !== id));
-        await removeAttachmentFromDb(id); // Rimuove subito da DB
+        const attachmentToDelete = attachments.find(a => a.id === id);
+        if (!attachmentToDelete) return;
+
+        setIsDeletingId(id);
+        setError(null);
+
+        try {
+            // 1. Se è un file, cancellalo dallo Storage
+            if (attachmentToDelete.type === 'file') {
+                try {
+                    // Creiamo il riferimento direttamente dall'URL
+                    const fileRef = ref(storage, attachmentToDelete.url);
+                    await deleteObject(fileRef);
+                } catch (error_: unknown) {
+                    console.error("Errore cancellazione file storage:", error_);
+                    throw new Error("Impossibile cancellare il file fisico.");
+                }
+            }
+
+            // 2. Aggiorna stato locale (rimuovi dall'array)
+            const newAttachmentsList = attachments.filter(a => a.id !== id);
+            setAttachments(newAttachmentsList);
+
+            // 3. Aggiorna Database
+            await updateStageAttachmentsInDb(newAttachmentsList);
+
+        } catch (err) {
+            console.error("Errore rimozione allegato:", err);
+            setError("Errore durante la rimozione dell'allegato.");
+        } finally {
+            setIsDeletingId(null);
+        }
     };
 
     return (
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-4">Allegati e Biglietti</h3>
-
-            {attachments.length > 0 && (
+        <div className="pt-2">
+            {/* Lista Allegati Esistenti */}
+            {attachments.length > 0 ? (
                 <ul className="space-y-3 mb-4">
                     {attachments.map((att) => {
                         let icon;
@@ -169,6 +175,9 @@ export default function AttachmentsManager({
                         } else {
                             icon = <FaLink />;
                         }
+
+                        const isDeletingThis = isDeletingId === att.id;
+
                         return (
                             <li key={att.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700">
                                 <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 flex-grow overflow-hidden group">
@@ -179,77 +188,82 @@ export default function AttachmentsManager({
                                         {att.name}
                                     </span>
                                 </a>
-                                {!readOnly && (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleRemoveAttachment(att.id)}
-                                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                                        aria-label="Rimuovi allegato"
-                                    >
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveAttachment(att.id)}
+                                    disabled={isDeletingThis || isUploading}
+                                    className={`p-2 transition-colors ${isDeletingThis
+                                        ? 'text-gray-400 cursor-not-allowed'
+                                        : 'text-gray-400 hover:text-red-500'
+                                        }`}
+                                    aria-label="Rimuovi allegato"
+                                >
+                                    {isDeletingThis ? (
+                                        <FaSpinner className="animate-spin" />
+                                    ) : (
                                         <FaTimes />
-                                    </button>
-                                )}
+                                    )}
+                                </button>
                             </li>
                         );
                     })}
                 </ul>
+            ) : (
+                <EmptyData title="Nessun allegato." subtitle='Aggiungi file o link utili per questa tappa.' />
             )}
 
-            {attachments.length === 0 && readOnly && (
-                <EmptyData title="Nessun allegato caricato." subtitle='Aggiungi un allegato per iniziare.' />
-            )}
+            {/* Bottoni Azione */}
+            <div className="flex flex-col gap-3 mt-4">
+                <div className="flex gap-3">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileUpload}
+                        accept="image/*,application/pdf"
+                    />
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading || isDeletingId !== null}
+                    >
+                        {isUploading ? <FaSpinner className="animate-spin mr-2" /> : <FaPaperclip className="mr-2" />}
+                        {isUploading ? 'Caricamento...' : 'Carica File'}
+                    </Button>
 
-            {!readOnly && (
-                <div className="flex flex-col gap-3">
-                    <div className="flex gap-3">
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            onChange={handleFileUpload}
-                            accept="image/*,application/pdf"
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setIsAddingLink(!isAddingLink)}
+                        disabled={isUploading || isDeletingId !== null}
+                    >
+                        <FaLink className="mr-2" />
+                        Aggiungi Link
+                    </Button>
+                </div>
+
+                {/* Input per nuovo Link */}
+                {isAddingLink && (
+                    <div className="flex gap-2 items-end animate-fade-in">
+                        <Input
+                            id="new-link"
+                            label=""
+                            placeholder="https://..."
+                            value={newLinkUrl}
+                            onChange={(e) => setNewLinkUrl(e.target.value)}
+                            className="flex-grow"
                         />
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                        >
-                            {isUploading ? <FaSpinner className="animate-spin mr-2" /> : <FaPaperclip className="mr-2" />}
-                            {isUploading ? 'Caricamento...' : 'Carica File'}
-                        </Button>
-
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setIsAddingLink(!isAddingLink)}
-                        >
-                            <FaLink className="mr-2" />
-                            Aggiungi Link
+                        <Button type="button" variant="secondary" className='h-10' size="sm" onClick={handleAddLink} disabled={!newLinkUrl}>
+                            OK
                         </Button>
                     </div>
+                )}
 
-                    {isAddingLink && (
-                        <div className="flex gap-2 items-end animate-fade-in">
-                            <Input
-                                id="new-link"
-                                label=""
-                                placeholder="https://..."
-                                value={newLinkUrl}
-                                onChange={(e) => setNewLinkUrl(e.target.value)}
-                                className="flex-grow"
-                            />
-                            <Button type="button" variant="secondary" className='h-10' size="sm" onClick={handleAddLink} disabled={!newLinkUrl}>
-                                OK
-                            </Button>
-                        </div>
-                    )}
-
-                    {error && <p className="text-red-500 text-sm">{error}</p>}
-                </div>
-            )}
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+            </div>
         </div>
     );
 }

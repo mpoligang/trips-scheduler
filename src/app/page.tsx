@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/authProvider";
 import { useEffect } from "react";
+import { appRoutes } from "@/utils/appRoutes";
 
 export default function Home() {
 
@@ -11,15 +12,15 @@ export default function Home() {
 
   useEffect(() => {
     if (!auth.user && !auth.loading) {
-      router.push('/login');
+      router.push(appRoutes.login);
     }
     else {
-      router.push('/dashboard');
+      router.push(appRoutes.home);
     }
-  }, [auth])
+  }, [auth, router])
 
   if (auth.userData) {
-    router.push('/dashboard');
+    router.push(appRoutes.home);
   }
 
   return (

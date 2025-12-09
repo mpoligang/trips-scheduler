@@ -26,6 +26,7 @@ interface SearchLocationProps {
     readonly className?: string;
     readonly value?: { lat: number; lng: number; address: string } | null;
     readonly readOnly?: boolean;
+    readonly required?: boolean;
 }
 
 export default function SearchLocation({
@@ -35,6 +36,7 @@ export default function SearchLocation({
     className,
     value,
     readOnly = false,
+    required = false,
 }: SearchLocationProps) {
     const { user } = useAuth();
     const [query, setQuery] = useState('');
@@ -140,7 +142,7 @@ export default function SearchLocation({
                     <>
                         {label && (
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {label}
+                                {label} {required && <span>*</span>}
                             </label>
                         )}
 

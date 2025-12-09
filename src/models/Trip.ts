@@ -12,4 +12,12 @@ export interface Trip {
     stages?: Stage[];
     accommodations?: Accommodation[];
     notes: string;
+    participants?: TripParticipant[];
+    participantIds?: string[];
+}
+
+export interface TripParticipant {
+    uid: string;
+    email: string;
+    displayName?: string;
 }

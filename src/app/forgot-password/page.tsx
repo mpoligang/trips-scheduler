@@ -7,6 +7,7 @@ import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import { auth } from '@/firebase/config';
 import { FirebaseError } from 'firebase/app';
+import { appRoutes } from '@/utils/appRoutes';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState<string>('');
@@ -87,7 +88,7 @@ export default function ForgotPasswordPage() {
 
                         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-8">
                             Ricordi la password?{' '}
-                            <Link href="/login" className="font-medium text-purple-600 hover:underline dark:text-purple-400">
+                            <Link href={appRoutes.login} className="font-medium text-purple-600 hover:underline dark:text-purple-400">
                                 Torna al Login
                             </Link>
                         </p>

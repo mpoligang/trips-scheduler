@@ -11,15 +11,18 @@ import DetailItemCard from '../cards/detail-item-card';
 import EmptyData from '../cards/empty-data';
 import ConfirmationModal from '../modals/confirm-modal';
 import Button from '../actions/button';
+import { EntityKeys } from '@/utils/entityKeys';
 
 interface AccommodationsListProps {
     readonly tripId: string;
     readonly accommodations?: Accommodation[];
+    isOwner: boolean;
 }
 
 export default function AccommodationsList({
     tripId,
     accommodations = [],
+    isOwner,
 }: AccommodationsListProps) {
     const router = useRouter();
 
@@ -46,7 +49,7 @@ export default function AccommodationsList({
 
         setIsDeleting(true);
         try {
-            const tripDocRef = doc(db, 'trips', tripId);
+            const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
             await updateDoc(tripDocRef, {
                 accommodations: arrayRemove(selectedAccommodation)
             });
@@ -116,6 +119,7 @@ export default function AccommodationsList({
                                         directionsUrl={mapNavigationUrl(accommodation.location.address)}
                                         detailUrl={appRoutes.accommodationDetails(tripId, accommodation.id)}
                                         onDelete={() => handleOpenDeleteModal(accommodation.id as string)}
+                                        isOwner={isOwner}
                                     />
                                 ))}
                             </ul>

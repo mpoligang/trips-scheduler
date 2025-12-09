@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaPlus, FaMapMarkerAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { doc, updateDoc, arrayRemove } from 'firebase/firestore';
-import { db } from '@/firebase/config';
+import { db, storage } from '@/firebase/config';
 import { Stage } from '@/models/Stage';
 
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
@@ -12,10 +12,13 @@ import ConfirmationModal from '../modals/confirm-modal';
 import Button from '../actions/button';
 import DetailItemCard from '../cards/detail-item-card';
 import EmptyData from '../cards/empty-data';
+import { EntityKeys } from '@/utils/entityKeys';
+import { deleteObject, ref } from 'firebase/storage';
 
 interface StagesListProps {
     readonly tripId: string;
     readonly stages?: Stage[];
+    readonly isOwner: boolean;
 }
 
 const formatDateForGroup = (dateString: string): string => {
@@ -26,7 +29,7 @@ const formatDateForGroup = (dateString: string): string => {
     });
 };
 
-export default function StagesList({ tripId, stages = [] }: StagesListProps) {
+export default function StagesList({ tripId, stages = [], isOwner }: StagesListProps) {
     const router = useRouter();
 
     // Stati per la gestione del modale di eliminazione interno
@@ -49,10 +52,25 @@ export default function StagesList({ tripId, stages = [] }: StagesListProps) {
 
         setIsDeleting(true);
         try {
-            const tripDocRef = doc(db, 'trips', tripId);
+            // 1. Elimina i file fisici dallo Storage (se presenti)
+            if (selectedStage.attachments && selectedStage.attachments.length > 0) {
+                const deletePromises = selectedStage.attachments
+                    .filter(att => att.type === 'file')
+                    .map(async (att) => {
+                        const fileRef = ref(storage, att.url);
+                        return deleteObject(fileRef).catch(err => {
+                            console.warn(`Impossibile eliminare il file ${att.name} dallo storage:`, err);
+                        });
+                    });
+
+                await Promise.all(deletePromises);
+            }
+
+            const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
             await updateDoc(tripDocRef, {
                 stages: arrayRemove(selectedStage)
             });
+
         } catch (error) {
             console.error("Errore durante l'eliminazione della tappa:", error);
         } finally {
@@ -132,6 +150,7 @@ export default function StagesList({ tripId, stages = [] }: StagesListProps) {
                                                     directionsUrl={mapNavigationUrl(stage.location.address)}
                                                     detailUrl={appRoutes.stageDetails(tripId, stage.id)}
                                                     onDelete={() => handleOpenDeleteModal(stage.id)}
+                                                    isOwner={isOwner}
                                                 />
                                             ))}
                                         </ul>

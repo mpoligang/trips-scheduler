@@ -9,7 +9,8 @@ interface DetailItemCardProps {
     readonly icon: ReactNode;
     readonly title: string;
     readonly directionsUrl: string;
-    readonly detailUrl: string; // Nuova prop per l'URL del dettaglio
+    readonly detailUrl: string
+    readonly isOwner: boolean;
     readonly onDelete: () => void;
 }
 
@@ -18,6 +19,7 @@ export default function DetailItemCard({
     title,
     directionsUrl,
     detailUrl,
+    isOwner,
     onDelete,
 }: DetailItemCardProps) {
     const router = useRouter();
@@ -28,13 +30,16 @@ export default function DetailItemCard({
             icon: <FaDirections />,
             onClick: () => window.open(directionsUrl, '_blank'),
         },
-        {
+
+    ];
+
+    if (isOwner) {
+        menuItems.push({
             label: 'Elimina',
             icon: <FaTrash />,
             onClick: onDelete,
-            className: 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20',
-        },
-    ];
+        });
+    }
 
     const handleCardClick = () => {
         router.push(detailUrl);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { FaPen, FaMap, FaUndo } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -16,8 +16,8 @@ import PageTitle from '../generics/page-title';
 import ContextMenu from '../actions/context-menu';
 import SearchLocation from '../inputs/search-location';
 import SingleDatePicker from '../inputs/date-picker';
-import AttachmentsManager from '../cards/attachment-manager';
 import Button from '../actions/button';
+import { EntityKeys } from '@/utils/entityKeys';
 
 
 
@@ -26,6 +26,8 @@ interface StageFormProps {
     readonly tripId: string;
     readonly stageId?: string;
     readonly isNew: boolean;
+    readonly isOwner: boolean;
+    readonly onSuccess?: () => Promise<void>;
 }
 
 const formatDateForLabel = (date: Date | undefined): string => {
@@ -38,6 +40,8 @@ export default function StageForm({
     tripId,
     stageId,
     isNew,
+    isOwner,
+    onSuccess
 }: StageFormProps) {
     const router = useRouter();
 
@@ -90,14 +94,15 @@ export default function StageForm({
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!trip || !stageName || !stageDate || !stageLocation || !stageDestination) {
-            setError("Tutti i campi obbligatori sono richiesti.");
+            setError("Tutti i campi obbligatori contrasseganti da * sono richiesti.");
             return;
         }
 
         setIsSubmitting(true);
         setError(null);
 
-        const tripDocRef = doc(db, 'trips', tripId);
+        const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
+
 
         const stageData: Stage = {
             id: isNew ? uuidv4() : (stageId as string),
@@ -116,9 +121,11 @@ export default function StageForm({
 
                 await updateDoc(tripDocRef, { stages: updatedStages });
                 setIsReadOnly(true);
+                onSuccess?.();
             } else {
                 await updateDoc(tripDocRef, { stages: arrayUnion(stageData) });
-                router.push(appRoutes.tripDetails(tripId));
+                setIsReadOnly(true);
+                router.push(appRoutes.stageDetails(tripId, stageData.id));
             }
         } catch (err) {
             console.error("Errore salvataggio:", err);
@@ -135,32 +142,37 @@ export default function StageForm({
     const destinationOptions = trip?.destinations?.map(d => ({ id: d, name: d })) || [];
     const submitButtonLabel = isSubmitting ? 'Salvataggio...' : (isNew ? 'Aggiungi' : 'Salva Modifiche');
 
+    const menuItems = [
+        {
+            label: 'Indicazioni',
+            icon: <FaMap />,
+            onClick: () => { if (stageLocation?.address) window.open(mapNavigationUrl(stageLocation.address), '_blank'); }
+        }
+    ];
+
+    if (isOwner) {
+        menuItems.unshift({
+            label: isReadOnly ? 'Modifica' : 'Annulla',
+            icon: isReadOnly ? <FaPen /> : <FaUndo />,
+            onClick: () => {
+                if (isReadOnly) { setIsReadOnly(false); }
+                else handleCancel();
+            }
+        },);
+    }
+
     return (
         <div className="space-y-6">
             <PageTitle
-                title={isNew ? 'Aggiungi Tappa' : (stageName || 'Dettaglio Tappa')}
-                subtitle={isNew ? "Aggiungi una nuova tappa al tuo viaggio." : "Dettagli della tappa."}
+                title={isNew ? "Aggiungi Tappa" : stageName}
+                subtitle={isNew ? "Crea una nuova tappa per il tuo viaggio." : (isReadOnly ? "Visualizza i dettagli della tappa." : "Modifica i dettagli della tappa.")}
             >
                 {!isNew && (
-                    <ContextMenu items={[
-                        {
-                            label: isReadOnly ? 'Modifica' : 'Annulla',
-                            icon: isReadOnly ? <FaPen /> : <FaUndo />,
-                            onClick: () => {
-                                if (isReadOnly) setIsReadOnly(false);
-                                else handleCancel();
-                            }
-                        },
-                        {
-                            label: 'Indicazioni',
-                            icon: <FaMap />,
-                            onClick: () => { if (stageLocation?.address) window.open(mapNavigationUrl(stageLocation.address), '_blank'); }
-                        }
-                    ]} />
+                    <ContextMenu items={menuItems} />
                 )}
             </PageTitle>
 
-            <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+            <form onSubmit={handleSubmit} className=" max-w-4xl space-y-6 ">
                 <Input
                     placeholder='es. Visita al Colosseo'
                     id="stage-name"
@@ -181,6 +193,7 @@ export default function StageForm({
                     optionLabel="name"
                     placeholder="Seleziona una destinazione"
                     readOnly={isReadOnly}
+                    required
                 />
 
                 <SearchLocation
@@ -189,6 +202,7 @@ export default function StageForm({
                     readOnly={isReadOnly}
                     onSelect={isReadOnly ? () => { } : setStageLocation}
                     placeholder="Digita per cercare..."
+                    required
                 />
 
                 <SingleDatePicker
@@ -200,13 +214,7 @@ export default function StageForm({
                         after: (trip.endDate).toDate()
                     } : { before: new Date() }}
                     readOnly={isReadOnly}
-                />
-
-                <AttachmentsManager
-                    tripId={tripId}
-                    attachments={attachments}
-                    setAttachments={setAttachments}
-                    readOnly={isReadOnly}
+                    required
                 />
 
                 {error && <p className="text-red-500 text-sm">{error}</p>}

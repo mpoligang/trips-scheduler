@@ -6,12 +6,12 @@ import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { FaPen, FaMap, FaUndo } from 'react-icons/fa';
 
-import { db } from '@/firebase/config';
+import { app, db } from '@/firebase/config';
 import { Trip } from '@/models/Trip';
 import { Accommodation } from '@/models/AccomModation';
 
 import ContextMenu from '@/components/actions/context-menu';
-import { mapNavigationUrl } from '@/utils/appRoutes';
+import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 import PageTitle from '../generics/page-title';
 import CurrencyInput from '../inputs/currency-input';
 import DateRangePicker from '../inputs/date-range-picker';
@@ -21,11 +21,13 @@ import { DateRange } from 'react-day-picker';
 import Dropdown from '../inputs/dropdown';
 import Input from '../inputs/input';
 import Button from '../actions/button';
+import { EntityKeys } from '@/utils/entityKeys';
 
 interface AccommodationFormProps {
     trip: Trip;
     tripId: string;
     accommodationId: string;
+    isOwner: boolean;
     isNew: boolean;
 }
 
@@ -34,6 +36,7 @@ export default function AccommodationForm({
     tripId,
     accommodationId,
     isNew,
+    isOwner
 }: Readonly<AccommodationFormProps>) {
     const router = useRouter();
 
@@ -97,7 +100,7 @@ export default function AccommodationForm({
         setIsSubmitting(true);
         setError(null);
 
-        const tripDocRef = doc(db, 'trips', tripId);
+        const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
 
         const accommodationData = {
             name,
@@ -124,7 +127,7 @@ export default function AccommodationForm({
                     ...accommodationData
                 };
                 await updateDoc(tripDocRef, { accommodations: arrayUnion(newAccommodation) });
-                router.push(`/dashboard/trips/${tripId}/detail`);
+                router.push(appRoutes.tripDetails(tripId));
             }
 
         } catch (err) {
@@ -139,6 +142,28 @@ export default function AccommodationForm({
 
     const submitButtonLabel = isSubmitting ? 'Salvataggio...' : (isNew ? 'Aggiungi Alloggio' : 'Salva Modifiche');
 
+    const menuItems = [
+        {
+            label: 'Indicazioni',
+            icon: <FaMap />,
+            onClick: () => { if (location?.address) window.open(mapNavigationUrl(location.address), '_blank'); }
+        }
+    ];
+
+    if (isOwner) {
+        menuItems.unshift({
+            label: isReadOnly ? 'Modifica' : 'Annulla',
+            icon: isReadOnly ? <FaPen /> : <FaUndo />,
+            onClick: () => {
+                if (isReadOnly) {
+                    setIsReadOnly(false);
+                } else {
+                    handleCancel();
+                }
+            }
+        });
+    }
+
     return (
         <div className="space-y-6">
             {/* Intestazione con Titolo e Context Menu inclusa nel form */}
@@ -147,28 +172,11 @@ export default function AccommodationForm({
                 subtitle={isNew ? "Inserisci i dettagli del luogo in cui pernotterai." : "Visualizza o modifica i dettagli del tuo soggiorno."}
             >
                 {!isNew && (
-                    <ContextMenu items={[
-                        {
-                            label: isReadOnly ? 'Modifica' : 'Annulla',
-                            icon: isReadOnly ? <FaPen /> : <FaUndo />,
-                            onClick: () => {
-                                if (isReadOnly) {
-                                    setIsReadOnly(false);
-                                } else {
-                                    handleCancel();
-                                }
-                            }
-                        },
-                        {
-                            label: 'Indicazioni',
-                            icon: <FaMap />,
-                            onClick: () => { if (location?.address) window.open(mapNavigationUrl(location.address), '_blank'); }
-                        }
-                    ]} />
+                    <ContextMenu items={menuItems} />
                 )}
             </PageTitle>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
                 <div className="space-y-6">
                     <Input
                         id="acc-name"
@@ -188,6 +196,7 @@ export default function AccommodationForm({
                         onSelect={setAccommodationDestination}
                         optionValue="id"
                         optionLabel="name"
+                        required
                         placeholder="Seleziona una destinazione"
                         readOnly={isReadOnly}
                     />
@@ -216,6 +225,8 @@ export default function AccommodationForm({
                             value={dateRange}
                             onChange={setDateRange}
                             readOnly={isReadOnly}
+                            required
+
                         />
                     </div>
                     <div className="w-full">

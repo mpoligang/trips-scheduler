@@ -18,6 +18,7 @@ import { appRoutes } from '@/utils/appRoutes';
 import Navbar from '@/components/navigations/navbar';
 import AccommodationForm from '@/components/forms/accomodation-form';
 import Loader from '@/components/generics/loader';
+import { EntityKeys } from '@/utils/entityKeys';
 
 export default function AccommodationFormPage() {
     const { user, loading } = useAuth();
@@ -38,7 +39,7 @@ export default function AccommodationFormPage() {
                 return;
             }
             try {
-                const tripDocRef = doc(db, 'trips', tripId);
+                const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
                 const tripDoc = await getDoc(tripDocRef);
 
                 if (!tripDoc.exists()) {
@@ -101,6 +102,8 @@ export default function AccommodationFormPage() {
                     tripId={tripId}
                     accommodationId={accommodationId}
                     isNew={isNew}
+                    isOwner={trip?.owner === user?.uid}
+
                 />
             )
         },

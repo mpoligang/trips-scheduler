@@ -9,6 +9,7 @@ import { auth, db } from '@/firebase/config';
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import { FirebaseError } from 'firebase/app';
+import { appRoutes } from '@/utils/appRoutes';
 
 export default function LoginPage() {
     const [email, setEmail] = useState<string>('');
@@ -27,7 +28,7 @@ export default function LoginPage() {
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            router.push('/dashboard');
+            router.push(appRoutes.home);
         } catch (err: unknown) {
             console.error("Errore di login:", (err as FirebaseError).code);
             setError("Email o password non validi. Riprova.");
@@ -65,7 +66,7 @@ export default function LoginPage() {
                 });
             }
 
-            router.push('/dashboard');
+            router.push(appRoutes.home);
 
         } catch (error: unknown) {
             console.error("Errore con Google Sign-In:", error);
@@ -137,7 +138,7 @@ export default function LoginPage() {
                                 required
                             />
                             <div className="flex justify-between items-center mt-2">
-                                <a href="/forgot-password" className="text-xs font-medium text-purple-600 hover:underline dark:text-purple-400">
+                                <a href={appRoutes.forgotPassword} className="text-xs font-medium text-purple-600 hover:underline dark:text-purple-400">
                                     Password dimenticata?
                                 </a>
                             </div>
@@ -154,7 +155,7 @@ export default function LoginPage() {
 
                         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-8">
                             Non hai un account?{' '}
-                            <a href="/register" className="font-medium text-purple-600 hover:underline dark:text-purple-400">
+                            <a href={appRoutes.register} className="font-medium text-purple-600 hover:underline dark:text-purple-400">
                                 Registrati
                             </a>
                         </p>

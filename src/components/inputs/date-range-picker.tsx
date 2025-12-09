@@ -10,9 +10,10 @@ interface DateRangePickerProps {
     onChange: (range: DateRange | undefined) => void;
     readOnly?: boolean; // Nuova prop fondamentale
     className?: string;
+    required?: boolean;
 }
 
-export default function DateRangePicker({ value, onChange, readOnly, className }: Readonly<DateRangePickerProps>) {
+export default function DateRangePicker({ value, onChange, readOnly, className, required }: Readonly<DateRangePickerProps>) {
     const handleStartDateChange = (date: Date | undefined) => {
         if (readOnly) return; // Blocco modifiche se in readonly
 
@@ -32,6 +33,7 @@ export default function DateRangePicker({ value, onChange, readOnly, className }
     return (
         <div className={`flex flex-col sm:flex-row gap-4 ${className}`}>
             <SingleDatePicker
+                required={required}
                 label="Data di Inizio"
                 selected={value?.from}
                 readOnly={readOnly} // Passiamo la prop al figlio
@@ -39,6 +41,7 @@ export default function DateRangePicker({ value, onChange, readOnly, className }
             />
             <SingleDatePicker
                 label="Data di Fine"
+                required={required}
                 selected={value?.to}
                 readOnly={readOnly} // Passiamo la prop al figlio
                 onSelect={handleEndDateChange}

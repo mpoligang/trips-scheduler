@@ -59,9 +59,9 @@ export default function Tabs({ tabs }: Readonly<TabsProps>) {
                     </Tab>
                 ))}
             </TabList>
-            <TabPanels className="mt-4">
+            <TabPanels className="mt-5">
                 {tabs.map((tab) => (
-                    <TabPanel key={tab.label} className="p-2 focus:outline-none">
+                    <TabPanel key={tab.label} className="px-2 focus:outline-none">
                         {tab.content}
                     </TabPanel>
                 ))}

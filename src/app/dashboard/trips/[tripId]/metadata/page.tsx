@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { collection, addDoc, doc, getDoc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { PathItem } from '@/models/PathItem';
 import { DateRange } from 'react-day-picker';
-import { Trip } from '@/models/Trip';
+import { Trip, TripParticipant } from '@/models/Trip'; // Importa anche TripParticipant
 import DateRangePicker from '@/components/inputs/date-range-picker';
 import Navbar from '@/components/navigations/navbar';
 import { useAuth } from '@/context/authProvider';
@@ -13,10 +13,13 @@ import { db } from '@/firebase/config';
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import PageTitle from '@/components/generics/page-title';
-import Textarea from '@/components/inputs/textarea';
 import Loader from '@/components/generics/loader';
-import { FaPlus, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaTimes, FaTrashAlt } from 'react-icons/fa';
 import PageContainer from '@/components/containers/page-container';
+import UserSearch from '@/components/inputs/user-search'; // Nuovo componente
+import { appRoutes } from '@/utils/appRoutes';
+import EmptyData from '@/components/cards/empty-data';
+import { EntityKeys } from '@/utils/entityKeys';
 
 export default function TripFormPage() {
     const { user, loading } = useAuth();
@@ -29,8 +32,10 @@ export default function TripFormPage() {
     // State del form
     const [name, setName] = useState('');
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
-    const [notes, setNotes] = useState('');
     const [destinations, setDestinations] = useState<string[]>([]);
+
+    // State per i partecipanti
+    const [participants, setParticipants] = useState<TripParticipant[]>([]);
 
     // State per l'input della destinazione corrente
     const [currentDestination, setCurrentDestination] = useState('');
@@ -40,21 +45,29 @@ export default function TripFormPage() {
     const [isLoadingData, setIsLoadingData] = useState(isEditMode);
 
     const breadcrumbPaths: PathItem[] = [
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: isEditMode ? 'Modifica Viaggio' : 'Aggiungi Viaggio', href: `/dashboard/trip/${tripId}` }
+        { label: 'Dashboard', href: appRoutes.home },
+        { label: isEditMode ? 'Modifica Viaggio' : 'Aggiungi Viaggio', href: appRoutes.tripDetails(tripId) }
     ];
 
     // Carica i dati in modalità modifica
     useEffect(() => {
         const getData = async () => {
             if (isEditMode && user) {
-                const tripDocRef = doc(db, 'trips', tripId);
+                const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
                 const tripDoc = await getDoc(tripDocRef);
                 if (tripDoc.exists()) {
                     const data = tripDoc.data() as Trip;
+                    // Controllo sicurezza: solo owner o partecipanti possono vedere/modificare
+                    // (Anche se Firestore rules bloccano, è bene gestire UI)
+                    if (data.owner !== user.uid && !data.participantIds?.includes(user.uid)) {
+                        setError("Non hai i permessi per modificare questo viaggio.");
+                        setIsLoadingData(false);
+                        return;
+                    }
+
                     setName(data.name);
-                    setNotes(data.notes || '');
                     setDestinations(data.destinations || []);
+                    setParticipants(data.participants || []); // Carica partecipanti
                     setDateRange({
                         from: (data.startDate as Timestamp).toDate(),
                         to: (data.endDate as Timestamp).toDate(),
@@ -68,48 +81,74 @@ export default function TripFormPage() {
         getData();
     }, [isEditMode, tripId, user]);
 
-    // Aggiunge una destinazione alla lista
+    // Gestione Destinazioni
     const handleAddDestination = () => {
         const trimmedDest = currentDestination.trim();
         if (trimmedDest && !destinations.includes(trimmedDest)) {
             setDestinations([...destinations, trimmedDest]);
         }
-        setCurrentDestination(''); // Resetta l'input
+        setCurrentDestination('');
     };
 
-    // Rimuove una destinazione dalla lista
     const handleRemoveDestination = (destinationToRemove: string) => {
         setDestinations(destinations.filter(d => d !== destinationToRemove));
+    };
+
+    // Gestione Partecipanti
+    const handleAddParticipant = (userToAdd: any) => {
+        // Evita duplicati
+        if (participants.some(p => p.uid === userToAdd.uid)) return;
+
+        const newParticipant: TripParticipant = {
+            uid: userToAdd.uid,
+            email: userToAdd.email,
+            displayName: userToAdd.firstName ? `${userToAdd.firstName} ${userToAdd.lastName || ''}` : userToAdd.email.split('@')[0]
+        };
+
+        setParticipants([...participants, newParticipant]);
+    };
+
+    const handleRemoveParticipant = (uidToRemove: string) => {
+        setParticipants(participants.filter(p => p.uid !== uidToRemove));
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!user || !dateRange?.from || !dateRange.to) {
-            setError("Tutti i campi sono obbligatori.");
+            setError("Tutti i campi obbligatori devono essere compilati.");
             return;
         }
 
         setIsSubmitting(true);
         setError(null);
 
+        // Estrai solo gli ID per le regole di sicurezza
+        const participantIds = participants.map(p => p.uid);
+
         const tripData: Partial<Trip> = {
             name,
             startDate: Timestamp.fromDate(dateRange.from),
             endDate: Timestamp.fromDate(dateRange.to),
-            owner: user.uid,
-            notes,
-            destinations, // Salva l'array di destinazioni
+            // owner: user.uid, // Non sovrascrivere l'owner in edit!
+            destinations,
+            participants,   // Salva dati completi per UI
+            participantIds, // Salva ID per Security Rules
         };
 
         try {
             if (isEditMode) {
-                const tripDocRef = doc(db, 'trips', tripId);
+                const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
                 await updateDoc(tripDocRef, tripData);
             } else {
-                const tripsCollectionRef = collection(db, 'trips');
-                await addDoc(tripsCollectionRef, { ...tripData, createdAt: serverTimestamp() });
+                const tripsCollectionRef = collection(db, EntityKeys.tripsKey);
+                // In creazione aggiungi l'owner
+                await addDoc(tripsCollectionRef, {
+                    ...tripData,
+                    owner: user.uid,
+                    createdAt: serverTimestamp()
+                });
             }
-            router.push('/dashboard');
+            router.push(appRoutes.home);
         } catch (err) {
             console.error("Errore nel salvataggio del viaggio:", err);
             setError("Impossibile salvare il viaggio. Riprova.");
@@ -127,12 +166,23 @@ export default function TripFormPage() {
             <Navbar backPath="/dashboard" breadcrumb={breadcrumbPaths} />
             <PageContainer>
                 <PageTitle title={isEditMode ? 'Modifica il tuo viaggio' : 'Crea un nuovo viaggio'}
-                    subtitle={isEditMode ? 'Aggiorna i dettagli di questa avventura.' : 'Inserisci i dettagli della tua prossima avventura.'} />
+                    subtitle={isEditMode ? 'Aggiorna i dettagli e invita i tuoi amici.' : 'Pianifica la tua prossima avventura.'} />
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl">
+                    {/* Sezione Dati Principali */}
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2">Dettagli Principali</h3>
+
                     <Input id="trip-name" label="Nome del Viaggio" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
 
-                    {/* Sezione Nuova: Destinazioni */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Periodo del viaggio
+                        </label>
+                        <DateRangePicker value={dateRange} onChange={setDateRange} />
+                    </div>
+
+                    {/* Sezione Destinazioni */}
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2">Destinazioni</h3>
                     <div className='w-full'>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Paesi o città da visitare
@@ -146,12 +196,7 @@ export default function TripFormPage() {
                                 onChange={(e) => setCurrentDestination(e.target.value)}
                                 placeholder="Es. Roma"
                                 className="flex-grow"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        handleAddDestination();
-                                    }
-                                }}
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddDestination(); } }}
                             />
                             <Button variant="secondary" type="button" onClick={handleAddDestination} className="w-auto h-10" size="sm">
                                 <FaPlus />
@@ -172,18 +217,56 @@ export default function TripFormPage() {
                         )}
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Periodo del viaggio
-                        </label>
-                        <DateRangePicker value={dateRange} onChange={setDateRange} />
+                    {/* NUOVA SEZIONE: Partecipanti */}
+                    <div className="flex items-center justify-between border-b dark:border-gray-700 pb-2">
+                        <h3 className="text-lg font-semibold text-gray-800 dark:text-white ">
+                            Compagni di Viaggio
+                        </h3>
                     </div>
-                    <Textarea id="notes" label="Note" value={notes} onChange={(e) => setNotes(e.target.value)} />
+
+                    <div className="w-full">
+                        <UserSearch
+                            onSelect={handleAddParticipant}
+                            placeholder="Cerca amici per email..."
+                            excludeIds={[user?.uid || '', ...participants.map(p => p.uid)]} // Esclude se stessi e chi è già aggiunto
+                        />
+                    </div>
+
+                    {participants.length > 0 ? (
+                        <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+                            {participants.map((participant) => (
+                                <li key={participant.uid} className="flex items-center justify-between py-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold text-xs">
+                                            {participant.displayName?.charAt(0).toUpperCase() || participant.email.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{participant.displayName}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{participant.email}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveParticipant(participant.uid)}
+                                        className="text-gray-400 hover:text-red-500 p-2 transition-colors"
+                                        title="Rimuovi partecipante"
+                                    >
+                                        <FaTrashAlt size={14} />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <EmptyData title='Nessun compagno di viaggio aggiunto.' subtitle='Invita i tuoi amici a unirsi al viaggio!' />
+                    )}
+
+
                     {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
                     <div className="flex justify-end gap-4 pt-4">
-                        <Button className='w-auto' variant="secondary" type="button" onClick={() => router.push('/dashboard')}>Annulla</Button>
+                        <Button className='w-auto' variant="secondary" type="button" onClick={() => router.push(appRoutes.home)}>Annulla</Button>
                         <Button className='w-auto' type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Salvataggio...' : 'Salva'}
+                            {isSubmitting ? 'Salvataggio...' : 'Salva Viaggio'}
                         </Button>
                     </div>
                 </form>
@@ -191,4 +274,3 @@ export default function TripFormPage() {
         </div>
     );
 }
-

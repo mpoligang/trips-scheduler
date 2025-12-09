@@ -14,7 +14,7 @@ export default function PageContainer({ children, className }: PageContainerProp
                 className
             )}
         >
-            <div className='w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg md:p-8 p-4'>
+            <div className='w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg md:p-8 p-4 '>
                 {children}
             </div>
         </main>

@@ -15,6 +15,7 @@ import { FaSignOutAlt } from "react-icons/fa";
 import PageTitle from "@/components/generics/page-title";
 import Loader from "@/components/generics/loader";
 import PageContainer from "@/components/containers/page-container";
+import { appRoutes } from "@/utils/appRoutes";
 
 
 
@@ -31,15 +32,15 @@ export default function ProfilePage() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const breadcrumbPaths: PathItem[] = [
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: 'Profilo', href: '/profile' }
+        { label: 'Dashboard', href: appRoutes.home },
+        { label: 'Profilo', href: appRoutes.profile }
     ];
 
     // Effetto per proteggere la rotta: attende la fine del caricamento
     useEffect(() => {
         // Agisce solo quando il caricamento iniziale è terminato
         if (!loading && !user) {
-            router.push('/login');
+            router.push(appRoutes.login);
         }
     }, [user, loading, router]);
 
@@ -103,7 +104,7 @@ export default function ProfilePage() {
             />
             <PageContainer>
                 <PageTitle title="Il Tuo Profilo" subtitle="Gestisci le tue informazioni personali." />
-                <form className="space-y-6" onSubmit={handleUpdateProfile}>
+                <form className="space-y-6 max-w-4xl" onSubmit={handleUpdateProfile}>
                     <Input
                         id="email"
                         label="Indirizzo Email"

@@ -9,6 +9,7 @@ import { appRoutes } from "@/utils/appRoutes";
 
 interface TripCardProps {
     readonly trip: Trip;
+    isOwner: boolean;
     readonly onDelete: () => void;
 }
 
@@ -24,7 +25,7 @@ const formatDate = (timestamp: Timestamp) => {
     });
 };
 
-export default function TripCard({ trip, onDelete }: TripCardProps) {
+export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
     const router = useRouter();
 
     const menuItems: ContextMenuItem[] = [
@@ -61,8 +62,10 @@ export default function TripCard({ trip, onDelete }: TripCardProps) {
                     </h3>
                 </div>
 
+                {
+                    isOwner && <ContextMenu items={menuItems} />
 
-                <ContextMenu items={menuItems} />
+                }
             </div>
 
             <div className="border-t border-gray-100 dark:border-gray-700 mt-4 pt-4">

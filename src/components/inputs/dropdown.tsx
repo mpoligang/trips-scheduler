@@ -10,11 +10,12 @@ interface DropdownProps<T extends Record<string, any>> {
     items: T[];
     selected: T | null;
     onSelect: (item: T | null) => void;
-    optionValue: keyof T; // Chiave per il valore unico (es. 'id')
-    optionLabel: keyof T;  // Chiave per il nome da visualizzare (es. 'name')
+    optionValue: keyof T;
+    optionLabel: keyof T;
     placeholder?: string;
     className?: string;
-    readOnly?: boolean; // Aggiunta la prop per la modalità di sola lettura
+    readOnly?: boolean;
+    required?: boolean;
 }
 
 export default function Dropdown<T extends Record<string, any>>({
@@ -26,7 +27,8 @@ export default function Dropdown<T extends Record<string, any>>({
     optionLabel,
     placeholder = 'Seleziona un\'opzione...',
     className,
-    readOnly, // Aggiunta la prop
+    readOnly,
+    required
 }: Readonly<DropdownProps<T>>) {
 
     // Se il componente è in modalità readOnly, mostra solo il testo
@@ -50,7 +52,7 @@ export default function Dropdown<T extends Record<string, any>>({
             {({ open }) => (
                 <>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {label}
+                        {label} {required && <span>*</span>}
                     </label>
                     {/* Wrapper per l'effetto gradiente del bordo */}
                     <div className={`relative rounded-lg p-[1.5px] transition-colors duration-300 ${open ? 'bg-gradient-to-br from-purple-600 to-indigo-700' : 'bg-transparent'}`}>

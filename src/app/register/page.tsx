@@ -9,6 +9,7 @@ import { auth, db } from '@/firebase/config';
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import { FirebaseError } from 'firebase/app';
+import { appRoutes } from '@/utils/appRoutes';
 
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
@@ -20,7 +21,6 @@ export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const router = useRouter();
 
-    // Gestore per la registrazione con Email e Password
     const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (isLoading) return;
@@ -44,10 +44,11 @@ export default function RegisterPage() {
                 email: user.email,
             });
 
-            router.push('/dashboard');
+            router.push(appRoutes.home);
         } catch (err: unknown) {
+
             const code = (err as FirebaseError).code
-            console.error("Errore Firebase:", code);
+
             if (code === 'auth/email-already-in-use') {
                 setError("Questo indirizzo email è già in uso.");
             } else if (code === 'auth/weak-password') {
@@ -60,9 +61,8 @@ export default function RegisterPage() {
         }
     };
 
-    // Gestore per la registrazione con Google
     const handleGoogleRegister = async () => {
-        if (isLoading) return;
+        if (isLoading) { return; }
         setError(null);
         setIsLoading(true);
         const provider = new GoogleAuthProvider();
@@ -71,11 +71,9 @@ export default function RegisterPage() {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
-            // Controlla se l'utente esiste già in Firestore
             const userDocRef = doc(db, "users", user.uid);
             const userDoc = await getDoc(userDocRef);
 
-            // Se il documento non esiste, crea un nuovo utente in Firestore
             if (!userDoc.exists()) {
                 const nameParts = user.displayName?.split(" ") || ["", ""];
                 const fName = nameParts[0];
@@ -89,7 +87,7 @@ export default function RegisterPage() {
                 });
             }
 
-            router.push('/dashboard');
+            router.push(appRoutes.home);
 
         } catch (error: unknown) {
             console.error("Errore con Google Sign-In:", error);
@@ -203,7 +201,7 @@ export default function RegisterPage() {
 
                         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-8">
                             Hai già un account?{' '}
-                            <a href="/login" className="font-medium text-purple-600 hover:underline dark:text-purple-400">
+                            <a href={appRoutes.login} className="font-medium text-purple-600 hover:underline dark:text-purple-400">
                                 Accedi
                             </a>
                         </p>

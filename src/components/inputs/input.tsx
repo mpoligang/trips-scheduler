@@ -6,10 +6,12 @@ import { twMerge } from 'tailwind-merge';
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     id: string;
     label: string;
+    readOnly?: boolean;
+    required?: boolean;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ className, id, label, type = 'text', readOnly, ...props }, ref) => {
+    ({ className, id, label, type = 'text', readOnly, required, ...props }, ref) => {
         // Se il componente è in modalità readOnly, mostra solo il testo
         if (readOnly) {
             return (
@@ -34,7 +36,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         return (
             <div className="w-full">
                 <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {label}
+                    {label} {required && <span >*</span>}
                 </label>
                 {/* Contenitore per creare l'effetto del bordo gradiente */}
                 <div

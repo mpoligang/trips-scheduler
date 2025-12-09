@@ -15,6 +15,9 @@ import PageContainer from '@/components/containers/page-container';
 import ComingSoonFeature from '@/components/cards/coming-soon-features';
 import AccommodationsList from '@/components/list/accomodations-list';
 import StagesList from '@/components/list/stages-list';
+import { appRoutes } from '@/utils/appRoutes';
+import { EntityKeys } from '@/utils/entityKeys';
+import ParticipantsList from '@/components/list/participants-list';
 
 const StagesMap = dynamic(() => import('@/components/maps/map-bound'), {
     ssr: false,
@@ -33,17 +36,17 @@ export default function TripDetailPage() {
 
 
     const breadcrumbPaths: PathItem[] = [
-        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Dashboard', href: appRoutes.home },
         { label: trip ? trip.name : 'Dettagli Viaggio', href: `#` }
     ];
 
     useEffect(() => {
         if (!loading && !user) {
-            router.push('/login');
+            router.push(appRoutes.login);
             return;
         }
         if (user && tripId) {
-            const tripDocRef = doc(db, 'trips', tripId);
+            const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
             const unsubscribe = onSnapshot(tripDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     setTrip({ id: docSnap.id, ...docSnap.data() } as Trip);
@@ -74,6 +77,7 @@ export default function TripDetailPage() {
                 <StagesList
                     tripId={tripId}
                     stages={trip?.stages}
+                    isOwner={trip?.owner === user?.uid}
                 />
             )
         },
@@ -82,6 +86,7 @@ export default function TripDetailPage() {
             content: (
                 <AccommodationsList
                     tripId={tripId}
+                    isOwner={trip?.owner === user?.uid}
                     accommodations={trip?.accommodations}
                 />
             )
@@ -93,6 +98,21 @@ export default function TripDetailPage() {
                     <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Trasporti</h3>
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
                         <ComingSoonFeature description='Presto potrai aggiungere e gestire i dettagli dei trasporti per il tuo viaggio, inclusi voli, treni e noleggi auto.' />
+                    </div>
+                </div>
+            )
+        },
+        {
+            label: 'Membri',
+            content: (
+                <div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow ">
+                        <ParticipantsList
+                            tripId={tripId}
+                            participants={trip?.participants}
+                            currentUserId={user?.uid}
+                            isOwner={trip?.owner === user?.uid}
+                        />
                     </div>
                 </div>
             )

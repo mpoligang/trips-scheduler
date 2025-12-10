@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, onSnapshot, query, orderBy, doc, deleteDoc, where, or } from 'firebase/firestore';
+import { collection, onSnapshot, query, doc, deleteDoc, where } from 'firebase/firestore';
 import { PathItem } from '@/models/PathItem';
 import { Trip } from '@/models/Trip';
 import { FaPlus, FaExclamationTriangle } from 'react-icons/fa';
@@ -10,7 +10,7 @@ import ConfirmationModal from '@/components/modals/confirm-modal';
 import Navbar from '@/components/navigations/navbar';
 import TripCard from '@/components/cards/trip-card';
 import { useAuth } from '@/context/authProvider';
-import { app, db } from '@/firebase/config';
+import { db } from '@/firebase/config';
 import Button from '@/components/actions/button';
 import PageTitle from '@/components/generics/page-title';
 import EmptyData from '@/components/cards/empty-data';

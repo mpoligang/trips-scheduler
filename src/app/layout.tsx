@@ -8,7 +8,7 @@ import { AuthProvider } from "@/context/authProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Trip Scheduler",
+  title: "ItinerIA - Pianifica i tuoi viaggi con l'IA",
   description: "La tua app per pianificare viaggi",
 };
 

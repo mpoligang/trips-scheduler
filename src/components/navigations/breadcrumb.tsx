@@ -4,21 +4,18 @@ import Link from 'next/link';
 import { Fragment } from 'react';
 import { FaChevronRight } from 'react-icons/fa';
 import { twMerge } from 'tailwind-merge';
-import { PathItem } from '@/models/PathItem'; // Importazione del tipo esternalizzato
+import { PathItem } from '@/models/PathItem';
 
 // Props del componente Breadcrumb
 interface BreadcrumbProps {
     readonly paths: readonly PathItem[];
-    readonly className?: string; // Prop per la classe esterna
+    readonly className?: string;
 }
 
 /**
- * Un componente Breadcrumb responsive.
- * @param paths - Un array di oggetti { label: string, href: string }
- * @param className - Classi CSS aggiuntive per il contenitore nav.
+ * Un componente Breadcrumb semplificato (sempre visibile, senza logica responsive interna).
  */
 export default function Breadcrumb({ paths, className }: BreadcrumbProps) {
-    // Non renderizzare nulla se non ci sono percorsi
     if (!paths || paths.length === 0) {
         return null;
     }
@@ -26,45 +23,34 @@ export default function Breadcrumb({ paths, className }: BreadcrumbProps) {
     return (
         <nav
             aria-label="breadcrumb"
-            className={twMerge("w-full", className)} // Unione delle classi
+            className={twMerge("w-full", className)}
         >
             <ol className="flex items-center gap-2 text-sm">
-                {/* Puntini per la vista mobile (mostrati solo se c'è più di un percorso) */}
-                {paths.length > 1 && (
-                    <li className="flex items-center gap-2 md:hidden">
-                        <span className="text-gray-500 dark:text-gray-400">...</span>
-                        <FaChevronRight className="h-3 w-3 flex-shrink-0 text-gray-400" />
-                    </li>
-                )}
-
-                {/* Mappa di tutti i percorsi */}
                 {paths.map((path, index) => {
                     const isLast = index === paths.length - 1;
 
                     return (
                         <Fragment key={path.href}>
-                            {/* Elemento della lista: visibile su desktop, nascosto su mobile (tranne l'ultimo) */}
-                            <li className={`${isLast ? 'block' : 'hidden md:block'}`}>
+                            {/* Elemento del percorso */}
+                            <li>
                                 {isLast ? (
-                                    // L'ultimo elemento è testo semplice (pagina corrente)
                                     <span className="font-semibold text-gray-900 dark:text-white" aria-current="page">
                                         {path.label}
                                     </span>
                                 ) : (
-                                    // Gli altri elementi sono link
                                     <Link
                                         href={path.href}
-                                        className="text-gray-600 dark:text-gray-300 hover:text-white dark:hover:text-white transition-colors"
+                                        className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
                                     >
                                         {path.label}
                                     </Link>
                                 )}
                             </li>
 
-                            {/* Separatore: visibile solo su desktop e non dopo l'ultimo elemento */}
+                            {/* Separatore */}
                             {!isLast && (
-                                <li className="hidden md:flex">
-                                    <FaChevronRight className="h-3 w-3 flex-shrink-0 text-gray-400" />
+                                <li className="text-gray-400 flex items-center">
+                                    <FaChevronRight className="h-3 w-3" />
                                 </li>
                             )}
                         </Fragment>
@@ -74,4 +60,3 @@ export default function Breadcrumb({ paths, className }: BreadcrumbProps) {
         </nav>
     );
 }
-

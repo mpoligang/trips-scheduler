@@ -12,7 +12,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!auth.user && !auth.loading) {
-      router.push(appRoutes.login);
+      router.push(appRoutes.landing);
     }
     else {
       router.push(appRoutes.home);

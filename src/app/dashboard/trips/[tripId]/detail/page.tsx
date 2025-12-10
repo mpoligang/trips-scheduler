@@ -18,6 +18,7 @@ import StagesList from '@/components/list/stages-list';
 import { appRoutes } from '@/utils/appRoutes';
 import { EntityKeys } from '@/utils/entityKeys';
 import ParticipantsList from '@/components/list/participants-list';
+import TransportsList from '@/components/list/transport-list';
 
 const StagesMap = dynamic(() => import('@/components/maps/map-bound'), {
     ssr: false,
@@ -94,12 +95,11 @@ export default function TripDetailPage() {
         {
             label: 'Trasporti',
             content: (
-                <div>
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Trasporti</h3>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
-                        <ComingSoonFeature description='Presto potrai aggiungere e gestire i dettagli dei trasporti per il tuo viaggio, inclusi voli, treni e noleggi auto.' />
-                    </div>
-                </div>
+                <TransportsList
+                    tripId={tripId}
+                    transports={trip?.transports}
+                    isOwner={trip?.owner === user?.uid}
+                />
             )
         },
         {

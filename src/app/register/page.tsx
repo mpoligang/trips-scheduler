@@ -10,6 +10,7 @@ import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import { FirebaseError } from 'firebase/app';
 import { appRoutes } from '@/utils/appRoutes';
+import Logo from '@/components/generics/logo';
 
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
@@ -113,6 +114,8 @@ export default function RegisterPage() {
 
                 {/* --- Sezione Destra --- */}
                 <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
+                    <Logo className="mb-4 flex justify-center" />
+
                     <h2 className="text-3xl font-bold text-gray-800 dark:text-white text-center mb-4">
                         Crea il tuo Account
                     </h2>

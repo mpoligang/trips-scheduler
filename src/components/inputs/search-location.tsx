@@ -2,14 +2,18 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from '@headlessui/react';
-import { FaMapMarkerAlt, FaSpinner, FaTimes, FaMap } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaSpinner, FaTimes, FaMap, FaDirections } from 'react-icons/fa';
 import { useAuth } from '@/context/authProvider';
 import { twMerge } from 'tailwind-merge';
 import dynamic from 'next/dynamic';
+import Button from '@/components/actions/button';
+import Sidebar from '@/components/containers/sidebar';
+import { apiRoutes } from '@/utils/apiRoutes';
 
+// Carica la mappa dinamicamente
 const MapPicker = dynamic(() => import('@/components/maps/map'), {
     ssr: false,
-    loading: () => <div className="h-[400px] w-full bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse mt-2"></div>
+    loading: () => <div className="h-full w-full bg-gray-100 dark:bg-gray-700 animate-pulse flex items-center justify-center text-gray-500">Caricamento mappa...</div>
 });
 
 interface LocationResult {
@@ -60,8 +64,6 @@ export default function SearchLocation({
             clearTimeout(searchTimeout.current);
         }
 
-        // Se la query è vuota o coincide già con il valore selezionato, svuotiamo i risultati
-        // Questo è ciò che farà chiudere la tendina dopo la selezione
         if (!query || query.trim() === '' || query === value?.address) {
             setResults([]);
             setIsLoading(false);
@@ -78,7 +80,7 @@ export default function SearchLocation({
             try {
                 const token = await user.getIdToken();
                 const response = await fetch(
-                    `https://searchlocation-ocrhz7kzoq-ew.a.run.app?q=${encodeURIComponent(query)}`,
+                    `${apiRoutes.LocationSearch}${encodeURIComponent(query)}`,
                     {
                         headers: { 'Authorization': `Bearer ${token}` }
                     }
@@ -114,126 +116,166 @@ export default function SearchLocation({
         setQuery(result.display_name);
     };
 
-    if (readOnly) {
-        return (
-            <div className={className}>
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    {label}
-                </label>
-                <p className="w-full py-2 text-gray-800 dark:text-gray-200  ">
-                    {value ? value.address : '-'}
-                </p>
-            </div>
-        );
-    }
+
+    const openDirections = () => {
+        if (value?.address) {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(value.address)}`;
+            window.open(url, '_blank');
+        }
+    };
 
     return (
-        <div className={twMerge("w-full relative", className)}>
-            <Combobox
-                as="div"
-                value={value ?? null}
-                onChange={(val: any) => handleSelect(val)}
-            >
-                {/* Nota: 'open' qui riflette lo stato interno di Headless UI.
-                   Anche se clicchi fuori e 'open' diventa false, la lista rimarrà visibile
-                   grazie alla prop 'static' su ComboboxOptions finché ci sono results.
-                */}
-                {({ open }) => (
-                    <>
-                        {label && (
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {label} {required && <span>*</span>}
-                            </label>
-                        )}
-
-                        <div className={`relative rounded-lg p-[1.5px] transition-colors duration-300 ${open ? 'bg-gradient-to-br from-purple-600 to-indigo-700' : 'bg-transparent'}`}>
-                            <div className="relative flex items-center bg-gray-50 dark:bg-gray-700 rounded-md">
-                                <ComboboxInput
-                                    className="w-full pl-4 pr-20 py-2 bg-transparent border-none rounded-md text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 placeholder-gray-500 dark:placeholder-gray-400"
-                                    displayValue={(item: any) => item?.address || query}
-                                    onChange={(event) => setQuery(event.target.value)}
-                                    placeholder={placeholder}
-                                    autoComplete="off"
-                                />
-
-                                <div className="absolute right-3 flex items-center gap-2 z-10">
-                                    {isLoading && (
-                                        <FaSpinner className="animate-spin h-4 w-4 text-purple-600 dark:text-purple-400" />
-                                    )}
-
-                                    {!isLoading && (query || value) && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                e.preventDefault();
-                                                setQuery('');
-                                                onSelect(null);
-                                            }}
-                                            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 transition-colors"
-                                            aria-label="Pulisci ricerca"
-                                            type="button"
-                                        >
-                                            <FaTimes className="h-3 w-3" />
-                                        </button>
-                                    )}
-
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            e.preventDefault();
-                                            setShowMap(!showMap);
-                                        }}
-                                        className={`p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${showMap ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500'}`}
-                                        aria-label={showMap ? "Nascondi mappa" : "Mostra mappa"}
-                                        type="button"
-                                    >
-                                        <FaMap className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* MODIFICA 1: Aggiunta prop 'static' e condizione di rendering manuale.
-                            La tendina resta nel DOM finché results.length > 0, ignorando il click-outside.
-                        */}
-                        {results.length > 0 && (
-                            <ComboboxOptions
-                                static
-                                anchor="bottom"
-                                transition
-                                className="w-[var(--input-width)] z-[9999] mt-2 origin-top rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none"
+        <>
+            {readOnly ? (
+                // MODALITÀ READ ONLY
+                <div className={className}>
+                    <label className="block text-sm  text-gray-500 dark:text-gray-400 mb-1">
+                        {label}
+                    </label>
+                    <div className="flex items-start justify-between w-full py-2 ">
+                        {/* Testo che va a capo invece di truncate */}
+                        <p className="text-gray-800 dark:text-gray-200 font-semibold pr-4 whitespace-normal break-words">
+                            {value ? value.address : '-'}
+                        </p>
+                        {value && (
+                            <button
+                                onClick={() => setShowMap(true)} // Apre la sidebar
+                                className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 mt-1 flex-shrink-0"
+                                title="Visualizza sulla mappa"
+                                type="button"
                             >
-                                <div className="max-h-60 overflow-y-auto p-1">
-                                    {results.map((item) => (
-                                        <ComboboxOption
-                                            key={item.place_id}
-                                            value={item}
-                                            // MODIFICA 2: items-start invece di center, rimosso truncate, aggiunto whitespace-normal
-                                            className="group flex cursor-pointer items-start gap-3 rounded-md py-2 px-3 data-[focus]:bg-purple-100 dark:data-[focus]:bg-purple-900/50"
-                                        >
-                                            {/* Icona leggermente abbassata (mt-1) per allinearsi alla prima riga di testo */}
-                                            <FaMapMarkerAlt className="flex-shrink-0 h-4 w-4 mt-1 text-gray-400 group-data-[focus]:text-purple-600 dark:text-gray-500 dark:group-data-[focus]:text-purple-400" />
-
-                                            {/* Text wrapping abilitato */}
-                                            <span className="text-sm text-gray-800 dark:text-gray-200 whitespace-normal break-words leading-snug">
-                                                {item.display_name}
-                                            </span>
-                                        </ComboboxOption>
-                                    ))}
-                                </div>
-                            </ComboboxOptions>
+                                <FaMap />
+                            </button>
                         )}
-                    </>
-                )}
-            </Combobox>
+                    </div>
+                </div>
+            ) : (
+                // MODALITÀ EDIT
+                <div className={twMerge("w-full relative", className)}>
+                    <Combobox
+                        as="div"
+                        value={value ?? null}
+                        onChange={(val: any) => handleSelect(val)}
+                    >
+                        {({ open }) => (
+                            <>
+                                {label && (
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {label} {required && <span className="text-red-500">*</span>}
+                                    </label>
+                                )}
 
-            {showMap && (
-                <div className="mt-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+                                <div className={`relative rounded-lg p-[1.5px] transition-colors duration-300 ${open ? 'bg-gradient-to-br from-purple-600 to-indigo-700' : 'bg-transparent'}`}>
+                                    <div className="relative flex items-center bg-gray-50 dark:bg-gray-700 rounded-md">
+                                        <ComboboxInput
+                                            className="w-full pl-4 pr-24 py-2 bg-transparent border-none rounded-md text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 placeholder-gray-500 dark:placeholder-gray-400"
+                                            displayValue={(item: any) => item?.address || query}
+                                            onChange={(event) => setQuery(event.target.value)}
+                                            placeholder={placeholder}
+                                            autoComplete="off"
+                                        />
+
+                                        <div className="absolute right-3 flex items-center gap-2 z-10">
+                                            {isLoading && (
+                                                <FaSpinner className="animate-spin h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                            )}
+
+                                            {!isLoading && (query || value) && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setQuery('');
+                                                        onSelect(null);
+                                                    }}
+                                                    className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 transition-colors"
+                                                    aria-label="Pulisci ricerca"
+                                                    type="button"
+                                                >
+                                                    <FaTimes className="h-3 w-3" />
+                                                </button>
+                                            )}
+
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    setShowMap(true);
+                                                }}
+                                                className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${showMap ? 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30' : 'text-gray-500'}`}
+                                                aria-label="Apri mappa"
+                                                type="button"
+                                            >
+                                                <FaMap className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {results.length > 0 && (
+                                    <ComboboxOptions
+                                        static
+                                        anchor="bottom"
+                                        transition
+                                        className="w-[var(--input-width)] z-[9999] mt-2 origin-top rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none"
+                                    >
+                                        <div className="max-h-60 overflow-y-auto p-1">
+                                            {results.map((item) => (
+                                                <ComboboxOption
+                                                    key={item.place_id}
+                                                    value={item}
+                                                    className="group flex cursor-pointer items-start gap-3 rounded-md py-2 px-3 data-[focus]:bg-purple-100 dark:data-[focus]:bg-purple-900/50"
+                                                >
+                                                    <FaMapMarkerAlt className="flex-shrink-0 h-4 w-4 mt-1 text-gray-400 group-data-[focus]:text-purple-600 dark:text-gray-500 dark:group-data-[focus]:text-purple-400" />
+                                                    <span className="text-sm text-gray-800 dark:text-gray-200 whitespace-normal break-words leading-snug">
+                                                        {item.display_name}
+                                                    </span>
+                                                </ComboboxOption>
+                                            ))}
+                                        </div>
+                                    </ComboboxOptions>
+                                )}
+                            </>
+                        )}
+                    </Combobox>
+                </div>
+            )}
+
+            {/* Sidebar Mappa (Overlay) riutilizzabile - VISIBILE ANCHE IN READONLY */}
+            <Sidebar
+                isOpen={showMap}
+                onClose={() => setShowMap(false)}
+                title={readOnly ? "Visualizza Posizione" : "Seleziona Posizione"}
+                subtitle={readOnly ? value?.address : "Clicca sulla mappa per confermare"}
+                position="right"
+                headerActions={
+                    value?.address && (
+                        <Button
+                            onClick={openDirections}
+                            variant="secondary"
+                            size="sm"
+                            className="hidden sm:flex"
+                        >
+                            <FaDirections className="mr-2" /> Indicazioni
+                        </Button>
+                    )
+                }
+            >
+                <div className="relative w-full h-full [&_.leaflet-container]:!h-full [&_.leaflet-container]:!w-full [&_.leaflet-container]:z-0">
                     <MapPicker
                         value={value ?? null}
                     />
+                    {/* Bottone flottante per indicazioni su mobile */}
+                    {value?.address && (
+                        <button
+                            onClick={openDirections}
+                            className="sm:hidden absolute bottom-6 right-4 z-[500] p-4 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-500/30"
+                        >
+                            <FaDirections size={24} />
+                        </button>
+                    )}
                 </div>
-            )}
-        </div>
+            </Sidebar>
+        </>
     );
 }

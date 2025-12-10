@@ -6,6 +6,7 @@ import Button from '../actions/button';
 import Breadcrumb from './breadcrumb';
 import { PathItem } from '@/models/PathItem';
 import Avatar from '../generics/userAvatar';
+import Logo from '../generics/logo';
 
 interface NavbarProps {
     readonly backPath: string;
@@ -28,7 +29,9 @@ export default function Navbar({ backPath, breadcrumb }: NavbarProps) {
                         </Button>
                     </Link>
                     <div className="flex items-center justify-between w-full">
-                        <Breadcrumb className='ml-4' paths={breadcrumb} />
+
+                        <Logo className='ml-4' />
+                        <Breadcrumb className='ml-6 md:block hidden' paths={breadcrumb} />
                         <Link href='/dashboard/profile'>
                             <Avatar />
                         </Link>

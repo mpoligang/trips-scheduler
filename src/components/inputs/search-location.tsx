@@ -169,7 +169,7 @@ export default function SearchLocation({
                                     <div className="relative flex items-center bg-gray-50 dark:bg-gray-700 rounded-md">
                                         <ComboboxInput
                                             className="w-full pl-4 pr-24 py-2 bg-transparent border-none rounded-md text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 placeholder-gray-500 dark:placeholder-gray-400"
-                                            displayValue={(item: any) => item?.address || query}
+                                            displayValue={(item: { address: string }) => item?.address || query}
                                             onChange={(event) => setQuery(event.target.value)}
                                             placeholder={placeholder}
                                             autoComplete="off"

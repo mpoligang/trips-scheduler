@@ -12,7 +12,6 @@ import { Trip } from '@/models/Trip';
 import Loader from '@/components/generics/loader';
 import Tabs, { TabItem } from '@/components/navigations/tabs';
 import PageContainer from '@/components/containers/page-container';
-import ComingSoonFeature from '@/components/cards/coming-soon-features';
 import AccommodationsList from '@/components/list/accomodations-list';
 import StagesList from '@/components/list/stages-list';
 import { appRoutes } from '@/utils/appRoutes';
@@ -37,7 +36,9 @@ export default function TripDetailPage() {
 
 
     const breadcrumbPaths: PathItem[] = [
-        { label: 'Dashboard', href: appRoutes.home },
+        {
+            label: 'I miei viaggi', href: appRoutes.home
+        },
         { label: trip ? trip.name : 'Dettagli Viaggio', href: `#` }
     ];
 
@@ -106,7 +107,7 @@ export default function TripDetailPage() {
             label: 'Membri',
             content: (
                 <div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow ">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg  ">
                         <ParticipantsList
                             tripId={tripId}
                             participants={trip?.participants}
@@ -135,7 +136,7 @@ export default function TripDetailPage() {
             <Navbar backPath="/dashboard" breadcrumb={breadcrumbPaths} />
             <PageContainer>
                 <div className="flex flex-col gap-8">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg ">
                         <Tabs tabs={tabs} />
                     </div>
                 </div>

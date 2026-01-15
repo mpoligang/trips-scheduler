@@ -32,7 +32,9 @@ export default function ProfilePage() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const breadcrumbPaths: PathItem[] = [
-        { label: 'Dashboard', href: appRoutes.home },
+        {
+            label: 'I miei viaggi', href: appRoutes.home
+        },
         { label: 'Profilo', href: appRoutes.profile }
     ];
 

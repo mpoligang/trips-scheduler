@@ -72,7 +72,9 @@ export default function AccommodationFormPage() {
     }, [user, tripId, isNew, accommodationId]);
 
     const breadcrumbPaths: PathItem[] = [
-        { label: 'Dashboard', href: appRoutes.home },
+        {
+            label: 'I miei viaggi', href: appRoutes.home
+        },
         { label: trip?.name || 'Viaggio', href: appRoutes.tripDetails(tripId) },
         { label: isNew ? 'Aggiungi Alloggio' : (currentAccommodation?.name || 'Dettaglio'), href: '#' }
     ];

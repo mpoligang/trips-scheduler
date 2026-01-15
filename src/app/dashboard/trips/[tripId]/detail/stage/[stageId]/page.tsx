@@ -110,7 +110,9 @@ function useTripStageData(tripId: string, stageId: string, isNew: boolean, user:
 
 function getBreadcrumbPaths(trip: Trip | null, tripId: string, isNew: boolean, stageName: string): PathItem[] {
     return [
-        { label: 'Dashboard', href: appRoutes.home },
+        {
+            label: 'I miei viaggi', href: appRoutes.home
+        },
         { label: trip?.name || 'Viaggio', href: appRoutes.tripDetails(tripId) },
         { label: isNew ? 'Aggiungi Tappa' : stageName, href: '#' }
     ];

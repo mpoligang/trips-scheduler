@@ -52,7 +52,7 @@ export default function Dropdown<T extends Record<string, any>>({
             {({ open }) => (
                 <>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {label} {required && <span>*</span>}
+                        {label} {required && <span className="text-red-500">*</span>}
                     </label>
                     {/* Wrapper per l'effetto gradiente del bordo */}
                     <div className={`relative rounded-lg p-[1.5px] transition-colors duration-300 ${open ? 'bg-gradient-to-br from-purple-600 to-indigo-700' : 'bg-transparent'}`}>

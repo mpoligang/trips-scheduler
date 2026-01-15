@@ -1,7 +1,6 @@
 'use client';
 
 import { ChangeEvent, useState, useEffect } from 'react';
-import { FaClock } from 'react-icons/fa';
 import Input from './input';
 import { twMerge } from 'tailwind-merge';
 
@@ -83,11 +82,6 @@ export default function TimeInput({
                 autoComplete="off"
                 maxLength={5}
             />
-            {readOnly && (
-                <div className="absolute right-3 bottom-3 z-10 flex items-center pointer-events-none">
-                    <FaClock className="h-5 w-5 text-gray-400" />
-                </div>
-            )}
         </div>
     );
 }

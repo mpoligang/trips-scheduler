@@ -28,7 +28,9 @@ export default function DashboardPage() {
     const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const breadcrumbPaths: PathItem[] = [{ label: 'Dashboard', href: appRoutes.home }];
+    const breadcrumbPaths: PathItem[] = [{
+        label: 'I miei viaggi', href: appRoutes.home
+    }];
 
     useEffect(() => {
         if (!loading && !user) { router.push(appRoutes.login); }
@@ -139,7 +141,7 @@ export default function DashboardPage() {
 
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-                <PageTitle title='I Miei Viaggi' subtitle='Organizza e visualizza le tue prossime avventure.' className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
+                <PageTitle title=' I miei viaggi' subtitle='Organizza e visualizza le tue prossime avventure.' className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
                     <Button
                         variant="secondary"
                         size={"sm"}
@@ -179,7 +181,7 @@ export default function DashboardPage() {
                     }
                 })()}
             </main>
-        </div>
+        </div >
     );
 }
 

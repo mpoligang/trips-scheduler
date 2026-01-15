@@ -54,7 +54,9 @@ export default function TransportFormPage() {
     }, [user, tripId]);
 
     const breadcrumbPaths: PathItem[] = [
-        { label: 'Dashboard', href: appRoutes.home },
+        {
+            label: 'I miei viaggi', href: appRoutes.home
+        },
         { label: trip?.name || 'Viaggio', href: appRoutes.tripDetails(tripId) },
         { label: isNew ? 'Aggiungi Trasporto' : 'Dettaglio Trasporto', href: '#' }
     ];
@@ -77,6 +79,7 @@ export default function TransportFormPage() {
                     tripId={tripId}
                     transportId={transportId}
                     isNew={isNew}
+                    isOwner={trip?.owner === user?.uid}
                 />
             )
         },
@@ -86,13 +89,18 @@ export default function TransportFormPage() {
         }
     ];
 
+    // if(!isNew){
+    //     tabs.push({
+    //         label: 'Allegati',
+    //         content: <AttachmentsManager tripId={tripId} stageId={transportId} />
+    //     });
+    // }
+
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
             <Navbar backPath={appRoutes.tripDetails(tripId)} breadcrumb={breadcrumbPaths} />
             <PageContainer>
-                <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-                    <Tabs tabs={tabs} />
-                </div>
+                <Tabs tabs={tabs} />
             </PageContainer>
         </div>
     );

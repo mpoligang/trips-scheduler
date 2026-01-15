@@ -45,7 +45,9 @@ export default function TripFormPage() {
     const [isLoadingData, setIsLoadingData] = useState(isEditMode);
 
     const breadcrumbPaths: PathItem[] = [
-        { label: 'Dashboard', href: appRoutes.home },
+        {
+            label: 'I miei viaggi', href: appRoutes.home
+        },
         { label: isEditMode ? 'Modifica Viaggio' : 'Aggiungi Viaggio', href: appRoutes.tripDetails(tripId) }
     ];
 
@@ -169,8 +171,7 @@ export default function TripFormPage() {
                     subtitle={isEditMode ? 'Aggiorna i dettagli e invita i tuoi amici.' : 'Pianifica la tua prossima avventura.'} />
 
                 <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl">
-                    {/* Sezione Dati Principali */}
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2">Dettagli Principali</h3>
+
 
                     <Input id="trip-name" label="Nome del Viaggio" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
 

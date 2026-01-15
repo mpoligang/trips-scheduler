@@ -36,7 +36,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         return (
             <div className="w-full">
                 <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {label} {required && <span >*</span>}
+                    {label} {required && <span className="text-red-500">*</span>}
                 </label>
                 {/* Contenitore per creare l'effetto del bordo gradiente */}
                 <div

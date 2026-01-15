@@ -1,9 +1,28 @@
 import { Timestamp } from 'firebase/firestore';
 import { Attachment } from './Stage';
 
-export type TransportType = 'Aereo' | 'Treno' | 'Autobus' | 'Navetta' | 'Traghetto' | 'Noleggio Auto' | 'Noleggio con conducente' | 'Altro';
+// 1. Enum per i Tipi (Fondamentale per switch/case sicuri)
+export enum TransportType {
+    Flight = 'Aereo',
+    Train = 'Treno',
+    Bus = 'Autobus',
+    Shuttle = 'Navetta',
+    Ferry = 'Traghetto',
+    CarRental = 'Noleggio Auto',
+    PrivateTransfer = 'Noleggio con conducente',
+    Other = 'Altro'
+}
 
-export interface Transport {
+export interface TransportStopover {
+    id: string;
+    location: string;
+    date: Timestamp;
+    arrivalTime: string;
+    departureTime: string;
+}
+
+// Interfaccia Base
+interface BaseTransport {
     id: string;
     title: string;
     type: TransportType;
@@ -11,10 +30,49 @@ export interface Transport {
     arrivalDate: Timestamp;
     departureLocation?: string;
     arrivalLocation?: string;
-    isRoundTrip: boolean;
-    returnDepartureDate?: Timestamp;
-    returnArrivalDate?: Timestamp;
-    referenceCode?: string;
+    stopovers?: TransportStopover[];
     notes?: string;
     attachments?: Attachment[];
 }
+
+// 1. Trasporti Pubblici (Aereo, Treno, etc.)
+export interface TransportPublic extends BaseTransport {
+    type: TransportType.Flight | TransportType.Train | TransportType.Bus | TransportType.Shuttle | TransportType.Ferry;
+    carrier?: string;
+    referenceNumber?: string;
+    seat?: string;
+    gateOrPlatform?: string;
+    bookingReference?: string;
+}
+
+// 2. Noleggio Auto
+export interface TransportRental extends BaseTransport {
+    type: TransportType.CarRental;
+    rentalCompany?: string;
+    carModel?: string;
+    pickupInstructions?: string;
+    insuranceDetails?: string;
+    hasDifferentDropOff: boolean;
+    dropOffLocation?: string;
+    dropOffInstructions?: string;
+}
+
+// 3. NCC / Privato
+export interface TransportPrivate extends BaseTransport {
+    type: TransportType.PrivateTransfer;
+
+    // Andata
+    driverName?: string;
+    driverPhoneNumber?: string;
+    vehicleDescription?: string;
+    meetingPoint?: string;
+}
+
+// 4. Altro
+export interface TransportGeneric extends BaseTransport {
+    type: TransportType.Other;
+    referenceCode?: string;
+}
+
+// Unione
+export type Transport = TransportPublic | TransportRental | TransportPrivate | TransportGeneric;

@@ -46,7 +46,7 @@ export default function SingleDatePicker({
                 ) : (
                     <>
                         <label className="block text-sm font-medium text-gray-500 dark:text-gray-300 mb-1">
-                            {label} {required && <span>*</span>}
+                            {label} {required && <span className="text-red-500">*</span>}
                         </label>
                         <Popover className={twMerge("relative w-full", className)}>
                             {({ open }) => (

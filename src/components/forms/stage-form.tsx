@@ -159,7 +159,6 @@ export default function StageForm({
     };
 
     const destinationOptions = trip?.destinations?.map(d => ({ id: d, name: d })) || [];
-    const submitButtonLabel = isSubmitting ? 'Salvataggio...' : (isNew ? 'Aggiungi' : 'Salva');
 
     const menuItems: ContextMenuItem[] = [
         {
@@ -191,7 +190,7 @@ export default function StageForm({
             <form onSubmit={handleSubmit} className="space-y-4">
 
                 {/* 1. SEZIONE INFORMAZIONI */}
-                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <section className="bg-white dark:bg-gray-800 sm:p-6 rounded-xl  sm:border border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">Informazioni Base</h3>
                     </div>
@@ -220,7 +219,7 @@ export default function StageForm({
                 </section>
 
                 {/* 2. SEZIONE LUOGO E TEMPO */}
-                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <section className="bg-white dark:bg-gray-800 sm:p-6 rounded-xl  sm:border border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">Luogo e Data della Tappa</h3>
                     </div>

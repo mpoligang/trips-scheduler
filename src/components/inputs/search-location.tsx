@@ -135,7 +135,7 @@ export default function SearchLocation({
                     <div className="flex items-start justify-between w-full py-2 ">
                         {/* Testo che va a capo invece di truncate */}
                         <p className="text-gray-800 dark:text-gray-200 font-semibold pr-4 whitespace-normal break-words">
-                            {value ? value.address : '-'}
+                            {!value?.address ? '-' : value?.address}
                         </p>
                         {value && (
                             <button

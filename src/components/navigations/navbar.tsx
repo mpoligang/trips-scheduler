@@ -30,7 +30,7 @@ export default function Navbar({ backPath, breadcrumb }: NavbarProps) {
                     </Link>
                     <div className="flex items-center justify-between w-full">
 
-                        <Logo className='ml-4' />
+                        <Logo className='ml-4' size='small' />
                         <Breadcrumb className='ml-6 md:block hidden' paths={breadcrumb} />
                         <Link href='/dashboard/profile'>
                             <Avatar />

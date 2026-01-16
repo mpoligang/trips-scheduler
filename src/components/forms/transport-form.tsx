@@ -353,7 +353,7 @@ export default function TransportForm({
         // 1. Pubblico
         if (isPublicTransportType) {
             return (
-                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl  border border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
                             Dettagli Biglietto
@@ -407,7 +407,7 @@ export default function TransportForm({
         // 2. Noleggio Auto
         if (currentType === TransportType.CarRental) {
             return (
-                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl  border border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2"><FaCar /> Dettagli Noleggio</h3>
                     </div>
@@ -471,7 +471,7 @@ export default function TransportForm({
         // 3. NCC
         if (currentType === TransportType.PrivateTransfer) {
             return (
-                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl  border border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2"><FaUserTie /> Contatti Autista</h3>
                     </div>
@@ -535,12 +535,13 @@ export default function TransportForm({
     }
 
     // Label dinamiche per noleggio vs viaggio
-    const isRental = type?.id === 'Noleggio Auto';
-    const departureLabel = isRental ? 'Luogo Ritiro' : 'Partenza da';
-    const arrivalLabel = isRental ? 'Luogo Riconsegna (Standard)' : 'Arrivo a';
-    const dateDepLabel = isRental ? 'Data Ritiro' : 'Data Partenza';
-    const dateArrLabel = isRental ? 'Data Consegna' : 'Data Arrivo';
-
+    const isRental = type?.id === TransportType.CarRental;
+    const departureLabel = isRental ? 'Luogo di Ritiro' : 'Partenza da';
+    const arrivalLabel = isRental ? 'Luogo di Riconsegna (Standard)' : 'Arrivo a';
+    const dateDepLabel = isRental ? 'Data di Ritiro' : 'Data di Partenza';
+    const dateArrLabel = isRental ? 'Data di Consegna' : 'Data di Arrivo';
+    const hourDepLabel = isRental ? 'Ora di Ritiro' : 'Ora di Partenza';
+    const hourArrLabel = isRental ? 'Ora di Consegna' : 'Ora di Arrivo';
 
     return (
         <div className="space-y-6 max-w-4xl pb-12">
@@ -551,7 +552,7 @@ export default function TransportForm({
             </PageTitle>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <section className="bg-white dark:bg-gray-800 sm:p-6 rounded-xl  sm:border border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">Generale</h3>
                     </div>
@@ -580,7 +581,7 @@ export default function TransportForm({
                 {renderSpecificFields()}
 
                 {/* 3. LOGISTICA (Date e Luoghi) */}
-                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <section className="bg-white dark:bg-gray-800 sm:p-6 rounded-xl  sm:border border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">{isRental ? 'Periodo Noleggio' : 'Itinerario'}</h3>
                     </div>
@@ -603,8 +604,8 @@ export default function TransportForm({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Partenza / Ritiro */}
-                        <div className="flex gap-2 items-end">
-                            <div className="flex-grow">
+                        <div className="flex md:flex-row flex-col gap-2 items-end">
+                            <div className="flex-grow w-full">
                                 <Dropdown
                                     label={`${dateDepLabel}`}
                                     items={dateOptions}
@@ -616,17 +617,17 @@ export default function TransportForm({
                                     optionLabel="name"
                                 />
                             </div>
-                            <div className="w-24">
+                            <div className="md:w-50 w-full">
                                 <TimeInput
-                                    label="Ora"
+                                    label={hourDepLabel}
                                     value={depTime}
                                     onChange={setDepTime}
                                     readOnly={isReadOnly} />
                             </div>
                         </div>
                         {/* Arrivo / Consegna */}
-                        <div className="flex gap-2 items-end">
-                            <div className="flex-grow">
+                        <div className="flex md:flex-row flex-col gap-2 items-end">
+                            <div className="flex-grow w-full">
                                 <Dropdown
                                     label={`${dateArrLabel}`}
                                     items={dateOptions}
@@ -638,9 +639,9 @@ export default function TransportForm({
                                     optionLabel="name"
                                 />
                             </div>
-                            <div className="w-24">
+                            <div className="md:w-50 w-full">
                                 <TimeInput
-                                    label="Ora"
+                                    label={hourArrLabel}
                                     value={arrTime}
                                     onChange={setArrTime}
                                     readOnly={isReadOnly}
@@ -652,7 +653,7 @@ export default function TransportForm({
 
                 {/* 4. SCALI (Solo se non è Noleggio o NCC) */}
                 {!isRental && type?.id !== 'Noleggio con conducente' && (
-                    <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <section className="bg-white dark:bg-gray-800 sm:p-6 rounded-xl  sm:border border-gray-100 dark:border-gray-700">
                         <div className="flex justify-between items-center mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
                             <h3 className="text-lg font-bold text-gray-800 dark:text-white">Scali</h3>
                             {!isReadOnly && (
@@ -665,7 +666,7 @@ export default function TransportForm({
                             )}
                         </div>
                         {stopovers.length > 0 ? stopovers.map((scalo, i) => (
-                            <div key={scalo.id} className="p-4 mb-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700 relative">
+                            <div key={scalo.id} className="sm:p-4 mb-4  rounded-xl sm:border border-gray-100 dark:border-gray-700 relative">
                                 {!isReadOnly &&
                                     <div className="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-600 pb-2">
                                         <h4>Scalo {i + 1}</h4>
@@ -695,7 +696,7 @@ export default function TransportForm({
                                         optionValue={'id'}
                                         optionLabel={'id'}
                                     />
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="sm:grid sm:grid-cols-2 flex flex-col gap-2">
                                         <TimeInput
                                             label="Arrivo"
                                             value={scalo.arrivalTime}
@@ -716,7 +717,7 @@ export default function TransportForm({
                 )}
 
                 {/* 5. NOTE */}
-                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <section className="bg-white dark:bg-gray-800 p-6 rounded-xl  border border-gray-100 dark:border-gray-700">
                     <Textarea
                         id="notes"
                         label="Note Aggiuntive"

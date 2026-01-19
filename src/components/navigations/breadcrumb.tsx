@@ -12,9 +12,7 @@ interface BreadcrumbProps {
     readonly className?: string;
 }
 
-/**
- * Un componente Breadcrumb semplificato (sempre visibile, senza logica responsive interna).
- */
+
 export default function Breadcrumb({ paths, className }: BreadcrumbProps) {
     if (!paths || paths.length === 0) {
         return null;
@@ -30,7 +28,7 @@ export default function Breadcrumb({ paths, className }: BreadcrumbProps) {
                     const isLast = index === paths.length - 1;
 
                     return (
-                        <Fragment key={path.href}>
+                        <Fragment key={`breadcrumb-item-${index}`}>
                             {/* Elemento del percorso */}
                             <li>
                                 {isLast ? (
@@ -47,7 +45,6 @@ export default function Breadcrumb({ paths, className }: BreadcrumbProps) {
                                 )}
                             </li>
 
-                            {/* Separatore */}
                             {!isLast && (
                                 <li className="text-gray-400 flex items-center">
                                     <FaChevronRight className="h-3 w-3" />

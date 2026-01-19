@@ -1,30 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { FaPlus, FaTrash, FaExclamationTriangle, FaUserFriends, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaTrash } from 'react-icons/fa';
 import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { TripParticipant } from '@/models/Trip';
 import { EntityKeys } from '@/utils/entityKeys'; // Assumo tu abbia questo file di utilità, altrimenti usa stringa 'trips'
 import Button from '../actions/button';
-import ConfirmationModal from '../modals/confirm-modal';
+import DialogComponent from '../modals/confirm-modal';
 import UserSearch from '../inputs/user-search';
 import EmptyData from '../cards/empty-data';
+import { useTrip } from '@/context/tripContext';
+import { useAuth } from '@/context/authProvider';
+import PageTitle from '../generics/page-title';
 
 
-interface ParticipantsListProps {
-    readonly tripId: string;
-    readonly participants?: TripParticipant[];
-    readonly currentUserId?: string;
-    readonly isOwner: boolean;
-}
+export default function ParticipantsList() {
 
-export default function ParticipantsList({
-    tripId,
-    participants = [],
-    currentUserId,
-    isOwner
-}: ParticipantsListProps) {
+    const { trip, isOwner } = useTrip();
+    const { user } = useAuth();
+    const currentUserId = user?.uid || '';
+
     const [isAdding, setIsAdding] = useState(false);
     const [deleteParticipant, setDeleteParticipant] = useState<TripParticipant | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -34,7 +30,7 @@ export default function ParticipantsList({
         if (!userToAdd || isProcessing) return;
 
         // Evita duplicati
-        if (participants.some(p => p.uid === userToAdd.uid)) {
+        if (trip?.participants?.some(p => p.uid === userToAdd.uid)) {
             alert("Questo utente è già partecipante del viaggio.");
             return;
         }
@@ -44,10 +40,11 @@ export default function ParticipantsList({
             const newParticipant: TripParticipant = {
                 uid: userToAdd.uid,
                 email: userToAdd.email,
-                displayName: userToAdd.firstName ? `${userToAdd.firstName} ${userToAdd.lastName || ''}` : userToAdd.email.split('@')[0]
+                displayName: userToAdd.firstName ? `${userToAdd.firstName} ${userToAdd.lastName || ''}` :
+                    userToAdd.email.split('@')[0]
             };
 
-            const tripRef = doc(db, EntityKeys.tripsKey, tripId);
+            const tripRef = doc(db, EntityKeys.tripsKey, trip?.id as string);
 
             // Aggiorna sia l'array completo per la UI sia l'array di ID per le Security Rules
             await updateDoc(tripRef, {
@@ -69,7 +66,7 @@ export default function ParticipantsList({
 
         setIsProcessing(true);
         try {
-            const tripRef = doc(db, EntityKeys.tripsKey, tripId);
+            const tripRef = doc(db, EntityKeys.tripsKey, trip?.id as string);
 
             // Rimuovi da entrambi gli array
             await updateDoc(tripRef, {
@@ -87,27 +84,24 @@ export default function ParticipantsList({
     return (
         <div className="space-y-6">
             {/* Modale di Conferma Eliminazione */}
-            <ConfirmationModal
+            <DialogComponent
                 isOpen={!!deleteParticipant}
                 onClose={() => setDeleteParticipant(null)}
                 onConfirm={handleConfirmDelete}
                 isLoading={isProcessing}
                 title="Rimuovi partecipante"
                 confirmText="Rimuovi"
-                icon={<FaExclamationTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />}
             >
                 <p>
                     Vuoi rimuovere <strong>{deleteParticipant?.displayName}</strong> dal viaggio?
                     Non potrà più visualizzare o modificare questo itinerario.
                 </p>
-            </ConfirmationModal>
+            </DialogComponent>
 
-            {/* Header Sezione */}
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                    Membri
-                </h3>
-                {isOwner && !isAdding && (
+
+
+            <PageTitle title="Membri del Viaggio" subtitle='Visualizza e gestisci i membri del viaggio' >
+                {isOwner && (
                     <Button
                         variant="secondary"
                         size="sm"
@@ -117,7 +111,7 @@ export default function ParticipantsList({
                         Invita
                     </Button>
                 )}
-            </div>
+            </PageTitle>
 
             {/* Area di Ricerca (Visibile solo quando si clicca "Invita") */}
             {isAdding && (
@@ -126,7 +120,7 @@ export default function ParticipantsList({
                     <UserSearch
                         onSelect={handleAddParticipant}
                         placeholder="Inserisci l'email dell'utente..."
-                        excludeIds={[currentUserId || '', ...participants.map(p => p.uid)]}
+                        excludeIds={[currentUserId || '', ...(trip?.participants ? trip.participants.map(p => p.uid) : [])]}
                     />
                     <div className="flex justify-end">
                         <Button
@@ -141,10 +135,11 @@ export default function ParticipantsList({
                 </div>
             )}
 
+
             {/* Lista Partecipanti */}
-            {participants.length > 0 ? (
+            {trip?.participants && trip.participants.length > 0 ? (
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {participants.map((participant) => (
+                    {trip.participants.map((participant) => (
                         <li key={participant.uid} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                             <div className="flex items-center gap-3">
                                 {/* Avatar con Iniziali */}
@@ -156,9 +151,6 @@ export default function ParticipantsList({
                                 <div>
                                     <p className="font-semibold text-gray-800 dark:text-white text-sm">
                                         {participant.displayName || 'Utente'}
-                                    </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                        {participant.email}
                                     </p>
                                 </div>
                             </div>

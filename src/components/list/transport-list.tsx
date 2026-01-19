@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FaPlus, FaPlane, FaTrain, FaBus, FaShip, FaCar, FaRocket, FaExclamationTriangle } from 'react-icons/fa';
+import { FaPlus, FaPlane, FaTrain, FaBus, FaShip, FaCar, FaRocket } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { doc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '@/firebase/config';
@@ -9,9 +9,10 @@ import { Transport } from '@/models/Transport';
 import Button from '@/components/actions/button';
 import DetailItemCard from '@/components/cards/detail-item-card';
 import EmptyData from '@/components/cards/empty-data';
-import ConfirmationModal from '@/components/modals/confirm-modal';
+import DialogComponent from '@/components/modals/confirm-modal';
 import { appRoutes } from '@/utils/appRoutes';
 import { EntityKeys } from '@/utils/entityKeys';
+import PageTitle from '../generics/page-title';
 
 interface TransportsListProps {
     readonly tripId: string;
@@ -80,31 +81,32 @@ export default function TransportsList({ tripId, transports = [], isOwner }: Rea
 
     return (
         <div>
-            <ConfirmationModal
+            <DialogComponent
                 isOpen={!!deleteId}
                 onClose={() => setDeleteId(null)}
                 onConfirm={handleConfirmDelete}
                 isLoading={isDeleting}
                 title="Elimina Trasporto"
                 confirmText="Elimina"
-                icon={<FaExclamationTriangle className="text-red-500" />}
             >
                 <p>Sei sicuro di voler eliminare il trasporto <strong>{toDelete?.title}</strong>?</p>
-            </ConfirmationModal>
+            </DialogComponent>
 
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white">I tuoi Spostamenti</h3>
-                <Button variant="secondary" size="sm" onClick={() => router.push(appRoutes.transportDetails(tripId, 'new'))}>
-                    <FaPlus className="mr-2" /> Aggiungi
-                </Button>
-            </div>
-
+            <PageTitle title="I tuoi Trasporti" subtitle="Gestisci i voli, treni e altri spostamenti del tuo viaggio.">
+                {
+                    isOwner && (<>
+                        <Button variant="secondary" size="sm" onClick={() => router.push(appRoutes.transportDetails(tripId, 'new'))}>
+                            <FaPlus className="mr-2" /> Aggiungi
+                        </Button>
+                    </>)
+                }
+            </PageTitle>
             {hasTransports ? (
                 <div className="space-y-6">
                     {sortedDates.map(date => (
                         <div key={date}>
                             {/* Intestazione della data */}
-                            <h4 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-3 border-b border-gray-200 dark:border-gray-700 pb-2 capitalize">
+                            <h4 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-3  pb-2 capitalize">
                                 {formatDateForGroup(date)}
                             </h4>
 

@@ -1,22 +1,13 @@
+import { Attachment } from "./Attachment";
+import { Location } from "./Location";
+
 export interface Stage {
     id: string;
     name: string;
     destination: string;
-    location: {
-        lat: number;
-        lng: number;
-        address: string;
-    };
+    location: Location | null;
     date: string;
     description?: string;
     attachments?: Attachment[];
-}
-
-export interface Attachment {
-    id: string;
-    name: string;
-    url: string;
-    type: 'file' | 'link';
-    createdAt: string;
 }
 

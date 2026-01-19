@@ -2,18 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaPlus, FaMapMarkerAlt, FaExclamationTriangle } from 'react-icons/fa';
+import { FaPlus, FaMapMarkerAlt } from 'react-icons/fa';
 import { doc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db, storage } from '@/firebase/config';
 import { Stage } from '@/models/Stage';
 
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
-import ConfirmationModal from '../modals/confirm-modal';
+import DialogComponent from '../modals/confirm-modal';
 import Button from '../actions/button';
 import DetailItemCard from '../cards/detail-item-card';
 import EmptyData from '../cards/empty-data';
 import { EntityKeys } from '@/utils/entityKeys';
 import { deleteObject, ref } from 'firebase/storage';
+import PageTitle from '../generics/page-title';
 
 interface StagesListProps {
     readonly tripId: string;
@@ -101,37 +102,41 @@ export default function StagesList({ tripId, stages = [], isOwner }: StagesListP
 
     return (
         <div>
-            <ConfirmationModal
+            <DialogComponent
                 isOpen={isDeleteModalOpen}
                 onClose={handleCloseDeleteModal}
                 onConfirm={handleConfirmDelete}
                 isLoading={isDeleting}
                 title="Confermi l'eliminazione della tappa?"
                 confirmText="Sì, elimina"
-                icon={<FaExclamationTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />}
             >
                 <p>
                     Stai per eliminare la tappa <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedStage?.name}</strong>. Questa azione è irreversibile.
                 </p>
-            </ConfirmationModal>
+            </DialogComponent>
 
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white">Itinerario</h3>
-                <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleAdd}
-                >
-                    <FaPlus className="mr-2" />
-                    Aggiungi
-                </Button>
-            </div>
+
+
+            <PageTitle title="Tappe del viaggio" subtitle='Gestisci le tappe del tuo viaggio.' >
+                {
+                    isOwner && (<>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={handleAdd}
+                        >
+                            <FaPlus className="mr-2" />
+                            Aggiungi
+                        </Button>
+                    </>)
+                }
+            </PageTitle>
 
             {hasStages ? (
                 <div className="space-y-6">
                     {sortedDates.map(date => (
                         <div key={date}>
-                            <h4 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-3 border-b border-gray-200 dark:border-gray-700 pb-2 capitalize">
+                            <h4 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-3  pb-2 capitalize">
                                 {formatDateForGroup(date)}
                             </h4>
                             <div className="space-y-4 mt-3">
@@ -145,9 +150,9 @@ export default function StagesList({ tripId, stages = [], isOwner }: StagesListP
                                             {groupedStages[date][destination].map((stage) => (
                                                 <DetailItemCard
                                                     key={stage.id}
-                                                    icon={<FaMapMarkerAlt className="h-5 w-5 text-purple-600 dark:text-purple-400" />}
+                                                    icon={<FaMapMarkerAlt className="h-5 w-5 0" />}
                                                     title={stage.name}
-                                                    directionsUrl={mapNavigationUrl(stage.location.address)}
+                                                    directionsUrl={mapNavigationUrl(stage?.location?.address || '')}
                                                     detailUrl={appRoutes.stageDetails(tripId, stage.id)}
                                                     onDelete={() => handleOpenDeleteModal(stage.id)}
                                                     isOwner={isOwner}

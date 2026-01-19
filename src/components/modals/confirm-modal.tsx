@@ -1,7 +1,10 @@
+'use client';
+
 import { ReactNode } from 'react';
+import { FaTimes } from 'react-icons/fa';
 import Button from '@/components/actions/button';
 
-interface ConfirmationModalProps {
+interface DialogComponentProps {
     readonly isOpen: boolean;
     readonly onClose: () => void;
     readonly onConfirm: () => void;
@@ -10,10 +13,9 @@ interface ConfirmationModalProps {
     readonly children: ReactNode;
     readonly confirmText?: string;
     readonly cancelText?: string;
-    readonly icon?: ReactNode;
 }
 
-export default function ConfirmationModal({
+export default function DialogComponent({
     isOpen,
     onClose,
     onConfirm,
@@ -22,24 +24,33 @@ export default function ConfirmationModal({
     children,
     confirmText = 'Conferma',
     cancelText = 'Annulla',
-    icon,
-}: ConfirmationModalProps) {
+}: DialogComponentProps) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-70 z-[9999] flex justify-center items-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md p-8 text-center">
-                {/* L'icona viene mostrata solo se fornita */}
-                {icon && (
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-900/50">
-                        {icon}
-                    </div>
-                )}
-                <h2 className="mt-4 text-2xl font-bold text-gray-800 dark:text-white">{title}</h2>
-                <div className="mt-2 text-gray-600 dark:text-gray-400">
+        <div className="fixed inset-0 bg-[#000000c9] z-[9999] flex justify-center items-center p-6">
+            {/* Container principale con altezza massima e flex-col per gestire lo scroll */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md flex flex-col max-h-[90vh]">
+
+                {/* Header: Titolo e Pulsante Chiudi */}
+                <div className="flex justify-between items-start p-6 pb-2">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white pr-4">{title}</h2>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 cursor-pointer"
+                        aria-label="Chiudi"
+                    >
+                        <FaTimes size={20} />
+                    </button>
+                </div>
+
+                {/* Contenuto: Scrollabile se troppo lungo */}
+                <div className="px-6 py-2 text-gray-600 dark:text-gray-400 overflow-y-auto custom-scrollbar">
                     {children}
                 </div>
-                <div className="mt-8 flex justify-center gap-4">
+
+                {/* Footer: Bottoni */}
+                <div className="p-6 pt-4 mt-4 flex md:flex-row flex-col justify-end gap-4 border-t border-gray-100 dark:border-gray-700 mx-6 border-x-0 border-b-0 px-0">
                     <Button variant="secondary" onClick={onClose} disabled={isLoading}>
                         {cancelText}
                     </Button>

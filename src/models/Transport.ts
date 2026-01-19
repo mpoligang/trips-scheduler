@@ -1,5 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
-import { Attachment } from './Stage';
+import { Attachment } from './Attachment';
+import { Location } from './Location';
 
 // 1. Enum per i Tipi (Fondamentale per switch/case sicuri)
 export enum TransportType {
@@ -15,11 +16,12 @@ export enum TransportType {
 
 export interface TransportStopover {
     id: string;
-    location: string;
+    location: Location | null;
     date: Timestamp;
     arrivalTime: string;
     departureTime: string;
 }
+
 
 // Interfaccia Base
 interface BaseTransport {
@@ -28,8 +30,8 @@ interface BaseTransport {
     type: TransportType;
     departureDate: Timestamp;
     arrivalDate: Timestamp;
-    departureLocation?: string;
-    arrivalLocation?: string;
+    departureLocation?: Location | null;
+    arrivalLocation?: Location | null;
     stopovers?: TransportStopover[];
     notes?: string;
     attachments?: Attachment[];
@@ -53,19 +55,16 @@ export interface TransportRental extends BaseTransport {
     pickupInstructions?: string;
     insuranceDetails?: string;
     hasDifferentDropOff: boolean;
-    dropOffLocation?: string;
+    dropOffLocation?: Location | null;
     dropOffInstructions?: string;
 }
 
 // 3. NCC / Privato
 export interface TransportPrivate extends BaseTransport {
     type: TransportType.PrivateTransfer;
-
-    // Andata
     driverName?: string;
     driverPhoneNumber?: string;
     vehicleDescription?: string;
-    meetingPoint?: string;
 }
 
 // 4. Altro

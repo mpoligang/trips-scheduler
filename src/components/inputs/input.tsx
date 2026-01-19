@@ -8,6 +8,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
     readOnly?: boolean;
     required?: boolean;
+    disabled?: boolean;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -46,10 +47,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                     )}
                 >
                     <input
+                        maxLength={100}
                         type={type}
                         id={id}
                         ref={ref}
-                        // Uniamo le classi base con quelle passate tramite props
+                        disabled={props.disabled}
                         className={twMerge(
                             'transition-all duration-150 ease-in-out w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border-0 rounded-[7px] text-gray-800 dark:text-gray-200 focus:outline-none',
                             className

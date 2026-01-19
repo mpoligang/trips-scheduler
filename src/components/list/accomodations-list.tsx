@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FaPlus, FaBed, FaExclamationTriangle } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { doc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '@/firebase/config';
@@ -9,10 +9,12 @@ import { Accommodation } from '@/models/AccomModation';
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 
 import { EntityKeys } from '@/utils/entityKeys';
-import ConfirmationModal from '../modals/confirm-modal';
+import DialogComponent from '../modals/confirm-modal';
 import Button from '../actions/button';
 import DetailItemCard from '../cards/detail-item-card';
 import EmptyData from '../cards/empty-data';
+import PageTitle from '../generics/page-title';
+import { RiHotelLine } from 'react-icons/ri';
 
 interface AccommodationsListProps {
     readonly tripId: string;
@@ -88,38 +90,42 @@ export default function AccommodationsList({
 
     return (
         <div>
-            <ConfirmationModal
+            <DialogComponent
                 isOpen={isDeleteModalOpen}
                 onClose={handleCloseDeleteModal}
                 onConfirm={handleConfirmDelete}
                 isLoading={isDeleting}
                 title="Confermi l'eliminazione dell'alloggio?"
                 confirmText="Sì, elimina"
-                icon={<FaExclamationTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />}
             >
                 <p>
                     {`Stai per eliminare l'alloggio`} <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedAccommodation?.name}</strong>. Questa azione è irreversibile.
                 </p>
-            </ConfirmationModal>
+            </DialogComponent>
 
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white">I tuoi Alloggi</h3>
-                <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleAdd}
-                >
-                    <FaPlus className="mr-2" />
-                    Aggiungi
-                </Button>
-            </div>
+
+            <PageTitle title="I tuoi Alloggi"
+                subtitle='Gestisci gli hotel, B&B o appartamenti del tuo viaggio.'
+            >
+
+                {
+                    isOwner && (<>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={handleAdd}
+                        >
+                            <FaPlus className="mr-2" />
+                            Aggiungi
+                        </Button>
+                    </>)
+                }
+            </PageTitle>
 
             {hasAccommodations ? (
                 <div className="space-y-8">
                     {sortedDestinations.map(destination => (
                         <div key={destination}>
-
-
 
                             {/* Badge Destinazione */}
                             <span className="inline-block mb-4 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 text-sm font-medium px-3 py-1 rounded-full">
@@ -136,7 +142,7 @@ export default function AccommodationsList({
                                         </h4>
 
                                         <DetailItemCard
-                                            icon={<FaBed className="h-5 w-5 text-purple-600 dark:text-purple-400" />}
+                                            icon={<RiHotelLine className="h-5 w-5 " />}
                                             title={accommodation.name}
                                             directionsUrl={mapNavigationUrl(accommodation.location.address)}
                                             detailUrl={appRoutes.accommodationDetails(tripId, accommodation.id)}

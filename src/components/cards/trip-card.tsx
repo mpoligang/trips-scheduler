@@ -33,7 +33,7 @@ export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
             label: 'Modifica',
             icon: <FaPen />,
             onClick: () => {
-                router.push(appRoutes.tripMetadata(trip.id as string));
+                router.push(appRoutes.settings(trip.id as string));
             },
         },
         {
@@ -45,7 +45,7 @@ export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
     ];
 
     const handleNavigateToDetail = (event: React.MouseEvent<HTMLDivElement>) => {
-        router.push(appRoutes.tripDetails(trip.id as string));
+        router.push(appRoutes.stages(trip.id as string));
         event.stopPropagation();
     }
 

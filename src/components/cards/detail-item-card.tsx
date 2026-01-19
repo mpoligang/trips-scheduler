@@ -1,19 +1,23 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { FaTrash, FaDirections } from "react-icons/fa"; // Rimosso FaPen
-import ContextMenu, { ContextMenuItem } from '../actions/context-menu';
 import { useRouter } from 'next/navigation';
+import { FaTrash, FaDirections } from "react-icons/fa";
+import ContextMenu, { ContextMenuItem } from '../actions/context-menu';
 
 interface DetailItemCardProps {
-    readonly icon: ReactNode;
-    readonly title: string;
-    readonly directionsUrl: string;
-    readonly detailUrl: string
-    readonly isOwner: boolean;
-    readonly onDelete: () => void;
+    icon: ReactNode;
+    title: string;
+    directionsUrl: string;
+    detailUrl: string;
+    isOwner?: boolean;
+    onDelete: () => void;
 }
 
+/**
+ * Componente per gli elementi della lista (Tappe, Alloggi, Trasporti).
+ * Risolve il bug dell'icona schiacciata usando flex-shrink-0 e gestisce testi lunghi.
+ */
 export default function DetailItemCard({
     icon,
     title,
@@ -24,6 +28,11 @@ export default function DetailItemCard({
 }: DetailItemCardProps) {
     const router = useRouter();
 
+    const handleCardClick = () => {
+        router.push(detailUrl);
+    };
+
+    // Definiamo le azioni per il menu a comparsa
     const menuItems: ContextMenuItem[] = [
         {
             label: 'Indicazioni',
@@ -34,34 +43,47 @@ export default function DetailItemCard({
     ];
 
     if (isOwner) {
-        menuItems.push({
-            label: 'Elimina',
-            icon: <FaTrash />,
-            onClick: onDelete,
-        });
-    }
+        menuItems.push(
 
-    const handleCardClick = () => {
-        router.push(detailUrl);
-    };
+            {
+                label: 'Elimina',
+                icon: <FaTrash />,
+                onClick: onDelete,
+                className: 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20',
+            }
+        );
+    }
 
     return (
         <li className="list-none">
             <div
                 onClick={handleCardClick}
-                role='button'
-                className="w-full flex flex-row items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg gap-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && handleCardClick()}
+                className="w-full flex flex-row items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl gap-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 group"
                 aria-label={`Apri dettaglio di ${title}`}
             >
-                <div className="flex items-center w-full">
-                    <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-purple-100 dark:bg-purple-900/50 rounded-full">
+                {/* Sezione Sinistra: Icona e Testi */}
+                <div className="flex items-center flex-1 min-w-0">
+                    {/* Icona con flex-shrink-0 per evitare che venga schiacciata */}
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-purple-500/20 transition-transform group-hover:scale-110">
                         {icon}
                     </div>
-                    <div className="ml-4">
-                        <p className="font-bold text-gray-800 dark:text-white">{title}</p>
+
+                    {/* Container Testo con min-w-0 per permettere il truncate del figlio */}
+                    <div className="ml-4 flex-1 min-w-0">
+                        <p className="font-bold text-gray-800 dark:text-white  text-sm md:text-base">
+                            {title}
+                        </p>
+
                     </div>
                 </div>
-                <ContextMenu items={menuItems} />
+
+                {/* Sezione Destra: Menu Contestuale */}
+                <div className="flex-shrink-0">
+                    <ContextMenu items={menuItems} />
+                </div>
             </div>
         </li>
     );

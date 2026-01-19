@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, FormEvent, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { FaPen, FaMap, FaUndo, FaHotel, FaMapMarkerAlt, FaCalendarAlt, FaCheck } from 'react-icons/fa';
+import { FaPen, FaMap, FaUndo, FaCheck, FaTimes } from 'react-icons/fa';
 
 import { db } from '@/firebase/config';
 import { Trip } from '@/models/Trip';
@@ -13,7 +13,6 @@ import { Accommodation } from '@/models/AccomModation';
 import ContextMenu from '@/components/actions/context-menu';
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 import PageTitle from '../generics/page-title';
-import CurrencyInput from '../inputs/currency-input';
 import LinkPreview from '../inputs/link-preview';
 import SearchLocation from '../inputs/search-location';
 import { DateRange } from 'react-day-picker';
@@ -21,23 +20,22 @@ import Dropdown from '../inputs/dropdown';
 import Input from '../inputs/input';
 import Button from '../actions/button';
 import { EntityKeys } from '@/utils/entityKeys';
+import { generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
+import { useTrip } from '@/context/tripContext';
+import { useAuth } from '@/context/authProvider';
+import ActionStickyBar from '../actions/action-sticky-bar';
 
-interface AccommodationFormProps {
-    trip: Trip;
-    tripId: string;
-    accommodationId: string;
-    isOwner: boolean;
-    isNew: boolean;
-}
 
-export default function AccommodationForm({
-    trip,
-    tripId,
-    accommodationId,
-    isNew,
-    isOwner
-}: Readonly<AccommodationFormProps>) {
+
+export default function AccommodationForm() {
     const router = useRouter();
+    const { trip } = useTrip();
+    const { user } = useAuth();
+    const params = useParams();
+    const tripId = params.tripId as string;
+    const accommodationId = params.id as string;
+    const isNew = accommodationId === 'new';
+    const isOwner = trip?.owner === user?.uid;
 
     const [isReadOnly, setIsReadOnly] = useState(!isNew);
     const [name, setName] = useState('');
@@ -49,45 +47,20 @@ export default function AccommodationForm({
 
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const dateOptions = useMemo(() => {
-        if (!trip?.startDate || !trip?.endDate) return [];
-        const dates = [];
-        const start = trip.startDate.toDate();
-        const end = trip.endDate.toDate();
-        const current = new Date(start);
-        current.setHours(0, 0, 0, 0);
-        const finalEnd = new Date(end);
-        finalEnd.setHours(0, 0, 0, 0);
-
-        while (current <= finalEnd) {
-            const dateObj = new Date(current);
-            const id = dateObj.toISOString().split('T')[0];
-            dates.push({
-                id: id,
-                name: dateObj.toLocaleDateString('it-IT', {
-                    weekday: 'short',
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                }),
-                date: dateObj
-            });
-            current.setDate(current.getDate() + 1);
-        }
-        return dates;
+        if (!trip?.startDate || !trip?.endDate) { return []; }
+        return generateDateOptions(trip.startDate.toDate(), trip.endDate.toDate());
     }, [trip?.startDate, trip?.endDate]);
 
     const selectedStartDateOption = useMemo(() => {
-        if (!dateRange?.from) return null;
-        const iso = dateRange.from.toISOString().split('T')[0];
-        return dateOptions.find(opt => opt.id === iso) || null;
+        if (!dateRange?.from) { return null };
+        return selectDateOption(dateRange.from, dateOptions);
     }, [dateRange?.from, dateOptions]);
 
+
     const selectedEndDateOption = useMemo(() => {
-        if (!dateRange?.to) return null;
-        const iso = dateRange.to.toISOString().split('T')[0];
-        return dateOptions.find(opt => opt.id === iso) || null;
+        if (!dateRange?.to) { return null };
+        return selectDateOption(dateRange.to, dateOptions);
     }, [dateRange?.to, dateOptions]);
 
     const handleStartDateSelect = (val: { id: string; name: string; date: Date } | null) => {
@@ -108,7 +81,7 @@ export default function AccommodationForm({
     };
 
     const populateForm = useCallback(() => {
-        const accommodation = trip.accommodations?.find(acc => acc.id === accommodationId);
+        const accommodation = trip?.accommodations?.find(acc => acc.id === accommodationId);
         if (accommodation) {
             setName(accommodation.name);
             setLink(accommodation.link || '');
@@ -122,9 +95,14 @@ export default function AccommodationForm({
                 setAccommodationDestination({ id: accommodation.destination, name: accommodation.destination });
             }
         } else {
-            setName(''); setLink(''); setCost(''); setLocation(null); setAccommodationDestination(null); setDateRange(undefined);
+            setName('');
+            setLink('');
+            setCost('');
+            setLocation(null);
+            setAccommodationDestination(null);
+            setDateRange(undefined);
         }
-    }, [trip.accommodations, accommodationId]);
+    }, [trip?.accommodations, accommodationId]);
 
     useEffect(() => { populateForm(); }, [populateForm]);
 
@@ -171,7 +149,6 @@ export default function AccommodationForm({
     };
 
     const destinationOptions = trip?.destinations?.map(d => ({ id: d, name: d })) || [];
-    const submitButtonLabel = isSubmitting ? 'Salvataggio...' : (isNew ? 'Aggiungi' : 'Salva');
 
     const menuItems = [
         {
@@ -190,9 +167,9 @@ export default function AccommodationForm({
     }
 
     return (
-        <div className="space-y-8 max-w-4xl pb-12">
+        <div className="space-y-8 pb-24">
             <PageTitle
-                title={isNew ? 'Aggiungi un Alloggio' : ''}
+                title={isNew ? 'Aggiungi un Alloggio' : isReadOnly ? 'Dettagli Alloggio' : 'Modifica Alloggio'}
                 subtitle={isNew ? "Pianifica dove riposerai durante il tuo viaggio." : "Visualizza o aggiorna le informazioni del tuo soggiorno."}
             >
                 {!isNew && <ContextMenu items={menuItems} />}
@@ -201,7 +178,7 @@ export default function AccommodationForm({
             <form onSubmit={handleSubmit} className="space-y-4">
 
                 {/* SEZIONE 1: IDENTITÀ ALLOGGIO */}
-                <section className="bg-white dark:bg-gray-800 sm:p-6 rounded-xl  sm:border border-gray-100 dark:border-gray-700">
+                <section className=" ">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">Informazioni Base</h3>
                     </div>
@@ -231,7 +208,7 @@ export default function AccommodationForm({
                 </section>
 
                 {/* SEZIONE 2: LOCATION E PRENOTAZIONE */}
-                <section className="bg-white dark:bg-gray-800 sm:p-6 rounded-xl  sm:border border-gray-100 dark:border-gray-700">
+                <section className=" ">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
 
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">Posizione e Prenotazione</h3>
@@ -255,7 +232,7 @@ export default function AccommodationForm({
                 </section>
 
                 {/* SEZIONE 3: DETTAGLI LOGISTICI */}
-                <section className="bg-white dark:bg-gray-800 sm:p-6 rounded-xl  sm:border border-gray-100 dark:border-gray-700">
+                <section className=" ">
                     <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
 
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">Dettagli Soggiorno</h3>
@@ -293,25 +270,19 @@ export default function AccommodationForm({
                     </div>
                 )}
 
-                {!isReadOnly && (
-                    <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-100 dark:border-gray-700">
-                        <Button
-                            className="w-full sm:w-auto px-8"
-                            variant="secondary"
-                            type="button"
-                            onClick={handleCancel}
-                        >
-                            Annulla
-                        </Button>
-                        <Button className="w-full sm:w-auto px-10 shadow-lg shadow-purple-500/20" type="submit" disabled={isSubmitting}>
-                            <div className="flex items-center gap-2">
-                                {!isSubmitting && <FaCheck size={12} />}
-                                <span>{isSubmitting ? 'Salvataggio...' : (isNew ? 'Aggiungi' : 'Salva')}</span>
-                            </div>
-                        </Button>
-                    </div>
-                )}
+                {
+                    !isReadOnly && (
+                        <ActionStickyBar
+                            handleCancel={handleCancel}
+                            isSubmitting={isSubmitting}
+                            isNew={isNew}
+                        />
+                    )
+                }
             </form>
+
+
         </div>
+
     );
 }

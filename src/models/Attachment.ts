@@ -1,0 +1,7 @@
+export interface Attachment {
+    id: string;
+    name: string;
+    url: string;
+    type: 'file' | 'link';
+    createdAt: string;
+}

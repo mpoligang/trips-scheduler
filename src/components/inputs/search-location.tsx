@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import Button from '@/components/actions/button';
 import Sidebar from '@/components/containers/sidebar';
 import { apiRoutes } from '@/utils/apiRoutes';
+import { Location } from '@/models/Location';
 
 // Carica la mappa dinamicamente
 const MapPicker = dynamic(() => import('@/components/maps/map'), {
@@ -24,11 +25,11 @@ interface LocationResult {
 }
 
 interface SearchLocationProps {
-    readonly onSelect: (location: { lat: number; lng: number; address: string } | null) => void;
+    readonly onSelect: (location: Location | null) => void;
     readonly label?: string;
     readonly placeholder?: string;
     readonly className?: string;
-    readonly value?: { lat: number; lng: number; address: string } | null;
+    readonly value?: Location | null;
     readonly readOnly?: boolean;
     readonly required?: boolean;
 }
@@ -134,7 +135,7 @@ export default function SearchLocation({
                     </label>
                     <div className="flex items-start justify-between w-full py-2 ">
                         {/* Testo che va a capo invece di truncate */}
-                        <p className="text-gray-800 dark:text-gray-200 font-semibold pr-4 whitespace-normal break-words">
+                        <p className="text-gray-800 dark:text-gray-200  pr-4 whitespace-normal break-words">
                             {!value?.address ? '-' : value?.address}
                         </p>
                         {value && (

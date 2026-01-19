@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { collection, onSnapshot, query, doc, deleteDoc, where } from 'firebase/firestore';
-import { PathItem } from '@/models/PathItem';
 import { Trip } from '@/models/Trip';
-import { FaPlus, FaExclamationTriangle } from 'react-icons/fa';
-import ConfirmationModal from '@/components/modals/confirm-modal';
+import { FaPlus } from 'react-icons/fa';
+import DialogComponent from '@/components/modals/confirm-modal';
 import Navbar from '@/components/navigations/navbar';
 import TripCard from '@/components/cards/trip-card';
 import { useAuth } from '@/context/authProvider';
@@ -28,59 +27,42 @@ export default function DashboardPage() {
     const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const breadcrumbPaths: PathItem[] = [{
-        label: 'I miei viaggi', href: appRoutes.home
-    }];
+
 
     useEffect(() => {
         if (!loading && !user) { router.push(appRoutes.login); }
     }, [user, loading, router]);
 
-    // Stati separati per evitare conflitti durante i caricamenti asincroni
     const [ownedTrips, setOwnedTrips] = useState<Trip[]>([]);
     const [participantTrips, setParticipantTrips] = useState<Trip[]>([]);
 
-    // Uniamo i due array ogni volta che uno dei due cambia
+
     useEffect(() => {
-        // Uniamo
         const allTrips = [...ownedTrips, ...participantTrips];
-
-        // Rimuoviamo duplicati (caso raro in cui sei sia owner che participant, ma possibile per errore)
         const uniqueTrips = Array.from(new Map(allTrips.map(item => [item.id, item])).values());
-
-        // Ordiniamo in JS (come discusso prima)
-
-
         setTrips(uniqueTrips);
-
-        // Se abbiamo caricato (o tentato di caricare), togliamo il loader
-        // Nota: Questa logica è semplificata, idealmente controlleresti se entrambi i listener hanno emesso almeno una volta
         setIsLoadingTrips(false);
 
     }, [ownedTrips, participantTrips]);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user) { return; }
 
-        // 1. Query per i viaggi di cui sei OWNER
         const qOwner = query(
             collection(db, EntityKeys.tripsKey),
             where('owner', '==', user.uid)
         );
 
-        // 2. Query per i viaggi di cui sei PARTECIPANTE
         const qParticipant = query(
             collection(db, EntityKeys.tripsKey),
             where('participantIds', 'array-contains', user.uid)
         );
 
-        // Listener 1: Owner
         const unsubscribeOwner = onSnapshot(qOwner, (snapshot) => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Trip[];
             setOwnedTrips(data);
         }, (error) => console.error("Err Owner:", error));
 
-        // Listener 2: Participant
         const unsubscribeParticipant = onSnapshot(qParticipant, (snapshot) => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Trip[];
             setParticipantTrips(data);
@@ -93,7 +75,6 @@ export default function DashboardPage() {
     }, [user]);
 
 
-    // Funzione per aprire il modale
     const handleOpenDeleteModal = (trip: Trip) => {
         const tripToDelete = trips.find(t => t.id === trip?.id);
         if (tripToDelete) {
@@ -124,28 +105,27 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <Navbar backPath="/dashboard" breadcrumb={breadcrumbPaths} />
-            <ConfirmationModal
+            <Navbar breadcrumb={[]} />
+            <DialogComponent
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 isLoading={isDeleting}
                 title="Confermi l'eliminazione?"
                 confirmText="Elimina"
-                icon={<FaExclamationTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />}
             >
                 <p>
                     Stai per eliminare il viaggio <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedTrip?.name}</strong>. Questa azione è irreversibile.
                 </p>
-            </ConfirmationModal>
+            </DialogComponent>
 
-            <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main className="p-6">
 
                 <PageTitle title=' I miei viaggi' subtitle='Organizza e visualizza le tue prossime avventure.' className='flex flex-col md:flex-row md:items-center md:justify-between gap-4'>
                     <Button
                         variant="secondary"
                         size={"sm"}
-                        onClick={() => router.push(appRoutes.tripMetadata('new'))}
+                        onClick={() => router.push(appRoutes.settings('new'))}
                         className="w-full md:w-auto whitespace-nowrap"
                     >
                         <FaPlus className="mr-2" />
@@ -157,7 +137,7 @@ export default function DashboardPage() {
                 {(() => {
                     if (isLoadingTrips) {
                         return (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
                                 {[new Array(6)].map((_, i) => {
                                     const key = `loading-${i}`;
                                     return <div key={key} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg h-40"></div>;
@@ -166,7 +146,7 @@ export default function DashboardPage() {
                         );
                     } else if (trips.length > 0) {
                         return (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 {trips.map(trip => (
                                     <TripCard
                                         isOwner={trip.owner === user.uid}

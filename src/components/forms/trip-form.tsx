@@ -18,6 +18,7 @@ import { appRoutes } from '@/utils/appRoutes';
 import EmptyData from '@/components/cards/empty-data';
 import { EntityKeys } from '@/utils/entityKeys';
 import ActionStickyBar from '../actions/action-sticky-bar';
+import FormSection from '../generics/form-section';
 
 export default function TripForm() {
 
@@ -157,28 +158,23 @@ export default function TripForm() {
             <PageTitle title={isEditMode ? 'Modifica il tuo viaggio' : 'Crea un nuovo viaggio'}
                 subtitle={isEditMode ? 'Aggiorna i dettagli e invita i tuoi amici.' : 'Pianifica la tua prossima avventura.'} />
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className='space-y-8'>
+
+                <FormSection title="Dettagli del Viaggio">
+                    <div className="space-y-6">
+                        <Input id="trip-name" label="Nome del Viaggio" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
 
 
-                <Input id="trip-name" label="Nome del Viaggio" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+                        <DateRangePicker value={dateRange} onChange={setDateRange} />
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Periodo del viaggio
-                    </label>
-                    <DateRangePicker value={dateRange} onChange={setDateRange} />
-                </div>
+                    </div>
+                </FormSection>
 
-                {/* Sezione Destinazioni */}
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2">Destinazioni</h3>
-                <div className='w-full'>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Paesi o città da visitare
-                    </label>
+                <FormSection title="Destinazioni" >
                     <div className="flex items-end gap-2">
                         <Input
                             id="destination-input"
-                            label=""
+                            label=" Paesi o città da visitare"
                             type="text"
                             value={currentDestination}
                             onChange={(e) => setCurrentDestination(e.target.value)}
@@ -203,51 +199,45 @@ export default function TripForm() {
                             ))}
                         </div>
                     )}
-                </div>
+                </FormSection>
 
-                {/* NUOVA SEZIONE: Partecipanti */}
-                <div className="flex items-center justify-between border-b dark:border-gray-700 pb-2">
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white ">
-                        Compagni di Viaggio
-                    </h3>
-                </div>
+                <FormSection title="Compagni di Viaggio" >
+                    <div className="w-full mb-5">
+                        <UserSearch
+                            onSelect={handleAddParticipant}
+                            placeholder="Cerca amici per email..."
+                            excludeIds={[user?.uid || '', ...participants.map(p => p.uid)]} // Esclude se stessi e chi è già aggiunto
+                        />
+                    </div>
 
-                <div className="w-full">
-                    <UserSearch
-                        onSelect={handleAddParticipant}
-                        placeholder="Cerca amici per email..."
-                        excludeIds={[user?.uid || '', ...participants.map(p => p.uid)]} // Esclude se stessi e chi è già aggiunto
-                    />
-                </div>
-
-                {participants.length > 0 ? (
-                    <ul className="divide-y divide-gray-100 dark:divide-gray-700">
-                        {participants.map((participant) => (
-                            <li key={participant.uid} className="flex items-center justify-between py-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold text-xs">
-                                        {participant.displayName?.charAt(0).toUpperCase() || participant.email.charAt(0).toUpperCase()}
+                    {participants.length > 0 ? (
+                        <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+                            {participants.map((participant) => (
+                                <li key={participant.uid} className="flex items-center justify-between py-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold text-xs">
+                                            {participant.displayName?.charAt(0).toUpperCase() || participant.email.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{participant.displayName}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{participant.email}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white">{participant.displayName}</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{participant.email}</p>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => handleRemoveParticipant(participant.uid)}
-                                    className="text-gray-400 hover:text-red-500 p-2 transition-colors"
-                                    title="Rimuovi partecipante"
-                                >
-                                    <FaTrashAlt size={14} />
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <EmptyData title='Nessun compagno di viaggio aggiunto.' subtitle='Invita i tuoi amici a unirsi al viaggio!' />
-                )}
-
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveParticipant(participant.uid)}
+                                        className="text-gray-400 hover:text-red-500 p-2 transition-colors"
+                                        title="Rimuovi partecipante"
+                                    >
+                                        <FaTrashAlt size={14} />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <EmptyData title='Nessun compagno di viaggio aggiunto.' subtitle='Invita i tuoi amici a unirsi al viaggio!' />
+                    )}
+                </FormSection>
 
                 {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 

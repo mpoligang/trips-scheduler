@@ -1,7 +1,6 @@
 'use client';
 
 import AttachmentsManager from "@/components/cards/attachment-manager";
-import StageTemplatePage from "@/components/templates/stage-template";
 import TransportTemplatePage from "@/components/templates/transport-template";
 import { useTrip } from "@/context/tripContext";
 import { db } from "@/firebase/config";

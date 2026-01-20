@@ -21,6 +21,7 @@ import { generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
 import { useTrip } from '@/context/tripContext';
 import { useAuth } from '@/context/authProvider';
 import ActionStickyBar from '../actions/action-sticky-bar';
+import FormSection from '../generics/form-section';
 
 
 
@@ -162,58 +163,60 @@ export default function StageForm() {
 
                 {/* 1. SEZIONE INFORMAZIONI */}
 
-                <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Informazioni Base</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Input
-                        id="stage-name"
-                        label="Nome della tappa"
-                        placeholder="Es. Visita ai musei"
-                        value={stageName}
-                        onChange={(e) => setStageName(e.target.value)}
-                        required
-                        readOnly={isReadOnly}
-                    />
-                    <Dropdown<{ id: string; name: string }>
-                        label="Destinazione"
-                        items={destinationOptions}
-                        selected={stageDestination}
-                        onSelect={setStageDestination}
-                        optionValue="id"
-                        optionLabel="name"
-                        placeholder="Scegli destinazione"
-                        readOnly={isReadOnly}
-                        required
-                    />
-                </div>
+                <FormSection title="Informazioni Base" >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Input
+                            id="stage-name"
+                            label="Nome della tappa"
+                            placeholder="Es. Visita ai musei"
+                            value={stageName}
+                            onChange={(e) => setStageName(e.target.value)}
+                            required
+                            readOnly={isReadOnly}
+                        />
+                        <Dropdown<{ id: string; name: string }>
+                            label="Destinazione"
+                            items={destinationOptions}
+                            selected={stageDestination}
+                            onSelect={setStageDestination}
+                            optionValue="id"
+                            optionLabel="name"
+                            placeholder="Scegli destinazione"
+                            readOnly={isReadOnly}
+                            required
+                        />
+                    </div>
+                </FormSection>
+
+
+
 
                 {/* 2. SEZIONE LUOGO E TEMPO */}
 
-                <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Luogo e Data della Tappa</h3>
-                </div>
-                <div className={`grid gap-6 items-start ${isReadOnly ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-                    <SearchLocation
-                        label="Indirizzo"
-                        value={stageLocation}
-                        readOnly={isReadOnly}
-                        onSelect={setStageLocation}
-                        placeholder="Cerca un indirizzo..."
-                        required
-                    />
-                    <Dropdown<{ id: string; name: string; date: Date }>
-                        label="Data della tappa"
-                        items={dateOptions}
-                        selected={selectedDateOption}
-                        onSelect={(val) => setStageDate(val?.date)}
-                        optionValue="id"
-                        optionLabel="name"
-                        placeholder="Seleziona data"
-                        readOnly={isReadOnly}
-                        required
-                    />
-                </div>
+                <FormSection title="Luogo e Data della Tappa">
+                    <div className={`grid gap-6 items-start ${isReadOnly ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                        <SearchLocation
+                            label="Indirizzo"
+                            value={stageLocation}
+                            readOnly={isReadOnly}
+                            onSelect={setStageLocation}
+                            placeholder="Cerca un indirizzo..."
+                            required
+                        />
+                        <Dropdown<{ id: string; name: string; date: Date }>
+                            label="Data della tappa"
+                            items={dateOptions}
+                            selected={selectedDateOption}
+                            onSelect={(val) => setStageDate(val?.date)}
+                            optionValue="id"
+                            optionLabel="name"
+                            placeholder="Seleziona data"
+                            readOnly={isReadOnly}
+                            required
+                        />
+                    </div>
+                </FormSection>
+
 
                 {error && (
                     <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 p-4 rounded-xl text-red-700 dark:text-red-400 text-sm text-center font-medium animate-in fade-in">

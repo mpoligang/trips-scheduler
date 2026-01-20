@@ -12,6 +12,7 @@ interface TimeInputProps {
     readonly className?: string;
     readonly id?: string;
     readonly placeholder?: string;
+    readonly required?: boolean;
 }
 
 export default function TimeInput({
@@ -21,7 +22,8 @@ export default function TimeInput({
     readOnly,
     className,
     id,
-    placeholder = "00:00"
+    placeholder = "00:00",
+    required
 }: TimeInputProps) {
     const [inputValue, setInputValue] = useState(value);
 
@@ -81,6 +83,7 @@ export default function TimeInput({
                 readOnly={readOnly}
                 autoComplete="off"
                 maxLength={5}
+                required={required}
             />
         </div>
     );

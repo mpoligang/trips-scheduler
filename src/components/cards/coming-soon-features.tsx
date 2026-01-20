@@ -1,6 +1,4 @@
-import { icon } from 'leaflet';
-import { ReactNode } from 'react';
-import { FaRobot } from 'react-icons/fa';
+
 import { twMerge } from 'tailwind-merge';
 
 interface ComingSoonFeatureProps {

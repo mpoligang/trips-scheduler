@@ -1,94 +1,310 @@
-'use client';
+import { useTrip } from "@/context/tripContext";
+import { useParams, useRouter } from "next/navigation"; // Usa next/navigation per App Router
+import PageTitle from "../generics/page-title";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import ContextMenu, { ContextMenuItem } from "../actions/context-menu";
+import { FaMap, FaPen, FaPlus, FaTimes, FaTrash } from "react-icons/fa";
+import FormSection from "../generics/form-section";
+import Input from "../inputs/input";
+import Dropdown from "../inputs/dropdown";
+import { Stopover, StopoverInstance, Transport, TransportType } from "@/models/Transport";
+import SearchLocation from "../inputs/search-location";
+import { Location } from "@/models/Location";
+import { generateDateOptions, selectDateOption } from "@/utils/dateTripUtils";
+import TimeInput from "../inputs/time-input";
+import Checkbox from "../inputs/checkbox";
+import Button from "../actions/button";
+import Textarea from "../inputs/textarea";
+import { mapNavigationUrl } from "@/utils/appRoutes";
+import ActionStickyBar from "../actions/action-sticky-bar";
+import { doc, Timestamp, updateDoc } from "firebase/firestore";
+import { db } from "@/firebase/config";
+import { EntityKeys } from "@/utils/entityKeys";
+import { tr } from "date-fns/locale";
+import DurationInput from "../inputs/duration-input";
+import { set } from "date-fns";
 
-import { useState, useEffect, FormEvent, useCallback, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
-import { v4 as uuidv4 } from 'uuid';
-import { FaPen, FaUndo, FaPlus, FaTrash, FaCheck, FaMap, FaUserTie, FaCar } from 'react-icons/fa';
-import { format } from 'date-fns';
-
-import { db } from '@/firebase/config';
-import { Trip } from '@/models/Trip';
-import { Transport, TransportGeneric, TransportPrivate, TransportPublic, TransportRental, TransportType } from '@/models/Transport';
-import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
-import { EntityKeys } from '@/utils/entityKeys';
-
-import Input from '../inputs/input';
-import Button from '../actions/button';
-import Dropdown from '../inputs/dropdown';
-import PageTitle from '../generics/page-title';
-import ContextMenu, { ContextMenuItem } from '../actions/context-menu';
-import Checkbox from '../inputs/checkbox';
-import Textarea from '../inputs/textarea';
-import SearchLocation from '../inputs/search-location';
-import TimeInput from '../inputs/time-input';
-import { generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
-import { Location } from '@/models/Location';
-import { useTrip } from '@/context/tripContext';
-import ActionStickyBar from '../actions/action-sticky-bar';
-
-interface StopoverState {
-    id: string;
-    location: Location | null;
-    date: Date | undefined;
-    arrivalTime: string;
-    departureTime: string;
-}
-
-
-const transportOptions = [
-    { id: TransportType.Flight, name: TransportType.Flight },
-    { id: TransportType.Train, name: TransportType.Train },
-    { id: TransportType.Bus, name: TransportType.Bus },
-    { id: TransportType.Shuttle, name: TransportType.Shuttle },
-    { id: TransportType.Ferry, name: TransportType.Ferry },
-    { id: TransportType.CarRental, name: TransportType.CarRental },
-    { id: TransportType.PrivateTransfer, name: TransportType.PrivateTransfer },
-    { id: TransportType.Other, name: TransportType.Other },
-];
+// Helper per generare ID univoci (se non usi una libreria esterna come uuid)
+const generateUUID = () => crypto.randomUUID();
 
 export default function TransportForm() {
-    const router = useRouter();
-    const { trip, isOwner, } = useTrip();
-    const tripId = trip?.id as string;
+
+    const { trip, isOwner } = useTrip();
     const params = useParams();
-    const transportId = params.id as string;
+    const router = useRouter();
+    // Gestione sicura del parametro id che potrebbe essere array o undefined
+    const transportId = Array.isArray(params.id) ? params.id[0] : params.id;
     const isNew = transportId === 'new';
 
     const [isReadOnly, setIsReadOnly] = useState(!isNew);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const [title, setTitle] = useState('');
-    const [type, setType] = useState<{ id: string; name: string } | null>(transportOptions[0]);
-    const [notes, setNotes] = useState('');
+    // --- State Form ---
+    const [title, setTitle] = useState<string>('');
+    const [type, setType] = useState<{ id: string; name: string } | null>({ id: TransportType.Flight, name: TransportType.Flight });
+    const [carrier, setCarrier] = useState<string>('');
+    const [referenceNumber, setReferenceNumber] = useState<string>('');
+    const [gateOrPlatform, setGateOrPlatform] = useState<string>('');
+    const [bookingReference, setBookingReference] = useState<string>('');
 
-
-    const [carrier, setCarrier] = useState('');
-    const [referenceNumber, setReferenceNumber] = useState('');
-    const [seat, setSeat] = useState('');
-    const [gateOrPlatform, setGateOrPlatform] = useState('');
-    const [bookingReference, setBookingReference] = useState('');
-
-    const [rentalCompany, setRentalCompany] = useState('');
-    const [carModel, setCarModel] = useState('');
-    const [pickupInstructions, setPickupInstructions] = useState('');
-    const [insuranceDetails, setInsuranceDetails] = useState('');
-    const [hasDifferentDropOff, setHasDifferentDropOff] = useState(false);
-    const [dropOffLocation, setDropOffLocation] = useState<Location | null>(null);
-    const [dropOffInstructions, setDropOffInstructions] = useState('');
-
-    const [driverName, setDriverName] = useState('');
-    const [driverPhoneNumber, setDriverPhoneNumber] = useState('');
-    const [vehicleDescription, setVehicleDescription] = useState('');
-    const [depDate, setDepDate] = useState<Date | undefined>();
-    const [depTime, setDepTime] = useState('');
+    // Partenza
     const [depLocation, setDepLocation] = useState<Location | null>(null);
-    const [arrDate, setArrDate] = useState<Date | undefined>();
-    const [arrTime, setArrTime] = useState('');
-    const [arrLocation, setArrLocation] = useState<Location | null>(null);
-    const [stopovers, setStopovers] = useState<StopoverState[]>([]);
+    const [depDate, setDepDate] = useState<Date | undefined>();
+    const [depTime, setDepTime] = useState<string>(''); // Formato "HH:mm"
+    const [tripDuration, setTripDuration] = useState<string>(''); // Formato "HH:mm"
 
+    // Arrivo
+    const [arrivalDate, setArrivalDate] = useState<Date | undefined>();
+    const [arrivalTime, setArrivalTime] = useState<string>(''); // Formato "HH:mm"
+
+    // Privato / Noleggio
+    const [driverName, setDriverName] = useState<string>('');
+    const [driverPhoneNumber, setDriverPhoneNumber] = useState<string>('');
+    const [vehicleDescription, setVehicleDescription] = useState<string>('');
+    const [rentalCompany, setRentalCompany] = useState<string>('');
+    const [carModel, setCarModel] = useState<string>('');
+
+    // Ritiro / Consegna (Noleggio)
+    const [pickupLocation, setPickupLocation] = useState<Location | null>(null);
+    const [pickupDate, setPickupDate] = useState<Date | undefined>();
+    const [pickupTime, setPickupTime] = useState<string>('');
+
+    const [hasDifferentDropOff, setHasDifferentDropOff] = useState<boolean>(false);
+
+    const [dropOffLocation, setDropOffLocation] = useState<Location | null>(null);
+    const [dropOffDate, setDropOffDate] = useState<Date | undefined>();
+    const [dropOffTime, setDropOffTime] = useState<string>('');
+    const [dropOffNotes, setDropOffNotes] = useState<string>('');
+
+    const [stopovers, setStopovers] = useState<Stopover[]>([]);
+
+    const isPublicTransportType = [TransportType.Flight, TransportType.Train,
+    TransportType.Bus, TransportType.Shuttle, TransportType.Ferry].includes(type?.id as TransportType);
+
+    // --- Helpers Date/Time ---
+
+    /**
+     * Combina un oggetto Date e una stringa "HH:mm" in un Firestore Timestamp.
+     */
+    const combineDateTimeToTimestamp = (date: Date | undefined, time: string): Timestamp | undefined => {
+        if (!date) return undefined;
+        // Se c'è la data ma non l'ora, impostiamo default 00:00 o gestiamo l'errore in validazione
+        const timeStr = time || "00:00";
+        const [hours, minutes] = timeStr.split(':').map(Number);
+
+        const newDate = new Date(date);
+        newDate.setHours(hours || 0, minutes || 0, 0, 0);
+
+        return Timestamp.fromDate(newDate);
+    };
+
+    /**
+     * Estrae la stringa "HH:mm" da un Firestore Timestamp.
+     */
+    const extractTimeFromTimestamp = (timestamp: Timestamp | undefined): string => {
+        if (!timestamp) return '';
+        const date = timestamp.toDate();
+        // Formatta in HH:mm assicurandosi che ci siano 2 cifre
+        return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    };
+
+    // --- Popolamento Dati ---
+
+    const populateForm = useCallback(() => {
+        if (!trip || !trip.transports) return;
+
+        const transport = trip.transports.find(t => t.id === transportId);
+
+        if (transport) {
+            setTitle(transport.title || '');
+            setType({ id: transport.type, name: transport.type });
+            setCarrier(transport.carrier || '');
+            setReferenceNumber(transport.referenceNumber || '');
+            setGateOrPlatform(transport.gateOrPlatform || '');
+            setBookingReference(transport.bookingReference || '');
+
+            // Partenza
+            setDepLocation(transport.depLocation || null);
+            setDepDate(transport.depDate ? transport.depDate.toDate() : undefined);
+            setDepTime(extractTimeFromTimestamp(transport.depDate)); // Estrai stringa
+            setTripDuration(transport.tripDuration || '');
+
+
+            // Arrivo
+            setArrivalDate(transport.arrivalDate ? transport.arrivalDate.toDate() : undefined);
+            setArrivalTime(extractTimeFromTimestamp(transport.arrivalDate)); // Estrai stringa
+
+            // Driver
+            setDriverName(transport.driverName || '');
+            setDriverPhoneNumber(transport.driverPhoneNumber || '');
+            setVehicleDescription(transport.vehicleDescription || '');
+
+            // Rental
+            setRentalCompany(transport.rentalCompany || '');
+            setCarModel(transport.carModel || '');
+
+            // Pickup
+            setPickupLocation(transport.pickupLocation || null);
+            setPickupDate(transport.pickupDate ? transport.pickupDate.toDate() : undefined);
+            setPickupTime(extractTimeFromTimestamp(transport.pickupDate));
+
+            // Dropoff
+            setHasDifferentDropOff(transport.hasDifferentDropOff || false);
+            setDropOffLocation(transport.dropOffLocation || null);
+            setDropOffDate(transport.dropOffDate ? transport.dropOffDate.toDate() : undefined);
+            setDropOffTime(extractTimeFromTimestamp(transport.dropOffDate));
+            setDropOffNotes(transport.dropOffNotes || '');
+
+            setStopovers(transport.stopovers || []);
+        }
+    }, [trip, transportId]);
+
+    useEffect(() => {
+        if (!isNew) {
+            populateForm();
+        }
+    }, [populateForm, isNew]);
+
+
+    // --- Logica Form ---
+
+    const validateForm = (): boolean => {
+        setError(null);
+        if (!title) { setError("Il titolo è obbligatorio."); return false; }
+        if (!type) { setError("Il tipo di trasporto è obbligatorio."); return false; }
+
+        if (type.id === TransportType.CarRental) {
+            if (!pickupLocation) { setError("Luogo di ritiro obbligatorio."); return false; }
+            if (!pickupDate) { setError("Data di ritiro obbligatoria."); return false; }
+            if (!pickupTime) { setError("Ora di ritiro obbligatoria."); return false; }
+        } else if (type.id === TransportType.PrivateTransfer) {
+            if (!depLocation) { setError("Luogo di partenza obbligatorio."); return false; }
+            // Aggiungi altre regole specifiche se necessario
+        } else {
+            // Voli, Treni, ecc.
+            if (!depLocation) { setError("Luogo di partenza obbligatorio."); return false; }
+            if (!depDate) { setError("Data di partenza obbligatoria."); return false; }
+            // Se vuoi rendere l'ora obbligatoria:
+            if (!depTime) { setError("Ora di partenza obbligatoria."); return false; }
+        }
+
+        return true;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!validateForm()) return;
+        if (!trip?.id) return;
+
+        setIsSubmitting(true);
+        setError(null);
+
+        // Helper per rimuovere campi undefined (Firestore non accetta undefined)
+        const removeUndefined = (obj: Transport) => {
+            const newObj = { ...obj };
+            Object.keys(newObj).forEach((key) => {
+                if (newObj[key as keyof Transport] === undefined) {
+                    delete newObj[key as keyof Transport];
+                }
+            });
+            return newObj;
+        };
+
+        const removeUndefinedStopover = (obj: Stopover) => {
+            const newObj = { ...obj };
+            Object.keys(newObj).forEach((key) => {
+                if (newObj[key as keyof Stopover] === undefined) {
+                    delete newObj[key as keyof Stopover];
+                }
+            });
+            return newObj;
+        };
+
+        try {
+            // 1. Costruzione Payload
+            // Creiamo un oggetto "raw" con possibili undefined
+            const rawTransport: Transport = {
+                id: isNew ? generateUUID() : transportId!,
+                title,
+                type: type?.id as TransportType,
+                carrier: carrier || undefined,
+                referenceNumber: referenceNumber || undefined,
+                gateOrPlatform: gateOrPlatform || undefined,
+                bookingReference: bookingReference || undefined,
+
+                // Public Transport / Transfer logic
+                depLocation: depLocation || null,
+                depDate: combineDateTimeToTimestamp(depDate, depTime),
+                depTime: depTime || undefined,
+                tripDuration: tripDuration || undefined,
+                arrivalDate: combineDateTimeToTimestamp(arrivalDate, arrivalTime),
+                arrivalTime: arrivalTime || undefined,
+
+                driverName: driverName || undefined,
+                driverPhoneNumber: driverPhoneNumber || undefined,
+                vehicleDescription: vehicleDescription || undefined,
+
+                // Rental logic
+                rentalCompany: rentalCompany || undefined,
+                carModel: carModel || undefined,
+                hasDifferentDropOff,
+                pickupLocation: pickupLocation || null,
+                pickupDate: combineDateTimeToTimestamp(pickupDate, pickupTime),
+                pickupTime: pickupTime || undefined,
+
+                dropOffLocation: dropOffLocation || null,
+                dropOffDate: combineDateTimeToTimestamp(dropOffDate, dropOffTime),
+                dropOffTime: dropOffTime || undefined,
+
+                dropOffNotes: dropOffNotes || undefined,
+                // Puliamo anche i singoli stopovers
+                stopovers: stopovers.map(s => removeUndefinedStopover(s)) || []
+            };
+
+            // Rimuoviamo i campi undefined dall'oggetto principale
+            const newTransport = removeUndefined(rawTransport) as Transport;
+
+            // 2. Aggiornamento Firebase
+            // Recuperiamo l'array corrente
+            const currentTransports = trip.transports || [];
+            let updatedTransports: Transport[];
+
+            if (isNew) {
+                updatedTransports = [...currentTransports, newTransport];
+            } else {
+                updatedTransports = currentTransports.map(t =>
+                    t.id === transportId ? newTransport : t
+                );
+            }
+
+            const tripRef = doc(db, EntityKeys.tripsKey, trip.id);
+            await updateDoc(tripRef, {
+                transports: updatedTransports
+            });
+
+            // 3. Post-submit UI
+            if (isNew) {
+                router.back();
+            } else {
+                setIsReadOnly(true);
+            }
+
+        } catch (err) {
+            console.error("Errore salvataggio trasporto:", err);
+            setError("Si è verificato un errore durante il salvataggio.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // --- Gestione UI ---
+
+    const handleCancel = () => {
+        if (isNew) { router.back(); }
+        else { populateForm(); setIsReadOnly(true); setError(null); }
+    };
 
     const dateOptions = useMemo(() => {
         if (!trip?.startDate || !trip?.endDate) { return []; }
@@ -100,384 +316,12 @@ export default function TransportForm() {
         return selectDateOption(date, dateOptions);
     };
 
-
-    const populateForm = useCallback(() => {
-        const transport = trip?.transports?.find(t => t.id === transportId);
-        if (transport) {
-            setTitle(transport.title || '');
-            const currentType = transportOptions.find(t => t.id === transport.type) || transportOptions[0];
-            setType(currentType);
-            setNotes(transport.notes || '');
-            setDepDate(transport.departureDate.toDate());
-            setDepTime(format(transport.departureDate.toDate(), 'HH:mm'));
-            setDepLocation(transport.departureLocation ?? null);
-            setArrDate(transport.arrivalDate.toDate());
-            setArrTime(format(transport.arrivalDate.toDate(), 'HH:mm'));
-            setArrLocation(transport.arrivalLocation ?? null);
-            setStopovers(transport.stopovers?.map((s) => {
-                return {
-                    id: s.id,
-                    location: s.location ?? null,
-                    date: s.date?.toDate(),
-                    arrivalTime: s.arrivalTime,
-                    departureTime: s.departureTime
-                };
-            }) || []);
-
-            const isPublicTransportType = [TransportType.Flight, TransportType.Train,
-            TransportType.Bus, TransportType.Shuttle, TransportType.Ferry].includes(transport.type);
-
-            // Specifici
-            if (isPublicTransportType) {
-                const t = transport as TransportPublic;
-                setCarrier(t.carrier || '');
-                setReferenceNumber(t.referenceNumber || '');
-                setSeat(t.seat || '');
-                setGateOrPlatform(t.gateOrPlatform || '');
-                setBookingReference(t.bookingReference || '');
-            } else if (transport.type === TransportType.CarRental) {
-                const t = transport as TransportRental;
-                setRentalCompany(t.rentalCompany || '');
-                setCarModel(t.carModel || '');
-                setPickupInstructions(t.pickupInstructions || '');
-                setInsuranceDetails(t.insuranceDetails || '');
-                setHasDifferentDropOff(t.hasDifferentDropOff || false);
-                setDropOffLocation(t.dropOffLocation ?? null);
-                setDropOffInstructions(t.dropOffInstructions || '');
-            } else if (transport.type === TransportType.PrivateTransfer) {
-                const t = transport as TransportPrivate;
-                setDriverName(t.driverName || '');
-                setDriverPhoneNumber(t.driverPhoneNumber || '');
-                setVehicleDescription(t.vehicleDescription || '');
-            } else {
-                const t = transport as TransportGeneric;
-                setReferenceNumber(t.referenceCode || '');
-            }
-
-        } else {
-            // Reset
-            setTitle('');
-            setType(transportOptions[0]);
-            setNotes('');
-            setDepDate(undefined);
-            setDepTime('');
-            setDepLocation(null);
-            setArrDate(undefined);
-            setArrTime('');
-            setArrLocation(null);
-            setStopovers([]);
-            setCarrier('');
-            setReferenceNumber('');
-            setSeat('');
-            setGateOrPlatform('');
-            setBookingReference('');
-            setRentalCompany('');
-            setCarModel('');
-            setPickupInstructions('');
-            setInsuranceDetails('');
-            setHasDifferentDropOff(false);
-            setDropOffLocation(null);
-            setDropOffInstructions('');
-            setDriverName('');
-            setDriverPhoneNumber('');
-            setVehicleDescription('');
-        }
-    }, [trip?.transports, transportId]);
-
-    useEffect(() => { populateForm(); }, [populateForm]);
-
-
-    // --- HELPERS E HANDLERS ---
-    const combineDateTime = (date: Date | undefined, time: string): Timestamp | null => {
-        if (!date || !time) return null;
-        const [hours, minutes] = time.split(':');
-        const newDate = new Date(date);
-        newDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-        return Timestamp.fromDate(newDate);
-    };
-
-    const handleAddStopover = () => {
-        setStopovers([...stopovers, { id: uuidv4(), location: null, date: depDate, arrivalTime: '', departureTime: '' }]);
-    };
-    const handleRemoveStopover = (id: string) => setStopovers(stopovers.filter(s => s.id !== id));
-    const updateStopover = (id: string, fields: Partial<StopoverState>) => {
+    const updateStopover = (id: string, fields: Partial<Stopover>) => {
         setStopovers(stopovers.map(s => s.id === id ? { ...s, ...fields } : s));
     };
 
-    const handleCancel = () => {
-        if (isNew) router.back();
-        else { populateForm(); setIsReadOnly(true); setError(null); }
-    };
+    const handleRemoveStopover = (id: string) => setStopovers(stopovers.filter(s => s.id !== id));
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setError(null);
-
-        // Validazione
-        if (!title || !type || !depDate || !depTime || !arrDate || !arrTime || !depLocation
-            || (!arrLocation && type.id !== TransportType.CarRental)) {
-            setError("Compila tutti i campi base obbligatori.");
-            return;
-        }
-
-        setIsSubmitting(true);
-
-        const depTimestamp = combineDateTime(depDate, depTime);
-        const arrTimestamp = combineDateTime(arrDate, arrTime);
-
-        if (!depTimestamp || !arrTimestamp) {
-            setError("Errore nelle date.");
-            setIsSubmitting(false);
-            return;
-        }
-
-        // Base Data
-        const baseData = {
-            id: isNew ? uuidv4() : (transportId as string),
-            title,
-            type: type.id,
-            departureDate: depTimestamp,
-            arrivalDate: arrTimestamp,
-            departureLocation: depLocation,
-            arrivalLocation: arrLocation || depLocation,
-            stopovers: stopovers.map(s => ({
-                id: s.id,
-                location: s.location,
-                date: combineDateTime(s.date, s.arrivalTime)!,
-                arrivalTime: s.arrivalTime,
-                departureTime: s.departureTime
-            })),
-            notes,
-        };
-
-        let transportData: Transport;
-        const isPublicTransportType = [TransportType.Flight, TransportType.Train,
-        TransportType.Bus, TransportType.Shuttle, TransportType.Ferry].includes(baseData.type as TransportType);
-
-        // Costruzione Payload in base al tipo
-        if (isPublicTransportType) {
-            transportData = {
-                ...baseData,
-                carrier,
-                referenceNumber,
-                seat,
-                gateOrPlatform,
-                bookingReference
-            } as TransportPublic;
-        } else if (baseData.type === TransportType.CarRental) {
-            transportData = {
-                ...baseData,
-                rentalCompany,
-                carModel,
-                pickupInstructions,
-                insuranceDetails,
-                hasDifferentDropOff,
-                dropOffLocation: hasDifferentDropOff ? dropOffLocation : undefined,
-                dropOffInstructions: hasDifferentDropOff ? dropOffInstructions : undefined
-            } as TransportRental;
-        } else if (baseData.type === TransportType.PrivateTransfer) {
-            transportData = {
-                ...baseData,
-                driverName,
-                driverPhoneNumber,
-                vehicleDescription,
-            } as TransportPrivate;
-        } else {
-            transportData = {
-                ...baseData,
-                referenceCode: referenceNumber
-            } as TransportGeneric;
-        }
-
-        try {
-            const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
-            if (!isNew) {
-                const updatedTransports = trip?.transports?.map(t => t.id === transportId ? transportData : t) || [];
-                await updateDoc(tripDocRef, { transports: updatedTransports });
-                setIsReadOnly(true);
-            } else {
-                await updateDoc(tripDocRef, { transports: arrayUnion(transportData) });
-                router.push(appRoutes.tripDetails(tripId));
-            }
-        } catch (err) {
-            console.error(err);
-            setError("Impossibile salvare i dati.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-
-    // --- RENDER COMPONENTI SPECIFICI ---
-    const renderSpecificFields = () => {
-        if (!type) return null;
-        const currentType = type.id;
-
-        const isPublicTransportType = [TransportType.Flight, TransportType.Train, TransportType.Bus,
-        TransportType.Shuttle, TransportType.Ferry].includes(currentType as TransportType);
-
-        // 1. Pubblico
-        if (isPublicTransportType) {
-            return (
-                <section className=" ">
-                    <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                            Dettagli Biglietto
-                        </h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <Input
-                            id="company"
-                            label="Compagnia"
-                            value={carrier}
-                            onChange={(e) => setCarrier(e.target.value)}
-                            readOnly={isReadOnly}
-                            placeholder="Es. Ryanair"
-                        />
-                        <Input
-                            id="referenceNumber"
-                            label="Numero Volo/Mezzo "
-                            value={referenceNumber}
-                            onChange={(e) => setReferenceNumber(e.target.value)}
-                            readOnly={isReadOnly}
-                            placeholder="Es. FR123"
-                        />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <Input
-                            id="bookingReference"
-                            label="Riferimento Prenotazione"
-                            value={bookingReference}
-                            onChange={(e) => setBookingReference(e.target.value)}
-                            readOnly={isReadOnly}
-                        />
-                        <Input
-                            id="seat"
-                            label="Posto"
-                            value={seat}
-                            onChange={(e) => setSeat(e.target.value)}
-                            readOnly={isReadOnly}
-                        />
-                        <Input
-                            id="gateOrPlatform"
-                            label={currentType === TransportType.Flight ? 'Gate' : 'Binario'}
-                            value={gateOrPlatform}
-                            onChange={(e) => setGateOrPlatform(e.target.value)}
-                            readOnly={isReadOnly}
-                        />
-                    </div>
-                </section>
-            );
-        }
-
-        // 2. Noleggio Auto
-        if (currentType === TransportType.CarRental) {
-            return (
-                <section className=" p-6 rounded-xl  border border-gray-100 dark:border-gray-700">
-                    <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2"><FaCar /> Dettagli Noleggio</h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <Input
-                            id="rentalCompany"
-                            label="Compagnia"
-                            value={rentalCompany}
-                            onChange={(e) => setRentalCompany(e.target.value)}
-                            readOnly={isReadOnly}
-                            required
-                        />
-                        <Input
-                            id="carModel"
-                            label="Modello Auto"
-                            value={carModel}
-                            onChange={(e) => setCarModel(e.target.value)}
-                            readOnly={isReadOnly}
-                        />
-                    </div>
-                    <div className="mb-6">
-                        <Textarea
-                            id="pickupInstructions"
-                            label="Istruzioni Ritiro/Consegna"
-                            value={pickupInstructions}
-                            onChange={(e) => setPickupInstructions(e.target.value)}
-                            readOnly={isReadOnly}
-                        />
-                    </div>
-
-                    <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
-                        <Checkbox
-                            id="diff-drop"
-                            checked={hasDifferentDropOff}
-                            onChange={(c: boolean) => !isReadOnly && setHasDifferentDropOff(c)}
-                        >
-                            <span className="font-medium">Riconsegna in luogo diverso</span>
-                        </Checkbox>
-                        {hasDifferentDropOff && (
-                            <div className="flex flex-col gap-6 mt-4 animate-in fade-in">
-                                <SearchLocation
-                                    label="Luogo Riconsegna"
-                                    value={dropOffLocation}
-                                    onSelect={setDropOffLocation}
-                                    readOnly={isReadOnly}
-                                />
-                                <Textarea
-                                    id="dropOffInstructions"
-                                    label="Istruzioni Riconsegna"
-                                    value={dropOffInstructions}
-                                    onChange={(e) => setDropOffInstructions(e.target.value)}
-                                    readOnly={isReadOnly}
-                                />
-                            </div>
-                        )}
-                    </div>
-                </section>
-            );
-        }
-
-        // 3. NCC
-        if (currentType === TransportType.PrivateTransfer) {
-            return (
-                <section className=" p-6 rounded-xl  border border-gray-100 dark:border-gray-700">
-                    <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2"><FaUserTie /> Contatti Autista</h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <Input
-                            id="driverName"
-                            label="Nome Autista"
-                            value={driverName}
-                            onChange={(e) => setDriverName(e.target.value)}
-                            readOnly={isReadOnly}
-                        />
-                        <Input
-                            id="driverPhoneNumber"
-                            label="Telefono Autista"
-                            value={driverPhoneNumber}
-                            onChange={(e) => setDriverPhoneNumber(e.target.value)}
-                            readOnly={isReadOnly}
-                            required
-                            placeholder="+39..."
-                        />
-                    </div>
-                    <div className="w-full">
-                        <Input
-                            id="vehicleDescription"
-                            label="Veicolo"
-                            value={vehicleDescription}
-                            onChange={(e) => setVehicleDescription(e.target.value)}
-                            readOnly={isReadOnly}
-                            placeholder="Modello/Targa"
-                        />
-
-                    </div>
-                </section>
-            );
-        }
-
-        return null;
-    };
-
-    // --- MENU CONTEXT ---
     const menuItems: ContextMenuItem[] = [
         {
             label: 'Indicazioni Partenza',
@@ -486,25 +330,32 @@ export default function TransportForm() {
         }
     ];
 
-    if (isOwner) {
-        menuItems.unshift({
-            label: isReadOnly ? 'Modifica' : 'Annulla',
-            icon: isReadOnly ? <FaPen /> : <FaUndo />,
-            onClick: () => { if (isReadOnly) setIsReadOnly(false); else handleCancel(); }
-        });
+    if (isOwner && !isNew) {
+        menuItems.push(
+            {
+                label: isReadOnly ? 'Modifica' : 'Annulla',
+                icon: isReadOnly ? <FaPen /> : <FaTimes />,
+                onClick: () => {
+                    if (!isReadOnly) handleCancel(); // Se stiamo annullando la modifica
+                    else setIsReadOnly(false);
+                }
+            }
+        );
     }
 
-    // Label dinamiche per noleggio vs viaggio
-    const isRental = type?.id === TransportType.CarRental;
-    const departureLabel = isRental ? 'Luogo Ritiro' : 'Partenza da';
-    const arrivalLabel = isRental ? 'Luogo Consegna (Standard)' : 'Arrivo a';
-    const dateDepLabel = isRental ? 'Data Ritiro' : 'Data Partenza';
-    const dateArrLabel = isRental ? 'Data Consegna' : 'Data Arrivo';
-    const hourDepLabel = isRental ? 'Ora di Ritiro' : 'Ora di Partenza';
-    const hourArrLabel = isRental ? 'Ora di Consegna' : 'Ora di Arrivo';
+    const transportOptions = [
+        { id: TransportType.Flight, name: TransportType.Flight },
+        { id: TransportType.Train, name: TransportType.Train },
+        { id: TransportType.Bus, name: TransportType.Bus },
+        { id: TransportType.Shuttle, name: TransportType.Shuttle },
+        { id: TransportType.Ferry, name: TransportType.Ferry },
+        { id: TransportType.CarRental, name: TransportType.CarRental },
+        { id: TransportType.PrivateTransfer, name: TransportType.PrivateTransfer },
+        { id: TransportType.Other, name: TransportType.Other },
+    ];
 
     return (
-        <div className="space-y-6 pb-24">
+        <div className="space-y-8 pb-24">
             <PageTitle
                 title={isNew ? "Nuovo Trasporto" : isReadOnly ? "Dettagli Trasporto" : "Modifica Trasporto"}
                 subtitle={isNew ? "Inserisci i dettagli del trasporto." : "Visualizza o aggiorna i dettagli del trasporto."}
@@ -512,11 +363,16 @@ export default function TransportForm() {
                 {!isNew && <ContextMenu items={menuItems} />}
             </PageTitle>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <section className="">
-                    <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">Generale</h3>
-                    </div>
+            {/* Visualizzazione Errori */}
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span className="block sm:inline">{error}</span>
+                </div>
+            )}
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
+
+                <FormSection title="Informazioni di Base" >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <Input
                             id="title"
@@ -524,7 +380,9 @@ export default function TransportForm() {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             readOnly={isReadOnly}
-                            required />
+                            required
+                            placeholder="Es. Volo per Roma"
+                        />
                         <Dropdown
                             label="Tipo"
                             items={transportOptions}
@@ -536,39 +394,295 @@ export default function TransportForm() {
                             readOnly={isReadOnly}
                         />
                     </div>
-                </section>
+                </FormSection>
 
-                {/* 2. CAMPI SPECIFICI PER TIPO */}
-                {renderSpecificFields()}
+                {/* ... Sezioni esistenti mantenute, assicurati di passare i value corretti ... */}
+                {/* Esempio sezione Public Transport */}
+                {
+                    isPublicTransportType && (
+                        <>
+                            <FormSection title="Dettagli Biglietto" >
+                                {/* ... Inputs Carrier, RefNumber etc ... */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <Input
+                                        id="company"
+                                        label="Compagnia"
+                                        value={carrier}
+                                        onChange={(e) => setCarrier(e.target.value)}
+                                        readOnly={isReadOnly}
+                                        placeholder="Es. Ryanair"
+                                    />
+                                    <Input
+                                        id="referenceNumber"
+                                        label="Numero Volo/Mezzo"
+                                        value={referenceNumber}
+                                        onChange={(e) => setReferenceNumber(e.target.value)}
+                                        readOnly={isReadOnly}
+                                        placeholder="Es. FR123"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <Input
+                                        id="bookingReference"
+                                        label="Riferimento Prenotazione"
+                                        value={bookingReference}
+                                        onChange={(e) => setBookingReference(e.target.value)}
+                                        readOnly={isReadOnly}
+                                    />
+                                    <Input
+                                        id="gateOrPlatform"
+                                        label={type?.id === TransportType.Flight ? 'Gate' : 'Binario/Molo'}
+                                        value={gateOrPlatform}
+                                        onChange={(e) => setGateOrPlatform(e.target.value)}
+                                        readOnly={isReadOnly}
+                                    />
+                                </div>
 
-                {/* 3. LOGISTICA (Date e Luoghi) */}
-                <section className=" ">
-                    <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">{isRental ? 'Periodo Noleggio' : 'Itinerario'}</h3>
-                    </div>
+                                <div className="w-full gap-6 mb-8">
+                                    <SearchLocation
+                                        label={`Luogo di Partenza`}
+                                        value={depLocation} onSelect={setDepLocation}
+                                        readOnly={isReadOnly}
+                                        required={!isReadOnly} // Mostra asterisco solo in edit
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <Dropdown
+                                        label={`Data di Partenza`}
+                                        items={dateOptions}
+                                        selected={findDateOption(depDate)}
+                                        onSelect={(val) => setDepDate(val?.date)}
+                                        readOnly={isReadOnly}
+                                        required
+                                        optionValue="id"
+                                        optionLabel="name"
+                                    />
+                                    <TimeInput
+                                        label={`Ora di Partenza`}
+                                        value={depTime}
+                                        onChange={setDepTime}
+                                        readOnly={isReadOnly}
+                                        required
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <Dropdown
+                                        label={`Data di Arrivo`}
+                                        items={dateOptions}
+                                        selected={findDateOption(arrivalDate)}
+                                        onSelect={(val) => setArrivalDate(val?.date)}
+                                        readOnly={isReadOnly}
+                                        required
+                                        optionValue="id"
+                                        optionLabel="name"
+                                    />
+                                    <TimeInput
+                                        label={`Ora di Arrivo`}
+                                        value={arrivalTime}
+                                        onChange={setArrivalTime}
+                                        readOnly={isReadOnly}
+                                        required
+                                    />
+                                    <DurationInput
+                                        id="tripDuration"
+                                        label={`Durata Viaggio`}
+                                        value={tripDuration}
+                                        onChange={setTripDuration}
+                                        readOnly={isReadOnly}
+                                        required
+                                    />
+                                </div>
+                            </FormSection>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <SearchLocation
-                            label={`${departureLabel}`}
-                            value={depLocation} onSelect={setDepLocation}
-                            readOnly={isReadOnly}
-                            required />
-                        {(!isRental || !hasDifferentDropOff) && (
-                            <SearchLocation
-                                label={`${arrivalLabel}`}
-                                value={arrLocation}
-                                onSelect={setArrLocation}
-                                readOnly={isReadOnly}
-                                required />
-                        )}
-                    </div>
+                            {/* Sezione Scali (Lasciata invariata come logica UI) */}
+                            <FormSection title="Scali/Cambi" className="relative" >
+                                {/* ... Codice scali invariato ... */}
+                                {
+                                    !isReadOnly && (
+                                        <Button variant="secondary" size={'sm'} className="absolute top-0 right-4" onClick={(e) => {
+                                            e.preventDefault(); // Prevenire submit form
+                                            setStopovers([...stopovers, new StopoverInstance()]);
+                                        }}>
+                                            <FaPlus className="mr-2" />
+                                            Aggiungi
+                                        </Button>
+                                    )
+                                }
+                                {stopovers.map((stopover, index) => (
+                                    <div key={stopover.id || index} className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 ${index < stopovers.length - 1 ? 'border-b' : ''} border-gray-50 dark:border-gray-700 pb-6 relative`}>
+                                        <Input
+                                            id={`stopoverStart_${index}`}
+                                            label="Luogo di Scalo"
+                                            value={stopover.stopoverPlace}
+                                            onChange={(e) => { updateStopover(stopover.id, { stopoverPlace: e.target.value }); }}
+                                            readOnly={isReadOnly}
+                                        />
+                                        <TimeInput
+                                            label="Ora Arrivo"
+                                            value={stopover.arrivalTime}
+                                            onChange={(e) => { updateStopover(stopover.id, { arrivalTime: e }); }}
+                                            readOnly={isReadOnly}
+                                        />
+                                        <TimeInput
+                                            label="Ora Partenza"
+                                            value={stopover.departureTime}
+                                            onChange={(e) => { updateStopover(stopover.id, { departureTime: e }); }}
+                                            readOnly={isReadOnly}
+                                        />
+                                        <DurationInput
+                                            id={`stopoverDuration_${index}`}
+                                            label="Durata Scalo"
+                                            value={stopover.duration}
+                                            onChange={(e) => { updateStopover(stopover.id, { duration: e }); }}
+                                            readOnly={isReadOnly}
+                                        />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Partenza / Ritiro */}
-                        <div className="flex md:flex-row flex-col gap-2 items-end">
-                            <div className="flex-grow w-full">
+                                        <Input
+                                            id={`stopoverStart_${index}`}
+                                            label="Numero Mezzo di Ripartenza"
+                                            value={stopover.transportNumber || ''}
+                                            onChange={(e) => { updateStopover(stopover.id, { transportNumber: e.target.value }); }}
+                                            readOnly={isReadOnly}
+                                        />
+                                        <Input
+                                            id={`stopoverStart_${index}`}
+                                            label="Gate di Ripartenza"
+                                            value={stopover.gateOrPlatform || ''}
+                                            onChange={(e) => { updateStopover(stopover.id, { gateOrPlatform: e.target.value }); }}
+                                            readOnly={isReadOnly}
+                                        />
+                                        {/* ... Resto dei campi scalo ... */}
+                                        {!isReadOnly && (
+                                            <div className="md:col-span-3 flex justify-end">
+                                                <Button size="sm" variant="secondary" onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleRemoveStopover(stopover.id)
+                                                }}>
+                                                    <FaTrash className="mr-2" /> Rimuovi
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </FormSection>
+                        </>
+                    )
+                }
+
+                {/* Sezione Noleggio Auto */}
+                {
+                    type?.id === TransportType.CarRental && (
+                        <FormSection title="Dettagli Noleggio Auto" >
+                            <div className="w-full gap-6 mb-8">
+                                <SearchLocation
+                                    label={`Luogo di Ritiro`}
+                                    value={pickupLocation} onSelect={setPickupLocation}
+                                    readOnly={isReadOnly}
+                                    required />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <Dropdown
-                                    label={`${dateDepLabel}`}
+                                    label={`Data di Ritiro`}
+                                    items={dateOptions}
+                                    selected={findDateOption(pickupDate)}
+                                    onSelect={(val) => setPickupDate(val?.date)}
+                                    readOnly={isReadOnly}
+                                    required
+                                    optionValue="id"
+                                    optionLabel="name"
+                                />
+                                <TimeInput
+                                    label={`Ora di Ritiro`}
+                                    value={pickupTime}
+                                    onChange={setPickupTime}
+                                    readOnly={isReadOnly}
+                                    required
+                                />
+                            </div>
+                            {/* ... Resto dei campi noleggio, assicurati di usare onChange corretti ... */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <Dropdown
+                                    label={`Data di Consegna`}
+                                    items={dateOptions}
+                                    selected={findDateOption(dropOffDate)}
+                                    onSelect={(val) => setDropOffDate(val?.date)}
+                                    readOnly={isReadOnly}
+                                    required
+                                    optionValue="id"
+                                    optionLabel="name"
+                                />
+                                <TimeInput
+                                    label={`Ora di Consegna`}
+                                    value={dropOffTime}
+                                    onChange={setDropOffTime}
+                                    readOnly={isReadOnly}
+                                    required
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <Input
+                                    id="rentalCompany"
+                                    label="Compagnia"
+                                    value={rentalCompany}
+                                    onChange={(e) => setRentalCompany(e.target.value)}
+                                    readOnly={isReadOnly}
+                                    required
+                                />
+                                <Input
+                                    id="carModel"
+                                    label="Modello Auto"
+                                    value={carModel}
+                                    onChange={(e) => setCarModel(e.target.value)}
+                                    readOnly={isReadOnly}
+                                />
+                            </div>
+
+                            <div className="mb-6">
+                                <Checkbox
+                                    id="diff-drop"
+                                    checked={hasDifferentDropOff}
+                                    onChange={(c: boolean) => !isReadOnly && setHasDifferentDropOff(c)}
+                                >
+                                    <span className="font-medium">Riconsegna in luogo diverso</span>
+                                </Checkbox>
+                            </div>
+
+                            {hasDifferentDropOff && (
+                                <div className="w-full gap-6 mb-6">
+                                    <SearchLocation
+                                        label={`Luogo di Riconsegna`}
+                                        value={dropOffLocation} onSelect={setDropOffLocation}
+                                        readOnly={isReadOnly}
+                                        required />
+                                </div>
+                            )}
+                            <div className="mb-6">
+                                <Textarea
+                                    id="dropOffNotes"
+                                    label={`Note`}
+                                    value={dropOffNotes}
+                                    onChange={(e) => setDropOffNotes(e.target.value)}
+                                    readOnly={isReadOnly}
+                                />
+                            </div>
+                        </FormSection>
+                    )
+                }
+
+                {/* Sezione Trasferimento Privato */}
+                {
+                    type?.id === TransportType.PrivateTransfer && (
+                        <FormSection title="Dettagli Trasferimento Privato" >
+                            <div className="w-full gap-6 mb-8">
+                                <SearchLocation
+                                    label={`Luogo di Partenza`}
+                                    value={depLocation} onSelect={setDepLocation}
+                                    readOnly={isReadOnly}
+                                    required />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <Dropdown
+                                    label={`Data di Partenza`}
                                     items={dateOptions}
                                     selected={findDateOption(depDate)}
                                     onSelect={(val) => setDepDate(val?.date)}
@@ -577,180 +691,58 @@ export default function TransportForm() {
                                     optionValue="id"
                                     optionLabel="name"
                                 />
-                            </div>
-                            <div className="md:w-50 w-full">
                                 <TimeInput
-                                    label={hourDepLabel}
+                                    label={`Ora di Partenza`}
                                     value={depTime}
                                     onChange={setDepTime}
-                                    readOnly={isReadOnly} />
-                            </div>
-                        </div>
-                        {/* Arrivo / Consegna */}
-                        <div className="flex md:flex-row flex-col gap-2 items-end">
-                            <div className="flex-grow w-full">
-                                <Dropdown
-                                    label={`${dateArrLabel}`}
-                                    items={dateOptions}
-                                    selected={findDateOption(arrDate)}
-                                    onSelect={(val) => setArrDate(val?.date)}
                                     readOnly={isReadOnly}
                                     required
-                                    optionValue="id"
-                                    optionLabel="name"
                                 />
                             </div>
-                            <div className="md:w-50 w-full">
-                                <TimeInput
-                                    label={hourArrLabel}
-                                    value={arrTime}
-                                    onChange={setArrTime}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <Input
+                                    id="driverName"
+                                    label="Nome Autista"
+                                    value={driverName}
+                                    onChange={(e) => setDriverName(e.target.value)}
                                     readOnly={isReadOnly}
                                 />
+                                <Input
+                                    id="driverPhoneNumber"
+                                    label="Telefono"
+                                    value={driverPhoneNumber}
+                                    onChange={(e) => setDriverPhoneNumber(e.target.value)}
+                                    readOnly={isReadOnly}
+                                    placeholder="+39..."
+                                />
                             </div>
-                        </div>
-                    </div>
-                </section>
+                            <div className="w-full">
+                                <Input
+                                    id="vehicleDescription"
+                                    label="Veicolo"
+                                    value={vehicleDescription}
+                                    onChange={(e) => setVehicleDescription(e.target.value)}
+                                    readOnly={isReadOnly}
+                                    placeholder="Modello/Targa"
+                                />
+                            </div>
+                        </FormSection>
+                    )
+                }
 
-                {/* 4. SCALI (Solo se non è Noleggio o NCC) */}
-                {!isRental && type?.id !== TransportType.PrivateTransfer && (
-                    <section className="  rounded-xl s">
-                        <div className="flex justify-between items-center mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Scali</h3>
-                            {!isReadOnly && (
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={handleAddStopover}>
-                                    <FaPlus /> <span className="ml-2">Aggiungi</span>
-                                </Button>
-                            )}
-                        </div>
-
-                        {stopovers.length > 0 ? stopovers.map((scalo, i) => {
-                            // LOGICA PER IL CAMPO "PARTENZA"
-                            // Se è il primo scalo, prende la partenza del viaggio principale (departure).
-                            // Altrimenti, prende la destinazione dello scalo precedente.
-                            const previousLocation = i === 0 ? depLocation : stopovers[i - 1].location;
-
-
-                            // LOGICA CHECKBOX "ULTIMO SCALO"
-                            // Confrontiamo gli indirizzi per capire se è selezionato
-                            const isLastStop = scalo.location?.address === arrLocation?.address;
-
-                            return (
-                                <div key={scalo.id} className="sm:p-4 mb-4 rounded-xl  relative">
-                                    <div className="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-600 pb-2">
-                                        <h4>Scalo {i + 1}</h4>
-                                        {!isReadOnly &&
-                                            <Button
-                                                variant="secondary"
-                                                size="sm"
-                                                onClick={() => handleRemoveStopover(scalo.id)}
-                                            >
-                                                <FaTrash />
-                                                <span className="ml-2">Rimuovi</span>
-                                            </Button>
-                                        }
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                                        {/* CAMPO PARTENZA (READONLY) */}
-                                        <div className="md:col-span-2">
-
-                                            <SearchLocation
-                                                label="Partenza"
-                                                value={previousLocation}
-                                                onSelect={() => { }} // Non modificabile
-                                                readOnly={true}
-                                            />
-
-                                        </div>
-
-                                        {/* GRUPPO DESTINAZIONE + CHECKBOX */}
-                                        <div className="md:col-span-2">
-
-                                            <SearchLocation
-                                                label="Destinazione"
-                                                value={scalo.location}
-                                                onSelect={(l) => updateStopover(scalo.id, { location: l })}
-                                                // Se è "Ultimo scalo", rendiamo il campo readonly per evitare modifiche accidentali che romperebbero la logica
-                                                readOnly={isReadOnly || isLastStop}
-                                            />
-                                        </div>
-
-                                        <Dropdown
-                                            label="Data"
-                                            items={dateOptions}
-                                            selected={findDateOption(scalo.date)}
-                                            onSelect={(v) => updateStopover(scalo.id, { date: v?.date })}
-                                            readOnly={isReadOnly}
-                                            optionValue={'id'}
-                                            optionLabel={'name'}
-                                        />
-
-                                        <div className="sm:grid sm:grid-cols-2 flex flex-col gap-2">
-                                            <TimeInput
-                                                label="Partenza"
-                                                value={scalo.departureTime}
-                                                onChange={(v) => updateStopover(scalo.id, { departureTime: v })}
-                                                readOnly={isReadOnly}
-                                            />
-                                            <TimeInput
-                                                label="Arrivo"
-                                                value={scalo.arrivalTime}
-                                                onChange={(v) => updateStopover(scalo.id, { arrivalTime: v })}
-                                                readOnly={isReadOnly}
-                                            />
-
-                                        </div>
-
-                                    </div>
-                                    <div className="flex justify-end mt-6">
-                                        {/* CHECKBOX PERSONALIZZATA */}
-                                        {!isReadOnly && arrLocation && (
-                                            <Checkbox
-                                                id={`last-stop-check-${scalo.id}`}
-                                                checked={isLastStop}
-                                                onChange={(checked) => {
-                                                    if (checked) {
-                                                        // Copia l'oggetto Location (lat, lng, address) dalla destinazione finale
-                                                        updateStopover(scalo.id, { location: arrLocation });
-                                                    } else {
-                                                        // Resetta il campo permettendo una nuova selezione
-                                                        updateStopover(scalo.id, { location: null });
-                                                    }
-                                                }}
-                                            >
-                                                Ultimo scalo
-                                            </Checkbox>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        }) : <p className="text-sm text-gray-400 italic">Nessuno scalo.</p>}
-                    </section>
-                )}
-
-
-
-                {error && (
-                    <div className="bg-red-50 p-3 rounded text-red-600 text-center border border-red-200">{error}</div>
-                )}
-
+                {/* Pulsanti Azione */}
                 {
                     !isReadOnly && (
                         <ActionStickyBar
                             handleCancel={handleCancel}
-                            isSubmitting={isSubmitting}
+                            isSubmitting={isSubmitting} // Collegato allo stato loading
                             isNew={isNew}
+                        // Rimuovi handleSave da qui se ActionStickyBar ha un pulsante di tipo submit interno
+                        // Altrimenti passa: onSave={handleSubmit}
                         />
                     )
                 }
-
-
             </form>
-        </div>
+        </div >
     );
 }

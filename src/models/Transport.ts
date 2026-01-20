@@ -1,8 +1,8 @@
 import { Timestamp } from 'firebase/firestore';
 import { Attachment } from './Attachment';
 import { Location } from './Location';
+import { v4 as uuidv4 } from 'uuid';
 
-// 1. Enum per i Tipi (Fondamentale per switch/case sicuri)
 export enum TransportType {
     Flight = 'Aereo',
     Train = 'Treno',
@@ -13,65 +13,52 @@ export enum TransportType {
     PrivateTransfer = 'Noleggio con conducente',
     Other = 'Altro'
 }
-
-export interface TransportStopover {
+export interface Stopover {
     id: string;
-    location: Location | null;
-    date: Timestamp;
+    stopoverPlace: string;
     arrivalTime: string;
     departureTime: string;
+    gateOrPlatform: string;
+    transportNumber?: string;
+    duration: string;
 }
 
+export class StopoverInstance implements Stopover {
+    public id: string = uuidv4();
+    public stopoverPlace: string = ''
+    public arrivalTime: string = ''
+    public departureTime: string = ''
+    public gateOrPlatform: string = ''
+    public duration: string = ''
+}
 
-// Interfaccia Base
-interface BaseTransport {
-    id: string;
+export interface Transport {
+    id?: string;
     title: string;
     type: TransportType;
-    departureDate: Timestamp;
-    arrivalDate: Timestamp;
-    departureLocation?: Location | null;
-    arrivalLocation?: Location | null;
-    stopovers?: TransportStopover[];
-    notes?: string;
-    attachments?: Attachment[];
-}
-
-// 1. Trasporti Pubblici (Aereo, Treno, etc.)
-export interface TransportPublic extends BaseTransport {
-    type: TransportType.Flight | TransportType.Train | TransportType.Bus | TransportType.Shuttle | TransportType.Ferry;
     carrier?: string;
     referenceNumber?: string;
-    seat?: string;
-    gateOrPlatform?: string;
     bookingReference?: string;
-}
-
-// 2. Noleggio Auto
-export interface TransportRental extends BaseTransport {
-    type: TransportType.CarRental;
+    gateOrPlatform?: string;
+    depLocation: Location | null;
+    depDate?: Timestamp;
+    depTime?: string;
+    arrivalDate?: Timestamp;
+    arrivalTime?: string;
+    tripDuration?: string;
+    stopovers?: Stopover[];
     rentalCompany?: string;
     carModel?: string;
-    pickupInstructions?: string;
-    insuranceDetails?: string;
-    hasDifferentDropOff: boolean;
+    pickupLocation?: Location | null;
+    pickupDate?: Timestamp;
+    pickupTime?: string;
     dropOffLocation?: Location | null;
-    dropOffInstructions?: string;
-}
-
-// 3. NCC / Privato
-export interface TransportPrivate extends BaseTransport {
-    type: TransportType.PrivateTransfer;
+    dropOffDate?: Timestamp;
+    dropOffTime?: string;
+    hasDifferentDropOff?: boolean;
+    dropOffNotes?: string;
     driverName?: string;
     driverPhoneNumber?: string;
     vehicleDescription?: string;
+    attachments?: Attachment[];
 }
-
-// 4. Altro
-export interface TransportGeneric extends BaseTransport {
-    type: TransportType.Other;
-    referenceCode?: string;
-}
-
-// Unione
-export type Transport = TransportPublic | TransportRental | TransportPrivate | TransportGeneric;

@@ -12,7 +12,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, la
     return (
         <div className="w-full">
             <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {label} {required && <span>*</span>}
+                {label}  {required && <span className="text-red-500">*</span>}
             </label>
             {/* Wrapper per l'effetto gradiente del bordo al focus */}
             <div className="relative rounded-lg p-[1.5px] bg-transparent focus-within:bg-gradient-to-br from-purple-600 to-indigo-700 transition-colors duration-300">

@@ -61,8 +61,8 @@ export default function TransportsList({ tripId, transports = [], isOwner }: Rea
     const groupedTransports = transports.reduce((acc, transport) => {
         // Converte il Timestamp di Firestore in una stringa YYYY-MM-DD per raggruppare
         let dateKey = '';
-        if (transport.departureDate && typeof transport.departureDate.toDate === 'function') {
-            const date = transport.departureDate.toDate();
+        if (transport.depDate && typeof transport.depDate.toDate === 'function') {
+            const date = transport.depDate.toDate();
             dateKey = date.toISOString().split('T')[0];
         } else {
             // Fallback se la data non è valida o non è un Timestamp
@@ -112,8 +112,6 @@ export default function TransportsList({ tripId, transports = [], isOwner }: Rea
 
                             <ul className="space-y-4">
                                 {groupedTransports[date]
-                                    // Ordina per orario all'interno dello stesso giorno
-                                    .sort((a, b) => a.departureDate.seconds - b.departureDate.seconds)
                                     .map(t => (
                                         <DetailItemCard
                                             key={t.id}

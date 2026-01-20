@@ -4,12 +4,9 @@ import { useState, useEffect, FormEvent, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-import { FaPen, FaMap, FaUndo, FaCheck, FaTimes } from 'react-icons/fa';
-
+import { FaPen, FaMap, FaUndo } from 'react-icons/fa';
 import { db } from '@/firebase/config';
-import { Trip } from '@/models/Trip';
 import { Accommodation } from '@/models/AccomModation';
-
 import ContextMenu from '@/components/actions/context-menu';
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 import PageTitle from '../generics/page-title';
@@ -18,12 +15,14 @@ import SearchLocation from '../inputs/search-location';
 import { DateRange } from 'react-day-picker';
 import Dropdown from '../inputs/dropdown';
 import Input from '../inputs/input';
-import Button from '../actions/button';
 import { EntityKeys } from '@/utils/entityKeys';
 import { generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
 import { useTrip } from '@/context/tripContext';
 import { useAuth } from '@/context/authProvider';
 import ActionStickyBar from '../actions/action-sticky-bar';
+import FormSection from '../generics/form-section';
+// import RichTextInput from '../inputs/rich-text-editor';
+import { Location } from '@/models/Location';
 
 
 
@@ -42,8 +41,9 @@ export default function AccommodationForm() {
     const [link, setLink] = useState('');
     const [cost, setCost] = useState('');
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
-    const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+    const [location, setLocation] = useState<Location | null>(null);
     const [accommodationDestination, setAccommodationDestination] = useState<{ id: string; name: string } | null>(null);
+    // const [additionalContents, setAdditionalContents] = useState<string>('');
 
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -178,10 +178,9 @@ export default function AccommodationForm() {
             <form onSubmit={handleSubmit} className="space-y-4">
 
                 {/* SEZIONE 1: IDENTITÀ ALLOGGIO */}
-                <section className=" ">
-                    <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">Informazioni Base</h3>
-                    </div>
+
+
+                <FormSection title='Informazioni Base'>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Input
                             id="acc-name"
@@ -205,14 +204,10 @@ export default function AccommodationForm() {
                             readOnly={isReadOnly}
                         />
                     </div>
-                </section>
+                </FormSection>
 
-                {/* SEZIONE 2: LOCATION E PRENOTAZIONE */}
-                <section className=" ">
-                    <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
 
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">Posizione e Prenotazione</h3>
-                    </div>
+                <FormSection title='Posizione e Prenotazione'>
                     <div className="space-y-6">
                         <SearchLocation
                             value={location}
@@ -229,14 +224,14 @@ export default function AccommodationForm() {
                             placeholder="Incolla qui l'URL..."
                         />
                     </div>
-                </section>
+                </FormSection>
 
-                {/* SEZIONE 3: DETTAGLI LOGISTICI */}
-                <section className=" ">
-                    <div className="flex items-center gap-3 mb-6 border-b border-gray-50 dark:border-gray-700 pb-4">
 
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">Dettagli Soggiorno</h3>
-                    </div>
+                {/* SEZIONE 2: LOCATION E PRENOTAZIONE */}
+
+
+
+                <FormSection title='Dettagli Soggiorno'>
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 items-end">
                         <Dropdown<{ id: string; name: string; date: Date }>
                             label="Data Check-in"
@@ -262,7 +257,17 @@ export default function AccommodationForm() {
                         />
 
                     </div>
-                </section>
+                </FormSection>
+
+
+                {/* <FormSection title='Contenuti Aggiuntivi'>
+                    <RichTextInput
+
+                    />
+                </FormSection> */}
+
+
+
 
                 {error && (
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-xl flex items-center gap-3 text-red-700 dark:text-red-400">

@@ -20,9 +20,8 @@ import ActionStickyBar from "../actions/action-sticky-bar";
 import { doc, Timestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { EntityKeys } from "@/utils/entityKeys";
-import { tr } from "date-fns/locale";
 import DurationInput from "../inputs/duration-input";
-import { set } from "date-fns";
+import RichTextInput from '../inputs/rich-text-editor';
 
 // Helper per generare ID univoci (se non usi una libreria esterna come uuid)
 const generateUUID = () => crypto.randomUUID();
@@ -78,6 +77,7 @@ export default function TransportForm() {
     const [dropOffNotes, setDropOffNotes] = useState<string>('');
 
     const [stopovers, setStopovers] = useState<Stopover[]>([]);
+    const [additionalContents, setAdditionalContents] = useState<string>('');
 
     const isPublicTransportType = [TransportType.Flight, TransportType.Train,
     TransportType.Bus, TransportType.Shuttle, TransportType.Ferry].includes(type?.id as TransportType);
@@ -123,7 +123,7 @@ export default function TransportForm() {
             setReferenceNumber(transport.referenceNumber || '');
             setGateOrPlatform(transport.gateOrPlatform || '');
             setBookingReference(transport.bookingReference || '');
-
+            setAdditionalContents(transport.additionalContents || '');
             // Partenza
             setDepLocation(transport.depLocation || null);
             setDepDate(transport.depDate ? transport.depDate.toDate() : undefined);
@@ -260,7 +260,8 @@ export default function TransportForm() {
 
                 dropOffNotes: dropOffNotes || undefined,
                 // Puliamo anche i singoli stopovers
-                stopovers: stopovers.map(s => removeUndefinedStopover(s)) || []
+                stopovers: stopovers.map(s => removeUndefinedStopover(s)) || [],
+                additionalContents: additionalContents || undefined,
             };
 
             // Rimuoviamo i campi undefined dall'oggetto principale
@@ -726,6 +727,27 @@ export default function TransportForm() {
                                     placeholder="Modello/Targa"
                                 />
                             </div>
+                        </FormSection>
+                    )
+                }
+                {
+                    isReadOnly && additionalContents.replace(/<[^>]*>/g, '').length > 0 && (
+                        <FormSection title='Contenuti Aggiuntivi'>
+                            <RichTextInput
+                                value={additionalContents}
+                                onChange={setAdditionalContents}
+                                readOnly={true}
+                            />
+                        </FormSection>
+                    )
+                }
+                {
+                    !isReadOnly && (
+                        <FormSection title='Contenuti Aggiuntivi'>
+                            <RichTextInput
+                                value={additionalContents}
+                                onChange={setAdditionalContents}
+                            />
                         </FormSection>
                     )
                 }

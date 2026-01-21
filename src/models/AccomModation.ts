@@ -12,4 +12,5 @@ export interface Accommodation {
     link?: string;
     cost?: number;
     attachments?: Attachment[];
+    additionalContents?: string;
 }

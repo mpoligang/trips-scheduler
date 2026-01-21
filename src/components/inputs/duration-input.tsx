@@ -99,7 +99,7 @@ export default function DurationInput({
                             value={hours}
                             onChange={onHoursChange}
                             placeholder="0"
-                            className="w-8 bg-transparent border-none p-0 text-gray-900 dark:text-white  text-right outline-none  placeholder-gray-400"
+                            className="w-8 bg-transparent border-none p-0 text-gray-900 dark:text-white  text-left outline-none  placeholder-gray-400"
                         />
                         <span className="text-xs text-gray-400 uppercase select-none">h</span>
                     </div>
@@ -115,7 +115,7 @@ export default function DurationInput({
                             onChange={onMinutesChange}
                             placeholder="00"
                             maxLength={2}
-                            className="w-8 bg-transparent border-none p-0 text-gray-900 dark:text-white  outline-none text-right placeholder-gray-400"
+                            className="w-8 bg-transparent border-none p-0 text-gray-900 dark:text-white  outline-none text-left placeholder-gray-400"
                         />
                         <span className="text-xs text-gray-400 uppercase select-none">m</span>
                     </div>

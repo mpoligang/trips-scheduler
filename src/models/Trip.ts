@@ -1,7 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 import { Stage } from "./Stage";
-import { Accommodation } from "./AccomModation";
 import { Transport } from "./Transport";
+import { Accommodation } from "./Accommodation";
 
 export interface Trip {
     id?: string;
@@ -12,7 +12,6 @@ export interface Trip {
     destinations: string[];
     stages?: Stage[];
     accommodations?: Accommodation[];
-    notes: string;
     participants?: TripParticipant[];
     participantIds?: string[];
     transports?: Transport[];

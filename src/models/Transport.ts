@@ -33,7 +33,7 @@ export class StopoverInstance implements Stopover {
 }
 
 export interface Transport {
-    id?: string;
+    id: string;
     title: string;
     type: TransportType;
     carrier?: string;
@@ -61,4 +61,5 @@ export interface Transport {
     driverPhoneNumber?: string;
     vehicleDescription?: string;
     attachments?: Attachment[];
+    additionalContents?: string;
 }

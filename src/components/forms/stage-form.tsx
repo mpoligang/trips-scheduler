@@ -3,7 +3,7 @@
 import { useState, useEffect, FormEvent, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { FaPen, FaUndo, FaCheck, FaMap } from 'react-icons/fa';
+import { FaPen, FaUndo, FaMap } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/firebase/config';
 import { Stage } from '@/models/Stage';
@@ -13,7 +13,6 @@ import Input from '../inputs/input';
 import PageTitle from '../generics/page-title';
 import ContextMenu, { ContextMenuItem } from '../actions/context-menu';
 import SearchLocation from '../inputs/search-location';
-import Button from '../actions/button';
 import { EntityKeys } from '@/utils/entityKeys';
 import { Attachment } from '@/models/Attachment';
 import { Location } from '@/models/Location';
@@ -22,7 +21,7 @@ import { useTrip } from '@/context/tripContext';
 import { useAuth } from '@/context/authProvider';
 import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
-
+import RichTextInput from '../inputs/rich-text-editor';
 
 
 export default function StageForm() {
@@ -45,6 +44,7 @@ export default function StageForm() {
     const [stageLocation, setStageLocation] = useState<Location | null>(null);
     const [stageDestination, setStageDestination] = useState<{ id: string; name: string } | null>(null);
     const [attachments, setAttachments] = useState<Attachment[]>([]);
+    const [additionalContents, setAdditionalContents] = useState<string>('');
 
     const dateOptions = useMemo(() => {
         if (!trip?.startDate || !trip?.endDate) { return []; }
@@ -64,6 +64,7 @@ export default function StageForm() {
             setStageDate(new Date(stage.date));
             setStageLocation(stage.location);
             setAttachments(stage.attachments || []);
+            setAdditionalContents(stage.additionalContents || '');
             if (stage.destination) {
                 setStageDestination({ id: stage.destination, name: stage.destination });
             }
@@ -72,6 +73,7 @@ export default function StageForm() {
             setStageDate(undefined);
             setStageLocation(null);
             setStageDestination(null);
+            setAdditionalContents('');
             setAttachments([]);
         }
     }, [trip?.stages, stageId]);
@@ -107,6 +109,7 @@ export default function StageForm() {
             location: stageLocation,
             destination: stageDestination.name,
             attachments: attachments,
+            additionalContents
         };
 
         try {
@@ -216,6 +219,28 @@ export default function StageForm() {
                         />
                     </div>
                 </FormSection>
+
+                {
+                    isReadOnly && additionalContents.replace(/<[^>]*>/g, '').length > 0 && (
+                        <FormSection title='Contenuti Aggiuntivi'>
+                            <RichTextInput
+                                value={additionalContents}
+                                onChange={setAdditionalContents}
+                                readOnly={true}
+                            />
+                        </FormSection>
+                    )
+                }
+                {
+                    !isReadOnly && (
+                        <FormSection title='Contenuti Aggiuntivi'>
+                            <RichTextInput
+                                value={additionalContents}
+                                onChange={setAdditionalContents}
+                            />
+                        </FormSection>
+                    )
+                }
 
 
                 {error && (

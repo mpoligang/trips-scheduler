@@ -5,7 +5,7 @@ import { FaPlus } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { doc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Accommodation } from '@/models/AccomModation';
+import { Accommodation } from '@/models/Accommodation1';
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 
 import { EntityKeys } from '@/utils/entityKeys';

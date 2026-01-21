@@ -11,6 +11,7 @@ import Input from '@/components/inputs/input';
 import { FirebaseError } from 'firebase/app';
 import { appRoutes } from '@/utils/appRoutes';
 import Logo from '@/components/generics/logo';
+import Checkbox from '@/components/inputs/checkbox';
 
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
@@ -20,6 +21,7 @@ export default function RegisterPage() {
     const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
     const router = useRouter();
 
     const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
@@ -28,6 +30,11 @@ export default function RegisterPage() {
 
         if (password !== confirmPassword) {
             setError("Le password non coincidono.");
+            return;
+        }
+
+        if (!termsAccepted) {
+            setError("Devi accettare i termini e le condizioni.");
             return;
         }
 
@@ -67,6 +74,11 @@ export default function RegisterPage() {
         setError(null);
         setIsLoading(true);
         const provider = new GoogleAuthProvider();
+
+        if (!termsAccepted) {
+            setError("Devi accettare i termini e le condizioni.");
+            return;
+        }
 
         try {
             const result = await signInWithPopup(auth, provider);
@@ -194,6 +206,19 @@ export default function RegisterPage() {
                                 required
                             />
                         </div>
+                        <div className="mb-6">
+                            <Checkbox
+                                id="terms"
+                                checked={termsAccepted}
+                                onChange={(e) => setTermsAccepted(e)}
+                                required
+                            >
+                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                    Accetto i termini e le condizioni
+                                </span>
+                            </Checkbox>
+                        </div>
+
 
                         {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
 

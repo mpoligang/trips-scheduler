@@ -6,7 +6,7 @@ import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { FaPen, FaMap, FaUndo } from 'react-icons/fa';
 import { db } from '@/firebase/config';
-import { Accommodation } from '@/models/AccomModation';
+import { Accommodation } from '@/models/Accommodation';
 import ContextMenu from '@/components/actions/context-menu';
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 import PageTitle from '../generics/page-title';
@@ -21,8 +21,9 @@ import { useTrip } from '@/context/tripContext';
 import { useAuth } from '@/context/authProvider';
 import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
-// import RichTextInput from '../inputs/rich-text-editor';
+import RichTextInput from '../inputs/rich-text-editor';
 import { Location } from '@/models/Location';
+import { Attachment } from '@/models/Attachment';
 
 
 
@@ -43,7 +44,8 @@ export default function AccommodationForm() {
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [location, setLocation] = useState<Location | null>(null);
     const [accommodationDestination, setAccommodationDestination] = useState<{ id: string; name: string } | null>(null);
-    // const [additionalContents, setAdditionalContents] = useState<string>('');
+    const [additionalContents, setAdditionalContents] = useState<string>('');
+    const [attachments, setAttachments] = useState<Attachment[]>([]);
 
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,10 +89,12 @@ export default function AccommodationForm() {
             setLink(accommodation.link || '');
             setLocation(accommodation.location);
             setCost(accommodation.cost ? accommodation.cost.toString() : '');
+            setAttachments(accommodation.attachments || []);
             setDateRange({
                 from: (accommodation.startDate).toDate(),
                 to: (accommodation.endDate).toDate(),
             });
+            setAdditionalContents(accommodation.additionalContents || '');
             if (accommodation.destination) {
                 setAccommodationDestination({ id: accommodation.destination, name: accommodation.destination });
             }
@@ -101,6 +105,8 @@ export default function AccommodationForm() {
             setLocation(null);
             setAccommodationDestination(null);
             setDateRange(undefined);
+            setAdditionalContents('');
+            setAttachments([]);
         }
     }, [trip?.accommodations, accommodationId]);
 
@@ -128,7 +134,9 @@ export default function AccommodationForm() {
             name, location, link, cost: cost ? Number.parseFloat(cost) : 0,
             startDate: Timestamp.fromDate(dateRange.from),
             endDate: Timestamp.fromDate(dateRange.to),
-            destination: accommodationDestination.name
+            destination: accommodationDestination.name,
+            additionalContents: additionalContents || '',
+            attachments: attachments || []
         };
         try {
             if (!isNew) {
@@ -260,11 +268,28 @@ export default function AccommodationForm() {
                 </FormSection>
 
 
-                {/* <FormSection title='Contenuti Aggiuntivi'>
-                    <RichTextInput
+                {
+                    isReadOnly && additionalContents.replace(/<[^>]*>/g, '').length > 0 && (
+                        <FormSection title='Contenuti Aggiuntivi'>
+                            <RichTextInput
+                                value={additionalContents}
+                                onChange={setAdditionalContents}
+                                readOnly={true}
+                            />
+                        </FormSection>
+                    )
+                }
+                {
+                    !isReadOnly && (
+                        <FormSection title='Contenuti Aggiuntivi'>
+                            <RichTextInput
+                                value={additionalContents}
+                                onChange={setAdditionalContents}
+                            />
+                        </FormSection>
+                    )
+                }
 
-                    />
-                </FormSection> */}
 
 
 

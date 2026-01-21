@@ -9,5 +9,6 @@ export interface Stage {
     date: string;
     description?: string;
     attachments?: Attachment[];
+    additionalContents?: string;
 }
 

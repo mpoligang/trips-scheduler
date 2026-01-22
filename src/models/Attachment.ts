@@ -4,4 +4,5 @@ export interface Attachment {
     url: string;
     type: 'file' | 'link';
     createdAt: string;
+    sizeInBytes: number;
 }

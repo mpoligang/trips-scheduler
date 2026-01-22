@@ -148,7 +148,7 @@ export default function AccommodationForm() {
             } else {
                 const newAccommodation: Accommodation = { id: uuidv4(), ...accommodationData };
                 await updateDoc(tripDocRef, { accommodations: arrayUnion(newAccommodation) });
-                router.push(appRoutes.tripDetails(tripId));
+                router.push(appRoutes.accommodations(tripId));
             }
         } catch (err) {
             console.error("Errore nel salvataggio:", err);

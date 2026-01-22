@@ -3,15 +3,15 @@
 import Link from 'next/link';
 import {
     FaMapMarkedAlt, FaUserFriends, FaBed, FaPlane, FaFileAlt,
-    FaCheckCircle, FaRobot, FaArrowRight, FaInstagram,
-    FaTwitter, FaFacebook, FaBriefcase, FaEnvelope, FaShieldAlt, FaLock
+    FaCheckCircle, FaRobot, FaBriefcase,
 } from 'react-icons/fa';
 import Logo from '@/components/generics/logo';
 import { appRoutes } from '@/utils/appRoutes';
 import SiteFooter from '@/components/templates/site-footer';
+import { appConfig } from '@/configs/app-config';
+import { sendPlanInfoRequest } from '@/utils/openMailer';
 
 export default function LandingPage() {
-    const currentYear = new Date().getFullYear();
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-purple-500/30 flex flex-col overflow-x-hidden">
@@ -112,7 +112,11 @@ export default function LandingPage() {
                                     Porta i tuoi follower in viaggio con te. Offriamo strumenti per Travel Influencer e Agenzie che vogliono offrire itinerari interattivi, brandizzati e professionali.
                                 </p>
                                 <a
-                                    href="mailto:michelangelopoli21@gmail.com"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        sendPlanInfoRequest()
+                                    }}
+                                    href={`mailto:${appConfig.supportEmail}`}
                                     className="inline-flex items-center gap-4 px-8 py-4 md:px-10 md:py-5 rounded-2xl bg-white text-slate-900 font-black text-base md:text-lg hover:bg-purple-50 transition-all shadow-xl active:scale-95"
                                 >
                                     Contattaci

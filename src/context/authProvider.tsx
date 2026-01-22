@@ -6,6 +6,8 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { UserData } from '@/models/UserData'; // Assicurati che il percorso sia corretto
 import { auth, db } from '@/firebase/config';
 import { EntityKeys } from '@/utils/entityKeys';
+import { useRouter } from 'next/navigation';
+import { appRoutes } from '@/utils/appRoutes';
 
 interface AuthContextType {
   user: User | null;
@@ -19,6 +21,7 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -26,11 +29,12 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
       if (!currentUser) {
         setUserData(null);
         setLoading(false);
+        router.push(appRoutes.login);
       }
     });
 
     return () => unsubscribeAuth();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (user) {

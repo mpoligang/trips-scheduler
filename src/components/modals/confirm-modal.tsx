@@ -13,6 +13,7 @@ interface DialogComponentProps {
     readonly children: ReactNode;
     readonly confirmText?: string;
     readonly cancelText?: string;
+    readonly showCancelButton?: boolean;
 }
 
 export default function DialogComponent({
@@ -24,6 +25,7 @@ export default function DialogComponent({
     children,
     confirmText = 'Conferma',
     cancelText = 'Annulla',
+    showCancelButton = true,
 }: DialogComponentProps) {
     if (!isOpen) return null;
 
@@ -33,7 +35,7 @@ export default function DialogComponent({
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md flex flex-col max-h-[90vh]">
 
                 {/* Header: Titolo e Pulsante Chiudi */}
-                <div className="flex justify-between items-start p-6 pb-2">
+                <div className="flex justify-between items-start p-6 pb-2 mb-4">
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-white pr-4">{title}</h2>
                     <button
                         onClick={onClose}
@@ -51,9 +53,13 @@ export default function DialogComponent({
 
                 {/* Footer: Bottoni */}
                 <div className="p-6 pt-4 mt-4 flex md:flex-row flex-col justify-end gap-4 border-t border-gray-100 dark:border-gray-700 mx-6 border-x-0 border-b-0 px-0">
-                    <Button variant="secondary" onClick={onClose} disabled={isLoading}>
-                        {cancelText}
-                    </Button>
+                    {
+                        showCancelButton && (
+                            <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+                                {cancelText}
+                            </Button>
+                        )
+                    }
                     <Button
                         onClick={onConfirm}
                         disabled={isLoading}

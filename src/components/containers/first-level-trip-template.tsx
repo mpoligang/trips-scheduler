@@ -6,7 +6,7 @@ import { BiTrip } from "react-icons/bi";
 import { BsTruckFront } from "react-icons/bs";
 import { FiUsers } from "react-icons/fi";
 import { appRoutes } from "@/utils/appRoutes";
-import { FaCog, FaPlus } from "react-icons/fa";
+import { FaPlus } from "react-icons/fa";
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import { useParams } from "next/navigation";
 

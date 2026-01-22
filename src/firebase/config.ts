@@ -3,6 +3,14 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+
+declare global {
+    interface Window {
+        FIREBASE_APPCHECK_DEBUG_TOKEN: boolean | string;
+    }
+}
+
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,6 +22,18 @@ const firebaseConfig = {
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+
+if (typeof window !== "undefined") {
+    if (process.env.NODE_ENV === "development") {
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    }
+
+    initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''),
+        isTokenAutoRefreshEnabled: true
+    });
+}
 
 const db = getFirestore(app);
 const auth = getAuth(app);

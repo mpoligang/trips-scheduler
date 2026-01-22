@@ -11,6 +11,7 @@ import Logo from '@/components/generics/logo';
 import Button from '@/components/actions/button';
 import SiteFooter from '@/components/templates/site-footer';
 import { useRouter } from 'next/navigation';
+import { appConfig } from '@/configs/app-config';
 
 export default function PrivacyPolicyPage() {
     const updateDate = "21 Gennaio 2026";
@@ -154,7 +155,7 @@ export default function PrivacyPolicyPage() {
                             <h4 className="text-xl font-black mb-2">Hai domande?</h4>
                             <p className="text-slate-500 text-sm mb-8 max-w-xs mx-auto">Siamo a tua disposizione per qualsiasi chiarimento sui tuoi dati.</p>
                             <a
-                                href="mailto:michelangelopoli21@gmail.com"
+                                href={`mailto:${appConfig.supportEmail}`}
                                 className="px-10 py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-lg hover:scale-105 transition-all shadow-xl shadow-slate-900/10"
                             >
                                 Contattaci

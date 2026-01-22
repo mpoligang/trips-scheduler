@@ -12,6 +12,8 @@ import { FirebaseError } from 'firebase/app';
 import { appRoutes } from '@/utils/appRoutes';
 import Logo from '@/components/generics/logo';
 import Checkbox from '@/components/inputs/checkbox';
+import { UserData } from '@/models/UserData';
+import { Plans } from '@/configs/app-config';
 
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
@@ -92,12 +94,18 @@ export default function RegisterPage() {
                 const fName = nameParts[0];
                 const lName = nameParts.slice(1).join(" ");
 
-                await setDoc(userDocRef, {
+                const payload: UserData = {
                     uid: user.uid,
                     firstName: fName,
                     lastName: lName,
-                    email: user.email,
-                });
+                    email: user.email || '',
+                    plan: Plans.FREE,
+                    expirationPlanDate: null,
+                    totalTripsCreated: 0,
+                    totalStorageUsedInBytes: 0,
+                };
+
+                await setDoc(userDocRef, payload);
             }
 
             router.push(appRoutes.home);

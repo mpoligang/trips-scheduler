@@ -1,52 +1,36 @@
 'use client';
 
+import { useParams } from "next/navigation";
 import AttachmentsManager from "@/components/cards/attachment-manager";
 import StageTemplatePage from "@/components/templates/stage-template";
 import { useTrip } from "@/context/tripContext";
-import { db } from "@/firebase/config";
-import { Attachment } from "@/models/Attachment";
-import { EntityKeys } from "@/utils/entityKeys";
-import { doc, updateDoc } from "firebase/firestore";
-import { useParams } from "next/navigation";
-
-
 
 const StageAttachmentsPage = () => {
-
-    const { trip, } = useTrip();
-
+    const { stages } = useTrip();
     const params = useParams();
+
+    // Recuperiamo i parametri dall'URL
     const stageId = params.id as string;
-    const tripId = params.tripId as string;
-    const attachments = trip?.stages?.find(s => s.id === (stageId || ''))?.attachments || [];
 
+    /**
+     * ✅ RECUPERO DATI
+     * Grazie alla join 'stages(*, attachments(*))' che abbiamo aggiunto nel Provider,
+     * gli allegati sono già presenti dentro l'oggetto della tappa.
+     */
+    const currentStage = stages?.find(s => s.id === stageId);
+    const attachments = currentStage?.attachments || [];
 
-    const handleAttachmentsUpdate = async (newAttachments: Attachment[]) => {
-        if (!trip) { return; }
+    console.log("StageAttachmentsPage - attachments:", attachments);
 
-        const updatedStages = trip.stages?.map((s) => {
-            if (s.id === stageId) {
-                return { ...s, attachments: newAttachments };
-            }
-            return s;
-        }) || [];
-
-        try {
-            const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
-            await updateDoc(tripDocRef, { stages: updatedStages });
-        } catch (err) {
-            console.error("Errore salvataggio allegati su DB:", err);
-        }
-    };
 
     return (
         <StageTemplatePage>
             <AttachmentsManager
+                type="stage"
                 pageTitle="Gestione Allegati"
-                subtitle="Visualizza e gestisci gli allegati della tappa"
+                subtitle="Carica, visualizza e gestisci gli allegati relativi a questa tappa del viaggio."
                 attachments={attachments}
-                storagePath={`trips/${trip?.id}/stages/${stageId}/attachments`}
-                onAttachmentsChange={handleAttachmentsUpdate}
+                relatedId={stageId} // ✅ Passiamo l'ID della tappa come riferimento
             />
         </StageTemplatePage>
     );

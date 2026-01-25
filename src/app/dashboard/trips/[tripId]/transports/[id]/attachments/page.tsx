@@ -1,49 +1,29 @@
 'use client';
 
+import { useParams } from "next/navigation";
 import AttachmentsManager from "@/components/cards/attachment-manager";
 import TransportTemplatePage from "@/components/templates/transport-template";
 import { useTrip } from "@/context/tripContext";
-import { db } from "@/firebase/config";
-import { Attachment } from "@/models/Attachment";
-import { EntityKeys } from "@/utils/entityKeys";
-import { doc, updateDoc } from "firebase/firestore";
-import { useParams } from "next/navigation";
-
-
 
 const TransportAttachmentsPage = () => {
+    // Recuperiamo la lista dei trasporti dal nostro context centralizzato
+    const { transports } = useTrip();
 
-    const { trip, } = useTrip();
     const params = useParams();
     const transportId = params.id as string;
-    const attachments = trip?.transports?.find(s => s.id === (transportId || ''))?.attachments || [];
 
-    const handleAttachmentsUpdate = async (newAttachments: Attachment[]) => {
-        if (!trip) { return; }
-
-        const updatedTransports = trip.transports?.map((s) => {
-            if (s.id === transportId) {
-                return { ...s, attachments: newAttachments };
-            }
-            return s;
-        }) || [];
-
-        try {
-            const tripDocRef = doc(db, EntityKeys.tripsKey, trip.id as string);
-            await updateDoc(tripDocRef, { stages: updatedTransports });
-        } catch (err) {
-            console.error("Errore salvataggio allegati su DB:", err);
-        }
-    };
+    // Identifichiamo il trasporto corrente per estrarre i suoi allegati (già inclusi dalla join SQL)
+    const currentTransport = transports?.find(t => t.id === transportId);
+    const attachments = currentTransport?.attachments || [];
 
     return (
         <TransportTemplatePage>
             <AttachmentsManager
                 pageTitle="Gestione Allegati"
-                subtitle="Visualizza e gestisci gli allegati del trasporto"
+                subtitle="Carica, visualizza e gestisci gli allegati relativi a questo trasporto."
                 attachments={attachments}
-                storagePath={`trips/${trip?.id}/transports/${transportId}/attachments`}
-                onAttachmentsChange={handleAttachmentsUpdate}
+                relatedId={transportId}
+                type="transport"
             />
         </TransportTemplatePage>
     );

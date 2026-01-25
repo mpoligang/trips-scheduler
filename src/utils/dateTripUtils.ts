@@ -53,3 +53,9 @@ export const selectDateOption = (date: Date | undefined | null, options: DateOpt
 
     return options.find(opt => opt.id === searchId) || null;
 };
+
+export const formatDateForPostgres = (date: Date) => {
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+};

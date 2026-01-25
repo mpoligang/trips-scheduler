@@ -11,7 +11,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!auth.user && !auth.loading) {
+    if (!auth.user) {
       router.push(appRoutes.landing);
     }
     else {

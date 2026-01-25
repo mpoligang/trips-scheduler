@@ -22,7 +22,6 @@ const FirstLevelTripTemplate = ({ breadcrumb, children }: FirstLevelTripTemplate
 
     const { trip, isOwner } = useTrip();
     const params = useParams();
-
     const tripId = params.tripId as string;
     const isNew = tripId === 'new';
 

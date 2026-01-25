@@ -1,21 +1,17 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { doc, updateDoc, increment } from 'firebase/firestore';
+import { useState, useRef, useEffect } from 'react';
 import { FaPaperclip, FaLink, FaFilePdf, FaImage, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
-import { v4 as uuidv4 } from 'uuid';
+import { createClient } from '@/lib/client';
 
-import { storage, db } from '@/firebase/config';
 import { Attachment } from '@/models/Attachment';
-import { EntityKeys } from '@/utils/entityKeys';
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import EmptyData from '@/components/cards/empty-data';
 import DialogComponent from '@/components/modals/confirm-modal';
 import PageTitle from '../generics/page-title';
 import { useTrip } from '@/context/tripContext';
-import { getActivePlan, mbToBytes } from '@/utils/planUtils';
+import { mbToBytes, bytesToMb } from '@/utils/fileSizeUtils';
 import { useAuth } from '@/context/authProvider';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
 
@@ -25,7 +21,7 @@ interface AddModalProps {
     readonly onClose: () => void;
     readonly onConfirm: (data: { type: 'file' | 'link'; name: string; file?: File; url?: string }) => Promise<void>;
     readonly maxFileSizeMb: number;
-    readonly isLoading: boolean; // Aggiunto per gestire lo stato di caricamento
+    readonly isLoading: boolean;
 }
 
 function AddAttachmentModal({ isOpen, onClose, onConfirm, maxFileSizeMb, isLoading }: AddModalProps) {
@@ -55,7 +51,7 @@ function AddAttachmentModal({ isOpen, onClose, onConfirm, maxFileSizeMb, isLoadi
             }
             setError(null);
             setFile(selectedFile);
-            if (!name) setName(selectedFile.name);
+            if (!name) { setName(selectedFile.name); }
         }
     };
 
@@ -85,7 +81,7 @@ function AddAttachmentModal({ isOpen, onClose, onConfirm, maxFileSizeMb, isLoadi
 
                 <div className={`${linkUrl ? 'opacity-50 pointer-events-none' : ''}`}>
                     <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                        File (Max {maxFileSizeMb}MB)
+                        File (Immagini o PDF - Max {maxFileSizeMb}MB)
                     </label>
                     <input
                         type="file"
@@ -142,75 +138,94 @@ interface AttachmentsManagerProps {
     readonly pageTitle: string;
     readonly subtitle?: string;
     readonly attachments: Attachment[];
-    readonly onAttachmentsChange: (attachments: Attachment[]) => void;
-    readonly storagePath: string;
+    readonly relatedId: string;
+    readonly type: 'stage' | 'accommodation' | 'transport';
 }
 
 export default function AttachmentsManager({
-    attachments, pageTitle, subtitle, onAttachmentsChange, storagePath,
+    attachments, pageTitle, subtitle, relatedId, type
 }: AttachmentsManagerProps) {
-    const { userData } = useAuth();
-    const { isOwner } = useTrip();
+    const supabase = createClient();
+    const { user, userData, refreshUserData } = useAuth();
+    const { isOwner, refreshData, trip } = useTrip();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [limitError, setLimitError] = useState<{ title: string; message: string } | null>(null);
 
-    const planConfig = useMemo(() => getActivePlan(userData), [userData]);
     const isReadOnly = !isOwner;
-
-    const updateUserStorage = async (bytes: number) => {
-        if (!userData?.uid) return;
-        const userRef = doc(db, EntityKeys.usersKey, userData.uid);
-        await updateDoc(userRef, {
-            totalStorageUsedInBytes: increment(bytes)
-        });
-    };
 
     const handleConfirmAdd = async (data: { type: 'file' | 'link'; name: string; file?: File; url?: string }) => {
         setIsProcessing(true);
         try {
             let finalUrl = data.url || '';
+            let storagePath = null;
             let fileSize = 0;
 
             if (data.type === 'file' && data.file) {
                 fileSize = data.file.size;
-                const currentUsed = userData?.totalStorageUsedInBytes || 0;
-                const limitBytes = mbToBytes(planConfig.totalStorageLimitMb);
 
+                const currentUsed = userData?.total_storage_used_in_bytes || 0;
+                const limitBytes = userData?.plan?.storage_limit_bytes || 0;
+                const planName = userData?.plan?.name || 'Free';
+                const limitMb = bytesToMb(limitBytes);
+
+                // 1. UX CHECK (Messaggio originale ripristinato)
                 if (currentUsed + fileSize > limitBytes) {
                     setIsProcessing(false);
                     setIsModalOpen(false);
                     setLimitError({
                         title: "Limite di archiviazione raggiunto",
-                        message: `Il tuo piano ${planConfig.name} permette massimo ${planConfig.totalStorageLimitMb}MB. Libera spazio o contatta il supporto per passare a un piano superiore.`
+                        message: `Il tuo piano ${planName} permette massimo ${limitMb}MB. Libera spazio o contatta il supporto per passare a un piano superiore.`
                     });
                     return;
                 }
 
-                const uniqueName = `${uuidv4()}_${data.file.name}`;
-                const fileRef = ref(storage, `${storagePath}/${uniqueName}`);
-                await uploadBytes(fileRef, data.file);
-                finalUrl = await getDownloadURL(fileRef);
+                // Generazione Path sicuro
+                const fileExt = data.file.name.split('.').pop();
+                storagePath = `${trip?.id as string}/${crypto.randomUUID()}.${fileExt}`;
 
-                await updateUserStorage(fileSize);
+                // 2. UPLOAD SU STORAGE
+                const { error: uploadError } = await supabase.storage.from('attachments').upload(storagePath, data.file);
+
+                if (uploadError) {
+                    if (uploadError.message.includes("violates row-level security policy")) {
+                        setIsModalOpen(false);
+                        setLimitError({
+                            title: "Limite di archiviazione raggiunto",
+                            message: `Il tuo piano ${planName} permette massimo ${limitMb}MB. Libera spazio o contatta il supporto per passare a un piano superiore.`
+                        });
+                        return;
+                    }
+                    throw uploadError;
+                }
+
+                const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(storagePath);
+                finalUrl = urlData.publicUrl;
             } else if (data.type === 'link' && finalUrl) {
                 if (!/^https?:\/\//i.test(finalUrl)) {
                     finalUrl = 'https://' + finalUrl;
                 }
             }
 
-            const newAttachment: Attachment = {
-                id: uuidv4(),
+            // 3. INSERIMENTO RECORD DB
+            const { error: dbError } = await supabase.from('attachments').insert({
+                trip_id: trip?.id as string,
                 name: data.name,
                 url: finalUrl,
-                type: data.type,
-                sizeInBytes: fileSize,
-                createdAt: new Date().toISOString()
-            };
+                storage_path: storagePath,
+                file_type: data.type,
+                size_in_bytes: fileSize,
+                stage_id: type === 'stage' ? relatedId : null,
+                accommodation_id: type === 'accommodation' ? relatedId : null,
+                transport_id: type === 'transport' ? relatedId : null,
+            });
 
-            onAttachmentsChange([...attachments, newAttachment]);
+            if (dbError) throw dbError;
+
+            await refreshData();
+            await refreshUserData();
             setIsModalOpen(false);
         } catch (error) {
             console.error("Errore aggiunta allegato:", error);
@@ -227,14 +242,12 @@ export default function AttachmentsManager({
 
         setIsProcessing(true);
         try {
-            if (att.type === 'file') {
-                const fileRef = ref(storage, att.url);
-                await deleteObject(fileRef);
-                if (att.sizeInBytes) {
-                    await updateUserStorage(-att.sizeInBytes);
-                }
+            if (att.storage_path) {
+                await supabase.storage.from('attachments').remove([att.storage_path]);
             }
-            onAttachmentsChange(attachments.filter(a => a.id !== deleteId));
+            await supabase.from('attachments').delete().eq('id', deleteId);
+            await refreshData();
+            await refreshUserData();
         } catch (error) {
             console.error("Errore eliminazione:", error);
         } finally {
@@ -243,22 +256,21 @@ export default function AttachmentsManager({
         }
     };
 
-
-
     return (
         <div className="space-y-8">
             <PageTitle title={pageTitle} subtitle={subtitle}>
-                {!isReadOnly && (
+                {!isReadOnly && relatedId !== 'new' && (
                     <Button variant="secondary" size="sm" onClick={() => setIsModalOpen(true)}>
                         <FaPlus className="mr-2" /> Aggiungi
                     </Button>
                 )}
             </PageTitle>
 
+            {/* MODALE DI ERRORE ORIGINALE */}
             <DialogComponent
                 isOpen={!!limitError}
                 onClose={() => setLimitError(null)}
-                onConfirm={() => sendEmailToUpgrade(`${userData?.firstName} ${userData?.lastName}`, `${userData?.email || ''}`)}
+                onConfirm={() => sendEmailToUpgrade(`${userData?.first_name} ${userData?.last_name}`, `${user?.email || ''}`)}
                 title={limitError?.title || ''}
                 isLoading={false}
                 confirmText="Contattaci"
@@ -270,7 +282,7 @@ export default function AttachmentsManager({
                 isOpen={isModalOpen}
                 onClose={() => !isProcessing && setIsModalOpen(false)}
                 onConfirm={handleConfirmAdd}
-                maxFileSizeMb={planConfig.maxFileSizeInMb}
+                maxFileSizeMb={userData?.plan?.max_file_size_bytes ? bytesToMb(userData.plan.max_file_size_bytes) : 2}
                 isLoading={isProcessing}
             />
 
@@ -284,7 +296,7 @@ export default function AttachmentsManager({
                     confirmText="Elimina"
                     cancelText="Annulla"
                 >
-                    <p>L&apos;azione è irreversibile e lo spazio verrà liberato dal tuo account.</p>
+                    <p>L&apos;azione è irreversibile. Lo spazio verrà liberato automaticamente dal tuo account.</p>
                 </DialogComponent>
             )}
 
@@ -294,12 +306,12 @@ export default function AttachmentsManager({
                         <li key={att.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
                             <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 flex-grow overflow-hidden group">
                                 <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                                    {att.type === 'file' ? (att.name.toLowerCase().endsWith('.pdf') ? <FaFilePdf className="text-red-500" /> : <FaImage className="text-blue-500" />) : <FaLink className="text-green-500" />}
+                                    {att.file_type === 'file' ? (att.name.toLowerCase().endsWith('.pdf') ? <FaFilePdf className="text-red-500" /> : <FaImage className="text-blue-500" />) : <FaLink className="text-green-500" />}
                                 </div>
                                 <div className="flex flex-col min-w-0">
                                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{att.name}</span>
                                     <span className="text-xs text-gray-500">
-                                        {att.type === 'file' ? `Documento (${att.sizeInBytes ? (att.sizeInBytes / 1024 / 1024).toFixed(2) : '0'} MB)` : 'Link esterno'}
+                                        {att.file_type === 'file' ? `Documento (${att.size_in_bytes ? bytesToMb(att.size_in_bytes).toFixed(2) : '0'} MB)` : 'Link esterno'}
                                     </span>
                                 </div>
                             </a>

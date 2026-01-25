@@ -3,7 +3,6 @@
 import { Trip } from "@/models/Trip";
 import { useRouter } from "next/navigation";
 import { FaCalendarAlt, FaPen, FaTrash } from "react-icons/fa";
-import { Timestamp } from "firebase/firestore";
 import ContextMenu, { ContextMenuItem } from "../actions/context-menu";
 import { appRoutes } from "@/utils/appRoutes";
 
@@ -13,16 +12,25 @@ interface TripCardProps {
     readonly onDelete: () => void;
 }
 
-// Funzione helper per formattare correttamente i Timestamp di Firestore
-const formatDate = (timestamp: Timestamp) => {
-    if (!timestamp || typeof timestamp.toDate !== 'function') {
+/**
+ * Formatta la data da stringa (YYYY-MM-DD) a MM/DD/YYYY
+ */
+const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'Data non definita';
+
+    const date = new Date(dateString);
+
+    // Controlla se la data è valida
+    if (isNaN(date.getTime())) {
         return 'Data non valida';
     }
-    return timestamp.toDate().toLocaleDateString('it-IT', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-    });
+
+    // Formato richiesto: MM/DD/YYYY
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
 };
 
 export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
@@ -53,7 +61,7 @@ export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
         <div
             onClick={(event: React.MouseEvent<HTMLDivElement>) => handleNavigateToDetail(event)}
             role="button"
-            className="bg-white p-6 dark:bg-gray-800 rounded-lg shadow-lg flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 cursor-pointer "
+            className="bg-white p-6 dark:bg-gray-800 rounded-lg shadow-lg flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 cursor-pointer"
         >
             <div className="flex items-start justify-between">
                 <div className="flex flex-col w-full pr-4">
@@ -62,16 +70,14 @@ export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
                     </h3>
                 </div>
 
-                {
-                    isOwner && <ContextMenu items={menuItems} />
-
-                }
+                {isOwner && <ContextMenu items={menuItems} />}
             </div>
 
             <div className="border-t border-gray-100 dark:border-gray-700 mt-4 pt-4">
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-300">
                     <FaCalendarAlt className="mr-2 text-purple-500 dark:text-white flex-shrink-0" />
-                    <span>{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</span>
+                    {/* Usiamo i nomi dei campi aggiornati: start_date e end_date */}
+                    <span>{formatDate(trip.start_date)} - {formatDate(trip.end_date)}</span>
                 </div>
             </div>
         </div>

@@ -9,8 +9,7 @@ import FirstLevelTripTemplate from '@/components/containers/first-level-trip-tem
 
 
 export default function TransportsPage() {
-    const { trip, isOwner } = useTrip();
-    const tripId = trip?.id as string;
+    const { trip } = useTrip();
 
     const breadcrumbPaths: PathItem[] = [
         {
@@ -31,11 +30,7 @@ export default function TransportsPage() {
         <FirstLevelTripTemplate
             breadcrumb={breadcrumbPaths}
         >
-            <TransportsList
-                isOwner={isOwner}
-                tripId={tripId}
-                transports={trip?.transports || []}
-            />
+            <TransportsList />
         </FirstLevelTripTemplate>
     );
 }

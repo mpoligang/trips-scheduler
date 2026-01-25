@@ -1,9 +1,8 @@
 import { TripProvider } from "@/context/tripContext";
 
-export default async function Layout({ children, params }: { children: React.ReactNode, params: any }) {
-    const { tripId } = await params;
+export default async function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <TripProvider tripId={tripId}>
+        <TripProvider >
             {children}
         </TripProvider>
     );

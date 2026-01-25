@@ -9,8 +9,7 @@ import FirstLevelTripTemplate from '@/components/containers/first-level-trip-tem
 
 
 export default function StagesPage() {
-    const { trip, isOwner } = useTrip();
-    const tripId = trip?.id as string;
+    const { trip } = useTrip();
     const breadcrumbPaths: PathItem[] = [
         {
             label: 'I miei viaggi',
@@ -30,11 +29,7 @@ export default function StagesPage() {
         <FirstLevelTripTemplate
             breadcrumb={breadcrumbPaths}
         >
-            <StagesList
-                isOwner={isOwner}
-                tripId={tripId}
-                stages={trip?.stages || []}
-            />
+            <StagesList />
         </FirstLevelTripTemplate>
     );
 }

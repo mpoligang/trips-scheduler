@@ -1,3 +1,4 @@
+// import { useAuth } from '@/context/authProvider';
 import { useAuth } from '@/context/authProvider';
 import { twMerge } from 'tailwind-merge';
 
@@ -13,7 +14,7 @@ export default function Avatar({ className }: AvatarProps) {
     }
 
     // Estrae le iniziali. Gestisce il caso in cui i dati non siano disponibili.
-    const initials = `${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`.toUpperCase();
+    const initials = `${userData.first_name?.charAt(0)}${userData.last_name?.charAt(0)}`.toUpperCase();
 
     // Non renderizzare l'avatar se non ci sono iniziali (es. utente non loggato)
     if (!initials) {

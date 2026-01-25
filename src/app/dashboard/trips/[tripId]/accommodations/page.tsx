@@ -32,11 +32,7 @@ export default function AccommodationsPage() {
         <FirstLevelTripTemplate
             breadcrumb={breadcrumbPaths}
         >
-            <AccommodationsList
-                isOwner={isOwner}
-                tripId={tripId}
-                accommodations={trip?.accommodations || []}
-            />
+            <AccommodationsList />
         </FirstLevelTripTemplate>
     );
 }

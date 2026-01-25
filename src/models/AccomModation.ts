@@ -1,16 +1,18 @@
-import { Timestamp } from 'firebase/firestore';
 import { Attachment } from './Attachment';
-import { Location } from './Location';
 
 export interface Accommodation {
-    id?: string;
-    name: string;
-    destination: string;
-    location: Location;
-    startDate: Timestamp;
-    endDate: Timestamp;
-    link?: string;
-    cost?: number;
     attachments?: Attachment[];
-    additionalContents?: string;
+    id: string; // UUID in Postgres
+    trip_id: string; // Foreign Key verso la tabella trips
+    name: string;
+    destination: string | null;
+    address: string;
+    lat: number | null; // double precision -> number
+    lng: number | null; // double precision -> number
+    start_date: string;
+    end_date: string;
+    link: string | null;
+    notes: string | null;
+    created_at?: string;
 }
+

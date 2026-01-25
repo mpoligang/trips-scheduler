@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaPlus, FaMapMarkerAlt } from 'react-icons/fa';
-import { doc, updateDoc, arrayRemove } from 'firebase/firestore';
-import { db, storage } from '@/firebase/config';
+import { createClient } from '@/lib/client';
 import { Stage } from '@/models/Stage';
 
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
@@ -12,68 +11,71 @@ import DialogComponent from '../modals/confirm-modal';
 import Button from '../actions/button';
 import DetailItemCard from '../cards/detail-item-card';
 import EmptyData from '../cards/empty-data';
-import { EntityKeys } from '@/utils/entityKeys';
-import { deleteObject, ref } from 'firebase/storage';
 import PageTitle from '../generics/page-title';
+import { useTrip } from '@/context/tripContext';
+import { Attachment } from '@/models/Attachment';
 
-interface StagesListProps {
-    readonly tripId: string;
-    readonly stages?: Stage[];
-    readonly isOwner: boolean;
-}
-
+/**
+ * Formatta la data ISO (2024-05-24T...) per il raggruppamento
+ */
 const formatDateForGroup = (dateString: string): string => {
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
+    const date = new Date(dateString);
     return date.toLocaleDateString('it-IT', {
-        weekday: 'long', day: 'numeric', month: 'long',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
     });
 };
 
-export default function StagesList({ tripId, stages = [], isOwner }: StagesListProps) {
+export default function StagesList() {
     const router = useRouter();
+    const supabase = createClient();
+    const { trip, stages, isOwner, refreshData } = useTrip();
 
-    // Stati per la gestione del modale di eliminazione interno
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const selectedStage = stages.find(s => s.id === deleteId);
     const isDeleteModalOpen = !!deleteId;
 
-    const handleOpenDeleteModal = (id: string) => {
-        setDeleteId(id);
-    };
-
-    const handleCloseDeleteModal = () => {
-        setDeleteId(null);
-    };
+    const handleOpenDeleteModal = (id: string) => setDeleteId(id);
+    const handleCloseDeleteModal = () => setDeleteId(null);
 
     const handleConfirmDelete = async () => {
-        if (!deleteId || !selectedStage) return;
+        if (!deleteId || !selectedStage) { return; }
 
         setIsDeleting(true);
         try {
-            // 1. Elimina i file fisici dallo Storage (se presenti)
-            if (selectedStage.attachments && selectedStage.attachments.length > 0) {
-                const deletePromises = selectedStage.attachments
-                    .filter(att => att.type === 'file')
-                    .map(async (att) => {
-                        const fileRef = ref(storage, att.url);
-                        return deleteObject(fileRef).catch(err => {
-                            console.warn(`Impossibile eliminare il file ${att.name} dallo storage:`, err);
-                        });
-                    });
+            /** * ✅ BUSINESS LOGIC: Pulizia Storage 
+             * Recuperiamo i path prima del DELETE per non perdere i riferimenti
+             */
+            const { data: attachments } = await supabase
+                .from('attachments')
+                .select('storage_path')
+                .eq('stage_id', deleteId) // Usiamo stage_id come da nuovo schema
+                .not('storage_path', 'is', null);
 
-                await Promise.all(deletePromises);
+            if (attachments && attachments.length > 0) {
+                const paths = attachments.map(a => a.storage_path as string);
+                // Usiamo il bucket 'attachments' creato precedentemente
+                await supabase.storage.from('attachments').remove(paths);
             }
 
-            const tripDocRef = doc(db, EntityKeys.tripsKey, tripId);
-            await updateDoc(tripDocRef, {
-                stages: arrayRemove(selectedStage)
-            });
+            /** * ✅ BUSINESS LOGIC: Delete con CASCADE
+             * Il database cancellerà automaticamente i record in 'attachments'
+             */
+            const { error } = await supabase
+                .from('stages')
+                .delete()
+                .eq('id', deleteId);
+
+            if (error) { throw error; }
+
+            await refreshData();
 
         } catch (error) {
             console.error("Errore durante l'eliminazione della tappa:", error);
+            alert("Errore durante l'eliminazione.");
         } finally {
             setIsDeleting(false);
             setDeleteId(null);
@@ -81,19 +83,20 @@ export default function StagesList({ tripId, stages = [], isOwner }: StagesListP
     };
 
     const handleAdd = () => {
-        router.push(appRoutes.stageDetails(tripId, 'new'));
+        router.push(appRoutes.stageDetails(trip?.id as string, 'new'));
     };
 
+    /**
+     * Raggruppamento tappe per Data e poi per Destinazione
+     */
     const groupedStages = stages.reduce((acc, stage) => {
-        const date = stage.date;
+        const dateKey = stage.arrival_date ? stage.arrival_date.split('T')[0] : 'no-date';
         const destination = stage.destination || 'Non specificato';
-        if (!acc[date]) {
-            acc[date] = {};
-        }
-        if (!acc[date][destination]) {
-            acc[date][destination] = [];
-        }
-        acc[date][destination].push(stage);
+
+        if (!acc[dateKey]) { acc[dateKey] = {}; }
+        if (!acc[dateKey][destination]) { acc[dateKey][destination] = []; }
+
+        acc[dateKey][destination].push(stage);
         return acc;
     }, {} as Record<string, Record<string, Stage[]>>);
 
@@ -111,38 +114,29 @@ export default function StagesList({ tripId, stages = [], isOwner }: StagesListP
                 confirmText="Sì, elimina"
             >
                 <p>
-                    Stai per eliminare la tappa <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedStage?.name}</strong>. Questa azione è irreversibile.
+                    Stai per eliminare la tappa <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedStage?.name}</strong>.
                 </p>
             </DialogComponent>
 
-
-
             <PageTitle title="Tappe del viaggio" subtitle='Gestisci le tappe del tuo viaggio.' >
-                {
-                    isOwner && (<>
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={handleAdd}
-                        >
-                            <FaPlus className="mr-2" />
-                            Aggiungi
-                        </Button>
-                    </>)
-                }
+                {isOwner && (
+                    <Button variant="secondary" size="sm" onClick={handleAdd}>
+                        <FaPlus className="mr-2" /> Aggiungi
+                    </Button>
+                )}
             </PageTitle>
 
             {hasStages ? (
                 <div className="space-y-6">
                     {sortedDates.map(date => (
                         <div key={date}>
-                            <h4 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-3  pb-2 capitalize">
-                                {formatDateForGroup(date)}
+                            <h4 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-3 pb-2 capitalize">
+                                {date === 'no-date' ? 'Senza Data' : formatDateForGroup(date)}
                             </h4>
                             <div className="space-y-4 mt-3">
-                                {groupedStages && Object.keys(groupedStages[date]).sort((a, b) => a.localeCompare(b)).map(destination => (
+                                {Object.keys(groupedStages[date]).sort().map(destination => (
                                     <div className='w-auto' key={destination}>
-                                        <span className="inline-block  bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 text-sm font-medium px-3 py-1 rounded-full">
+                                        <span className="inline-block bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 text-sm font-medium px-3 py-1 rounded-full">
                                             {destination}
                                         </span>
 
@@ -150,10 +144,10 @@ export default function StagesList({ tripId, stages = [], isOwner }: StagesListP
                                             {groupedStages[date][destination].map((stage) => (
                                                 <DetailItemCard
                                                     key={stage.id}
-                                                    icon={<FaMapMarkerAlt className="h-5 w-5 0" />}
+                                                    icon={<FaMapMarkerAlt className="h-5 w-5" />}
                                                     title={stage.name}
-                                                    directionsUrl={mapNavigationUrl(stage?.location?.address || '')}
-                                                    detailUrl={appRoutes.stageDetails(tripId, stage.id)}
+                                                    directionsUrl={stage.address ? mapNavigationUrl(stage.address) : ''}
+                                                    detailUrl={appRoutes.stageDetails(trip?.id as string, stage.id)}
                                                     onDelete={() => handleOpenDeleteModal(stage.id)}
                                                     isOwner={isOwner}
                                                 />

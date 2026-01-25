@@ -8,8 +8,8 @@ import { twMerge } from 'tailwind-merge';
 import dynamic from 'next/dynamic';
 import Button from '@/components/actions/button';
 import Sidebar from '@/components/containers/sidebar';
-import { apiRoutes } from '@/utils/apiRoutes';
 import { Location } from '@/models/Location';
+import { mapNavigationUrl } from '@/utils/appRoutes';
 
 // Carica la mappa dinamicamente
 const MapPicker = dynamic(() => import('@/components/maps/map'), {
@@ -25,6 +25,7 @@ interface LocationResult {
 }
 
 interface SearchLocationProps {
+    readonly id?: string;
     readonly onSelect: (location: Location | null) => void;
     readonly label?: string;
     readonly placeholder?: string;
@@ -42,8 +43,9 @@ export default function SearchLocation({
     value,
     readOnly = false,
     required = false,
+    id
 }: SearchLocationProps) {
-    const { user } = useAuth();
+    const { user } = useAuth(); // User di Supabase dal tuo AuthProvider
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<LocationResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -59,12 +61,13 @@ export default function SearchLocation({
         }
     }, [value]);
 
-    // Logica di ricerca con Debounce
+    // Logica di ricerca con Debounce verso il nuovo Route Handler di Next.js
     useEffect(() => {
         if (searchTimeout.current) {
             clearTimeout(searchTimeout.current);
         }
 
+        // Evitiamo ricerche inutili se la query è vuota o uguale all'indirizzo già selezionato
         if (!query || query.trim() === '' || query === value?.address) {
             setResults([]);
             setIsLoading(false);
@@ -79,12 +82,10 @@ export default function SearchLocation({
             }
 
             try {
-                const token = await user.getIdToken();
+                // Chiamata al tuo nuovo endpoint Next.js
+                // Non serve l'Authorization Header manuale: i cookie di Supabase viaggiano da soli
                 const response = await fetch(
-                    `${apiRoutes.LocationSearch}${encodeURIComponent(query)}`,
-                    {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    }
+                    `/api/search-location?q=${encodeURIComponent(query)}`
                 );
 
                 if (response.ok) {
@@ -94,7 +95,7 @@ export default function SearchLocation({
                     setResults([]);
                 }
             } catch (error) {
-                console.error("Errore di ricerca:", error);
+                console.error("Errore di ricerca LocationIQ:", error);
                 setResults([]);
             } finally {
                 setIsLoading(false);
@@ -108,7 +109,7 @@ export default function SearchLocation({
 
     const handleSelect = (result: LocationResult) => {
         if (!result) return;
-        const newLocation = {
+        const newLocation: Location = {
             lat: Number.parseFloat(result.lat),
             lng: Number.parseFloat(result.lon),
             address: result.display_name
@@ -117,30 +118,26 @@ export default function SearchLocation({
         setQuery(result.display_name);
     };
 
-
     const openDirections = () => {
         if (value?.address) {
-            const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(value.address)}`;
-            window.open(url, '_blank');
+            window.open(mapNavigationUrl(value.address), '_blank');
         }
     };
 
     return (
         <>
             {readOnly ? (
-                // MODALITÀ READ ONLY
                 <div className={className}>
-                    <label className="block text-sm  text-gray-500 dark:text-gray-400 mb-1">
+                    <label htmlFor={id} className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
                         {label}
                     </label>
-                    <div className="flex items-start justify-between w-full py-2 ">
-                        {/* Testo che va a capo invece di truncate */}
-                        <p className="text-gray-800 dark:text-gray-200  pr-4 whitespace-normal break-words">
+                    <div className="flex items-start justify-between w-full py-2">
+                        <p className="text-gray-800 dark:text-gray-200 pr-4 whitespace-normal break-words">
                             {!value?.address ? '-' : value?.address}
                         </p>
                         {value && (
                             <button
-                                onClick={() => setShowMap(true)} // Apre la sidebar
+                                onClick={() => setShowMap(true)}
                                 className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 mt-1 flex-shrink-0"
                                 title="Visualizza sulla mappa"
                                 type="button"
@@ -151,7 +148,6 @@ export default function SearchLocation({
                     </div>
                 </div>
             ) : (
-                // MODALITÀ EDIT
                 <div className={twMerge("w-full relative", className)}>
                     <Combobox
                         as="div"
@@ -170,7 +166,7 @@ export default function SearchLocation({
                                     <div className="relative flex items-center bg-gray-50 dark:bg-gray-700 rounded-md">
                                         <ComboboxInput
                                             className="w-full pl-4 pr-24 py-2 bg-transparent border-none rounded-md text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 placeholder-gray-500 dark:placeholder-gray-400"
-                                            displayValue={(item: { address: string }) => item?.address || query}
+                                            displayValue={(item: any) => item?.address || query}
                                             onChange={(event) => setQuery(event.target.value)}
                                             placeholder={placeholder}
                                             autoComplete="off"
@@ -190,7 +186,6 @@ export default function SearchLocation({
                                                         onSelect(null);
                                                     }}
                                                     className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 transition-colors"
-                                                    aria-label="Pulisci ricerca"
                                                     type="button"
                                                 >
                                                     <FaTimes className="h-3 w-3" />
@@ -204,7 +199,6 @@ export default function SearchLocation({
                                                     setShowMap(true);
                                                 }}
                                                 className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${showMap ? 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30' : 'text-gray-500'}`}
-                                                aria-label="Apri mappa"
                                                 type="button"
                                             >
                                                 <FaMap className="h-4 w-4" />
@@ -217,8 +211,7 @@ export default function SearchLocation({
                                     <ComboboxOptions
                                         static
                                         anchor="bottom"
-                                        transition
-                                        className="w-[var(--input-width)] z-[9999] mt-2 origin-top rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none"
+                                        className="w-[var(--input-width)] z-[9999] mt-2 origin-top rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 focus:outline-none"
                                     >
                                         <div className="max-h-60 overflow-y-auto p-1">
                                             {results.map((item) => (
@@ -242,7 +235,6 @@ export default function SearchLocation({
                 </div>
             )}
 
-            {/* Sidebar Mappa (Overlay) riutilizzabile - VISIBILE ANCHE IN READONLY */}
             <Sidebar
                 isOpen={showMap}
                 onClose={() => setShowMap(false)}
@@ -263,14 +255,11 @@ export default function SearchLocation({
                 }
             >
                 <div className="relative w-full h-full [&_.leaflet-container]:!h-full [&_.leaflet-container]:!w-full [&_.leaflet-container]:z-0">
-                    <MapPicker
-                        value={value ?? null}
-                    />
-                    {/* Bottone flottante per indicazioni su mobile */}
+                    <MapPicker value={value ?? null} />
                     {value?.address && (
                         <button
                             onClick={openDirections}
-                            className="sm:hidden absolute bottom-6 right-4 z-[500] p-4 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-500/30"
+                            className="sm:hidden absolute bottom-6 right-4 z-[500] p-4 bg-purple-600 text-white rounded-full shadow-lg"
                         >
                             <FaDirections size={24} />
                         </button>

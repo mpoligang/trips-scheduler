@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Combobox, ComboboxInput, ComboboxOptions, ComboboxOption } from '@headlessui/react';
 import { FaUser, FaSpinner, FaTimes, FaUserPlus } from 'react-icons/fa';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { db } from '@/firebase/config';
 import { twMerge } from 'tailwind-merge';
-import { EntityKeys } from '@/utils/entityKeys';
+import { createClient } from '@/lib/client';
+import { UserData } from '@/models/UserData';
 
-interface UserResult {
+export interface UserResult {
     uid: string;
     email: string;
     firstName?: string;
@@ -33,54 +32,36 @@ export default function UserSearch({
     const [searchTerm, setSearchTerm] = useState('');
     const [results, setResults] = useState<UserResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        if (searchTimeout.current) {
-            clearTimeout(searchTimeout.current);
-        }
-
-        if (!searchTerm || searchTerm.trim().length < 3) { // Cerca solo dopo 3 caratteri
+        if (!searchTerm || searchTerm.trim().length < 3) {
             setResults([]);
-            setIsLoading(false);
             return;
         }
 
         setIsLoading(true);
-        searchTimeout.current = setTimeout(async () => {
-            try {
-                const usersRef = collection(db, EntityKeys.usersKey);
-                // Cerca utenti la cui email inizia con il termine di ricerca
-                const q = query(
-                    usersRef,
-                    where('email', '>=', searchTerm.toLowerCase()),
-                    where('email', '<=', searchTerm.toLowerCase() + '\uf8ff'),
-                    limit(5)
-                );
+        const supabase = createClient(); // Usa il client browser
 
-                const querySnapshot = await getDocs(q);
-                const foundUsers: UserResult[] = [];
+        const searchUsers = async () => {
+            const { data, error } = await supabase.rpc('search_users', {
+                search_term: searchTerm
+            });
 
-                for (const doc of querySnapshot.docs) {
-                    const userData = doc.data() as UserResult;
-                    // Escludi utenti già presenti nella lista
-                    if (!excludeIds.includes(userData.uid)) {
-                        foundUsers.push(userData);
-                    }
-                }
-
-                setResults(foundUsers);
-            } catch (error) {
-                console.error("Errore ricerca utenti:", error);
-                setResults([]);
-            } finally {
-                setIsLoading(false);
+            if (!error && data) {
+                setResults(data.map((u: UserData) => ({
+                    uid: u.id,
+                    email: u.email,
+                    firstName: u.first_name,
+                    lastName: u.last_name
+                })));
             }
-        }, 800); // Debounce di 800ms
-
-        return () => {
-            if (searchTimeout.current) clearTimeout(searchTimeout.current);
+            setIsLoading(false);
         };
+
+
+
+        const timer = setTimeout(searchUsers, 500);
+        return () => clearTimeout(timer);
     }, [searchTerm, excludeIds]);
 
     const handleSelect = (user: UserResult) => {

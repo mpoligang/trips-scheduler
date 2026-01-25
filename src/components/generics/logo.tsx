@@ -1,3 +1,4 @@
+import { appRoutes } from '@/utils/appRoutes';
 import { useRouter } from 'next/dist/client/components/navigation';
 import { twMerge } from 'tailwind-merge';
 
@@ -11,7 +12,7 @@ export default function Logo({ className, size = 'large' }: LogoProps) {
 
     const router = useRouter();
     const handleClick = () => {
-        router.push('/dashboard');
+        router.push(appRoutes.home);
     };
 
     return (

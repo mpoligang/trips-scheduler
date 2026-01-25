@@ -1,19 +1,13 @@
 'use client';
 
-import { useState, FormEvent, ChangeEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { FaGoogle } from 'react-icons/fa';
-import { auth, db } from '@/firebase/config';
+import { signUpAction } from '@/actions/auth-actions';
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
-import { FirebaseError } from 'firebase/app';
 import { appRoutes } from '@/utils/appRoutes';
 import Logo from '@/components/generics/logo';
 import Checkbox from '@/components/inputs/checkbox';
-import { UserData } from '@/models/UserData';
-import { Plans } from '@/configs/app-config';
 
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
@@ -26,6 +20,7 @@ export default function RegisterPage() {
     const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
     const router = useRouter();
 
+    // REGISTRAZIONE EMAIL/PASSWORD (Via Server Action)
     const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (isLoading) return;
@@ -43,92 +38,41 @@ export default function RegisterPage() {
         setError(null);
         setIsLoading(true);
 
+        // Prepariamo i dati per la Server Action
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('firstName', firstName);
+        formData.append('lastName', lastName);
+
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+            const result = await signUpAction(formData);
 
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                firstName: firstName,
-                lastName: lastName,
-                email: user.email,
-            });
-
-            router.push(appRoutes.home);
-        } catch (err: unknown) {
-
-            const code = (err as FirebaseError).code
-
-            if (code === 'auth/email-already-in-use') {
-                setError("Questo indirizzo email è già in uso.");
-            } else if (code === 'auth/weak-password') {
-                setError("La password deve essere di almeno 6 caratteri.");
+            if (result?.error) {
+                setError(result.error);
+            } else if (result?.confirmEmail) {
+                router.push(appRoutes.verifyEmail);
+                return;
             } else {
-                setError("Si è verificato un errore durante la registrazione.");
+                router.push(appRoutes.home);
             }
+        } catch (err) {
+            console.error("Errore durante la registrazione:", err);
+            setError("Si è verificato un errore imprevisto.");
         } finally {
             setIsLoading(false);
         }
     };
-
-    const handleGoogleRegister = async () => {
-        if (isLoading) { return; }
-        setError(null);
-        setIsLoading(true);
-        const provider = new GoogleAuthProvider();
-
-        if (!termsAccepted) {
-            setError("Devi accettare i termini e le condizioni.");
-            return;
-        }
-
-        try {
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-
-            const userDocRef = doc(db, "users", user.uid);
-            const userDoc = await getDoc(userDocRef);
-
-            if (!userDoc.exists()) {
-                const nameParts = user.displayName?.split(" ") || ["", ""];
-                const fName = nameParts[0];
-                const lName = nameParts.slice(1).join(" ");
-
-                const payload: UserData = {
-                    uid: user.uid,
-                    firstName: fName,
-                    lastName: lName,
-                    email: user.email || '',
-                    plan: Plans.FREE,
-                    expirationPlanDate: null,
-                    totalTripsCreated: 0,
-                    totalStorageUsedInBytes: 0,
-                };
-
-                await setDoc(userDocRef, payload);
-            }
-
-            router.push(appRoutes.home);
-
-        } catch (error: unknown) {
-            console.error("Errore con Google Sign-In:", error);
-            setError("Impossibile registrarsi con Google. Riprova.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
 
     return (
         <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
             <div className="w-full max-w-4xl flex h-auto min-h-[600px] bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+
                 {/* --- Sezione Sinistra --- */}
                 <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-12 text-white">
                     <div className="text-center">
                         <h1 className="text-4xl font-bold mb-4">Unisciti a Noi</h1>
-                        <p className="text-lg opacity-90">
-                            Crea un account per iniziare a salvare i tuoi viaggi preferiti.
-                        </p>
+                        <p className="text-lg opacity-90">Crea un account per iniziare a salvare i tuoi viaggi preferiti.</p>
                     </div>
                 </div>
 
@@ -136,110 +80,57 @@ export default function RegisterPage() {
                 <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
                     <Logo className="mb-4 flex justify-center" />
 
-                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white text-center mb-4">
-                        Crea il tuo Account
-                    </h2>
-                    <p className="text-center text-gray-600 dark:text-gray-300 mb-6">
-                        Inizia gratuitamente
-                    </p>
+                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white text-center mb-4">Crea il tuo Account</h2>
+                    <p className="text-center text-gray-600 dark:text-gray-300 mb-0">Inizia gratuitamente</p>
 
-                    <Button className="mb-6" variant="secondary" onClick={handleGoogleRegister}
-                        disabled={isLoading}>
+                    {/* <Button className="mb-6" variant="secondary" onClick={handleGoogleRegister} disabled={isLoading}>
                         <FaGoogle className="text-gray-700 dark:text-gray-200" />
                         <span className="ml-2">Registrati con Google</span>
-                    </Button>
+                    </Button> */}
 
-
-                    <div className="flex items-center mb-6">
+                    <div className="flex items-center my-10">
                         <hr className="flex-grow border-gray-300 dark:border-gray-600" />
-                        <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">oppure</span>
+                        {/* <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">compila il form</span> */}
                         <hr className="flex-grow border-gray-300 dark:border-gray-600" />
                     </div>
 
                     <form onSubmit={handleRegister}>
                         <div className="flex gap-4 mb-4">
                             <div className="w-1/2">
-
-                                <Input
-                                    label='Nome'
-                                    type="text"
-                                    id="firstName"
-                                    value={firstName}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
-                                    required
-                                />
+                                <Input label='Nome' type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
                             </div>
                             <div className="w-1/2">
-                                <Input
-                                    label='Cognome'
-                                    type="text"
-                                    id="lastName"
-                                    value={lastName}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
-                                    required
-                                />
+                                <Input label='Cognome' type="text" id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                             </div>
                         </div>
-                        <div className="mb-4">
 
-                            <Input
-                                label='Indirizzo Email'
-                                type="email"
-                                id="email"
-                                value={email}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
                         <div className="mb-4">
+                            <Input label='Indirizzo Email' type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                        </div>
 
-                            <Input
-                                label='Password'
-                                type="password"
-                                id="password"
-                                value={password}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                required
-                            />
+                        <div className="mb-4">
+                            <Input label='Password' type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                         </div>
+
                         <div className="mb-6">
-                            <Input
-                                label='Conferma Password'
-                                type="password"
-                                id="confirmPassword"
-                                value={confirmPassword}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                required
-                            />
+                            <Input label='Conferma Password' type="password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
                         </div>
+
                         <div className="mb-6">
-                            <Checkbox
-                                id="terms"
-                                checked={termsAccepted}
-                                onChange={(e) => setTermsAccepted(e)}
-                                required
-                            >
-                                <span className="text-sm text-slate-500 dark:text-slate-400">
-                                    Accetto i termini e le condizioni
-                                </span>
+                            <Checkbox id="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e)} required>
+                                <span className="text-sm text-slate-500 dark:text-slate-400">Accetto i termini e le condizioni</span>
                             </Checkbox>
                         </div>
 
-
-                        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+                        {error && <p className={`text-sm text-center mb-4 ${error.includes('riuscita') ? 'text-green-500' : 'text-red-500'}`}>{error}</p>}
 
                         <Button disabled={isLoading} size="default">
                             {isLoading ? 'Creazione account...' : 'Registra Account'}
                         </Button>
 
-
                         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-8">
                             Hai già un account?{' '}
-                            <a href={appRoutes.login} className="font-medium text-purple-600 hover:underline dark:text-purple-400">
-                                Accedi
-                            </a>
+                            <a href={appRoutes.login} className="font-medium text-purple-600 hover:underline dark:text-purple-400">Accedi</a>
                         </p>
                     </form>
                 </div>

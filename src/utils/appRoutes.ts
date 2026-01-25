@@ -8,8 +8,13 @@ export const appRoutes = {
     landing: '/landing',
     login: '/login',
     forgotPassword: '/forgot-password',
+    resetPassword: '/reset-password',
     register: '/register',
     home: dashboard,
+    verifyEmail: '/verify-email',
+    privacy: '/privacy',
+    registrationSuccess: '/registration-success',
+    processFailed: '/process-failed',
     profile: `${dashboard}/profile`,
     tripMetadata,
     tripDetails,
@@ -25,4 +30,3 @@ export const appRoutes = {
 
 export const mapNavigationUrl = (address: string) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
 
-export const TRIP_NAME = 'TRIP_NAME';

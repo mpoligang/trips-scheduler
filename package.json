@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack && firebase deploy --only hosting --debug",
+    "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.91.0",
     "@tiptap/extension-bubble-menu": "^3.16.0",
     "@tiptap/extension-link": "^3.16.0",
     "@tiptap/extension-placeholder": "^3.15.3",
@@ -17,7 +19,6 @@
     "@tiptap/starter-kit": "^3.16.0",
     "class-variance-authority": "^0.7.1",
     "date-fns": "^4.1.0",
-    "firebase": "^12.2.1",
     "leaflet": "^1.9.4",
     "leaflet-geosearch": "^4.2.0",
     "lucide-react": "^0.562.0",

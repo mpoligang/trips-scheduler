@@ -19,7 +19,7 @@ function MapBounds({ stages }: { stages: Stage[] }) {
     const map = useMap();
     useEffect(() => {
         if (stages && stages.length > 0) {
-            const bounds = L.latLngBounds(stages.map(stage => [stage?.location?.lat ?? 0, stage?.location?.lng ?? 0]));
+            const bounds = L.latLngBounds(stages.map(stage => [stage?.lat ?? 0, stage?.lng ?? 0]));
             map.fitBounds(bounds, { padding: [50, 50] });
         }
     }, [stages, map]);
@@ -35,7 +35,7 @@ export default function StagesMap({ stages }: StagesMapProps) {
         return <div className="h-[400px] bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center text-center text-gray-500">Nessuna tappa da mostrare sulla mappa.</div>;
     }
 
-    const positions = stages.map(stage => [stage?.location?.lat, stage?.location?.lng] as [number, number]);
+    const positions = stages.map(stage => [stage?.lat, stage?.lng] as [number, number]);
 
     return (
         <MapContainer center={positions[0]} zoom={10} style={{ height: '400px', width: '100%' }} className="rounded-lg">
@@ -44,9 +44,9 @@ export default function StagesMap({ stages }: StagesMapProps) {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
             {stages.map((stage) => (
-                <Marker key={stage.id} position={[stage?.location?.lat ?? 0, stage?.location?.lng ?? 0]}>
+                <Marker key={stage.id} position={[stage?.lat ?? 0, stage?.lng ?? 0]}>
                     <Popup>
-                        <b>{stage.name}</b><br />{stage.date}
+                        <b>{stage.name}</b><br />{stage.address}
                     </Popup>
                 </Marker>
             ))}

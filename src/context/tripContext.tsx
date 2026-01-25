@@ -8,6 +8,7 @@ import { useAuth } from '@/context/authProvider';
 import { Stage } from '@/models/Stage';
 import { Accommodation } from '@/models/Accommodation';
 import { Transport } from '@/models/Transport';
+import { EntityKeys } from '@/utils/entityKeys';
 
 interface TripContextType {
     trip: Trip | null;
@@ -58,7 +59,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
 
         try {
             const { data, error: supabaseError } = await supabase
-                .from('trips')
+                .from(EntityKeys.tripsKey)
                 .select(`
                     *,
                     stages(*, attachments(*)),
@@ -67,7 +68,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
                     trip_participants (profiles (id, email, first_name, last_name))
                 `)
                 .eq('id', tripId)
-                .order('position', { foreignTable: 'stages', ascending: true })
+                .order('position', { referencedTable: EntityKeys.stagesKey, ascending: true })
                 .single();
 
             if (supabaseError) throw supabaseError;
@@ -105,7 +106,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
 
         const channel = supabase.channel(`realtime_trip_${tripId}`)
             .on('postgres_changes', { event: '*', schema: 'public', filter: `trip_id=eq.${tripId}` }, () => fetchAllData(true))
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'trips', filter: `id=eq.${tripId}` }, () => fetchAllData(true))
+            .on('postgres_changes', { event: '*', schema: 'public', table: EntityKeys.tripsKey, filter: `id=eq.${tripId}` }, () => fetchAllData(true))
             .subscribe();
 
         return () => { supabase.removeChannel(channel); };
@@ -116,7 +117,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         stages: trip?.stages || [],
         accommodations: trip?.accommodations || [],
         transports: trip?.transports || [],
-        participants: trip?.trip_participants?.map((p: any) => ({ ...p.profiles })) || [],
+        participants: trip?.trip_participants?.map((p: { profiles: TripParticipant }) => ({ ...p.profiles })) || [],
         loading,
         error,
         isOwner: trip?.owner_id === user?.id,

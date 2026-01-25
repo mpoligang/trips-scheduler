@@ -13,6 +13,7 @@ import DetailItemCard from '../cards/detail-item-card';
 import EmptyData from '../cards/empty-data';
 import PageTitle from '../generics/page-title';
 import { useTrip } from '@/context/tripContext';
+import { EntityKeys } from '@/utils/entityKeys';
 
 /**
  * Formatta la data ISO (2024-05-24T...) per il raggruppamento
@@ -64,7 +65,7 @@ export default function StagesList() {
              * Il database cancellerà automaticamente i record in 'attachments'
              */
             const { error } = await supabase
-                .from('stages')
+                .from(EntityKeys.stagesKey)
                 .delete()
                 .eq('id', deleteId);
 

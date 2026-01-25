@@ -18,6 +18,7 @@ import { GrUpdate } from "react-icons/gr";
 import { sendEmailToUpgrade } from "@/utils/openMailer";
 import DialogComponent from "@/components/modals/confirm-modal";
 import ContextMenu, { ContextMenuItem } from "@/components/actions/context-menu";
+import { deleteAccountAction } from "@/actions/user-actions";
 
 export default function ProfilePage() {
     const supabase = createClient();
@@ -93,7 +94,7 @@ export default function ProfilePage() {
     const handleLogout = async () => {
         try {
             await supabase.auth.signOut();
-            window.location.href = '/login';
+            window.location.href = appRoutes.login;
         } catch (error) {
             console.error("Errore logout:", error);
         }
@@ -104,24 +105,14 @@ export default function ProfilePage() {
         try {
             setIsDeletingAccount(true);
 
-            // 1. Pulizia Storage (Hacker-proof)
-            const { data: attachments } = await supabase
-                .from('attachments')
-                .select('storage_path')
-                .eq('trip_id', user.id);
+            // Chiamata alla Server Action
+            const result = await deleteAccountAction()
 
-            if (attachments && attachments.length > 0) {
-                const paths = attachments.map(a => a.storage_path).filter(Boolean) as string[];
-                await supabase.storage.from('attachments').remove(paths);
+            // Se la funzione ritorna un oggetto, c'è stato un errore (altrimenti avrebbe fatto redirect)
+            if (result?.error) {
+                setIsDeletingAccount(false);
+                return;
             }
-
-            // 2. Delete Profilo (Cascade delete gestirà il resto nel DB)
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .delete()
-                .eq('id', user.id);
-
-            if (profileError) throw profileError;
 
             await handleLogout();
         } catch (error: any) {

@@ -4,10 +4,10 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { DateRange } from 'react-day-picker';
 import { useAuth } from '@/context/authProvider';
-import { upsertTripAction } from '@/actions/trip-actions'; // La server action aggiornata
+import { upsertTripAction } from '@/actions/trip-actions';
 import { useTrip } from '@/context/tripContext';
 import { appRoutes } from '@/utils/appRoutes';
-import { UserResult } from '@/components/inputs/user-search'; // Assumo tu abbia questo tipo esportato
+import { UserResult } from '@/components/inputs/user-search';
 
 // Components
 import DateRangePicker from '@/components/inputs/date-range-picker';
@@ -21,12 +21,10 @@ import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import DialogComponent from '@/components/modals/confirm-modal';
 import { FaPlus, FaTimes, FaTrashAlt, FaExclamationTriangle } from 'react-icons/fa';
-import { TripParticipant } from '@/models/Trip';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
 
 export default function TripForm() {
     const { user, refreshUserData, userData } = useAuth();
-    // Assicurati che il context esponga questi metodi/dati
     const { trip, participants, loading: contextLoading } = useTrip();
 
     const router = useRouter();
@@ -39,15 +37,16 @@ export default function TripForm() {
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [destinations, setDestinations] = useState<string[]>([]);
     const [currentDestination, setCurrentDestination] = useState('');
-    const [participantsState, setParticipants] = useState<TripParticipant[]>(participants || []);
+
+    // Inizializza vuoto, verrà popolato dall'useEffect
+    const [participantsState, setParticipants] = useState<any[]>([]);
 
     // UI State
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [limitError, setLimitError] = useState<{ title: string; message: string } | null>(null);
 
-    // 1. POPOLAMENTO DATI (Edit Mode)
-    // Sincronizza lo stato locale con i dati del context quando vengono caricati
+    // 1. POPOLAMENTO DATI (Edit Mode & Participants Sync)
     useEffect(() => {
         if (isEditMode && trip) {
             setName(trip.name);
@@ -59,7 +58,13 @@ export default function TripForm() {
                 });
             }
         }
-    }, [isEditMode, trip]);
+
+        // Sincronizza i partecipanti dal context allo stato locale
+        // Il context restituisce oggetti già "appiattiti" (senza .profiles)
+        if (participants && participants.length > 0) {
+            setParticipants(participants);
+        }
+    }, [isEditMode, trip, participants]);
 
     // Gestione Destinazioni
     const handleAddDestination = () => {
@@ -72,26 +77,35 @@ export default function TripForm() {
 
     const handleRemoveDestination = (dest: string) => setDestinations(prev => prev.filter(d => d !== dest));
 
-    // 2. GESTIONE PARTECIPANTI (Normalizzazione)
+    // 2. GESTIONE PARTECIPANTI
     const handleAddParticipant = (searchResult: UserResult) => {
-        // Evita duplicati o se stesso
-        if (participants.some(p => p.uid === searchResult.uid)) return;
+        console.log("Selected user from search:", searchResult);
+
+        // // Evita duplicati (controlla sia id che uid) o se stesso
+        // const alreadyExists = participantsState.some(p => (p.id === searchResult.uid) || (p.uid === searchResult.uid));
+        // console.log("Selected user from search:", alreadyExists);
+
+        // if (alreadyExists) return;
         if (searchResult.uid === user?.id) return;
 
-        // Normalizziamo i dati per matchare la struttura del DB (snake_case) usata nel context
         const newParticipant = {
-            uid: searchResult.uid,
-            user_id: searchResult.uid,
+            uid: searchResult.uid,      // ID per i nuovi utenti
+            id: searchResult.id,       // Aggiungiamo anche 'id' per uniformità con quelli dal DB
             email: searchResult.email,
-            first_name: searchResult.firstName, // Mapping fondamentale
+            first_name: searchResult.firstName,
             last_name: searchResult.lastName,
             trip_id: tripId
         };
+        console.log(newParticipant);
 
-        setParticipants((prev: TripParticipant[]) => [...prev, newParticipant]);
+        setParticipants(() => [...participantsState, newParticipant]);
+        console.log("Current participants:", participantsState);
     };
 
-    const handleRemoveParticipant = (uid: string) => setParticipants((prev: TripParticipant[]) => prev.filter(p => p.uid !== uid));
+    const handleRemoveParticipant = (identifier: string) => {
+        // Rimuove basandosi su id o uid
+        setParticipants((prev) => prev.filter(p => (p.id !== identifier) && (p.uid !== identifier)));
+    };
 
     // 3. SUBMIT
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -105,9 +119,22 @@ export default function TripForm() {
         setIsSubmitting(true);
         setError(null);
 
+        console.log("Submitting trip with participants:", participantsState);
+
+
         try {
-            // Estraiamo solo gli ID per la server action
-            const participantIds = participants.map(p => p.uid);
+            // Logica corretta estrazione ID
+            const participantIds = participantsState.map((p: any) => {
+                // Priorità 1: 'uid' (Nuovi aggiunti dalla ricerca)
+                if (p.uid) return p.uid;
+                // Priorità 2: 'id' (Esistenti caricati dal Context/DB)
+                if (p.id) return p.id;
+
+                return null;
+            }).filter((id) => id !== null) as string[];
+
+            console.log("Participant IDs to submit:", participantIds);
+
 
             const result = await upsertTripAction({
                 id: isEditMode ? tripId : 'new',
@@ -126,8 +153,11 @@ export default function TripForm() {
             } else if (result.error) {
                 setError(result.error);
             } else {
-                await refreshUserData(); // Aggiorna contatore viaggi utente
-                router.push(appRoutes.home);
+                if (trip?.id) {
+                    await refreshUserData();
+                } else {
+                    router.push(appRoutes.home);
+                }
             }
         } catch (err) {
             console.error("Errore submit:", err);
@@ -137,7 +167,6 @@ export default function TripForm() {
         }
     };
 
-    // Mostra loader se siamo in edit ma i dati non sono ancora nel context
     if (isEditMode && (contextLoading || !trip)) return <Loader />;
 
     return (
@@ -147,7 +176,6 @@ export default function TripForm() {
                 subtitle={isEditMode ? 'Aggiorna i dettagli.' : 'Inizia una nuova avventura.'}
             />
 
-            {/* Modale Limiti */}
             <DialogComponent
                 isOpen={!!limitError}
                 onClose={() => setLimitError(null)}
@@ -165,7 +193,6 @@ export default function TripForm() {
             </DialogComponent>
 
             <form onSubmit={handleSubmit} className='space-y-8'>
-                {/* Sezione Dettagli */}
                 <FormSection title="Dettagli Principali">
                     <div className="space-y-6">
                         <Input
@@ -179,7 +206,6 @@ export default function TripForm() {
                     </div>
                 </FormSection>
 
-                {/* Sezione Destinazioni */}
                 <FormSection title="Destinazioni">
                     <div className="flex items-end gap-2">
                         <Input
@@ -208,39 +234,39 @@ export default function TripForm() {
                     </div>
                 </FormSection>
 
-                {/* Sezione Partecipanti */}
                 <FormSection title="Compagni di Viaggio">
                     <div className="mb-6">
                         <UserSearch
                             onSelect={handleAddParticipant}
                             placeholder="Cerca per email..."
-                            excludeIds={[user?.id || '', ...participants.map(p => p.uid)]}
+                            excludeIds={[user?.id || '', ...participantsState.map((p: any) => p.uid || p.id || '')]}
                         />
                     </div>
 
                     {participantsState.length > 0 ? (
-                        <ul className="divide-y divide-gray-100 dark:divide-gray-800  rounded-lg overflow-hidden">
-                            {participantsState.map((p) => (
-                                <li key={p.uid} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <ul className="divide-y divide-gray-100 dark:divide-gray-800 rounded-lg overflow-hidden">
+                            {participantsState.map((p: any) => (
+                                <li key={p.uid || p.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="h-9 w-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
-                                            {(p.first_name || p.email).charAt(0).toUpperCase()}
+                                            {(p.first_name || p.email || '?').charAt(0).toUpperCase()}
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                {p.first_name ? `${p.first_name} ${p.last_name || ''}` : p.email.split('@')[0]}
+                                                {p.first_name ? `${p.first_name} ${p.last_name || ''}` : p.email?.split('@')[0]}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        {p.uid === trip?.owner_id && (
+                                        {(p.id === trip?.owner_id || p.uid === trip?.owner_id) && (
                                             <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">Owner</span>
                                         )}
-                                        {p.uid !== user?.id && (
+                                        {/* Mostra il cestino solo se NON è l'owner e NON è l'utente corrente */}
+                                        {(p.id !== trip?.owner_id && p.uid !== trip?.owner_id) && (
                                             <button
                                                 type="button"
-                                                onClick={() => handleRemoveParticipant(p.uid)}
+                                                onClick={() => handleRemoveParticipant(p.uid || p.id)}
                                                 className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
                                             >
                                                 <FaTrashAlt size={14} />

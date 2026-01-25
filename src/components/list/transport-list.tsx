@@ -13,8 +13,8 @@ import EmptyData from '@/components/cards/empty-data';
 import DialogComponent from '@/components/modals/confirm-modal';
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 import PageTitle from '../generics/page-title';
-import { Attachment } from '@/models/Attachment';
-import { tr } from 'date-fns/locale';
+
+import { EntityKeys } from '@/utils/entityKeys';
 
 
 
@@ -71,7 +71,7 @@ export default function TransportsList() {
 
             // 2. Eliminazione del trasporto (il CASCADE DB eliminerà i record in 'attachments')
             const { error } = await supabase
-                .from('transports')
+                .from(EntityKeys.transportsKey)
                 .delete()
                 .eq('id', deleteId);
 

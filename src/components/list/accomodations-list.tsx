@@ -13,7 +13,7 @@ import EmptyData from '../cards/empty-data';
 import PageTitle from '../generics/page-title';
 import { RiHotelLine } from 'react-icons/ri';
 import { useTrip } from '@/context/tripContext';
-import { Attachment } from '@/models/Attachment';
+import { EntityKeys } from '@/utils/entityKeys';
 
 const formatStayPeriod = (start: string | undefined, end: string | undefined) => {
     if (!start || !end) { return ''; }
@@ -72,7 +72,7 @@ export default function AccommodationsList() {
 
             // 3. Eliminazione record alloggio (il CASCADE DB pulirà i metadati attachments)
             const { error } = await supabase
-                .from('accommodations')
+                .from(EntityKeys.accommodationsKey)
                 .delete()
                 .eq('id', deleteId);
 

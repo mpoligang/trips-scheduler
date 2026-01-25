@@ -2,5 +2,9 @@
 
 export enum EntityKeys {
     tripsKey = 'trips',
-    usersKey = 'users',
+    profilesKey = 'profiles',
+    participantsKey = 'trip_participants',
+    accommodationsKey = 'accommodations',
+    transportsKey = 'transports',
+    stagesKey = 'stages',
 };

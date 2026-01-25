@@ -24,6 +24,7 @@ import { Location } from "@/models/Location";
 import { Transport, TransportDetails, StopoverV2, StopoverInstanceV2, TransportType } from "@/models/Transport";
 import { generateDateOptions, selectDateOption } from "@/utils/dateTripUtils";
 import { appRoutes, mapNavigationUrl } from "@/utils/appRoutes";
+import { EntityKeys } from '@/utils/entityKeys';
 
 export default function TransportForm() {
     const supabase = createClient();
@@ -266,8 +267,8 @@ export default function TransportForm() {
 
         try {
             const { error: dbError } = isNew
-                ? await supabase.from('transports').insert([transportPayload])
-                : await supabase.from('transports').update(transportPayload).eq('id', transportId);
+                ? await supabase.from(EntityKeys.transportsKey).insert([transportPayload])
+                : await supabase.from(EntityKeys.transportsKey).update(transportPayload).eq('id', transportId);
 
             if (dbError) throw dbError;
 

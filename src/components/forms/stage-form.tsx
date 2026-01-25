@@ -17,6 +17,7 @@ import { useAuth } from '@/context/authProvider';
 import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
+import { EntityKeys } from '@/utils/entityKeys';
 
 export default function StageForm() {
     const router = useRouter();
@@ -118,7 +119,7 @@ export default function StageForm() {
         try {
             if (isNew) {
                 const { data, error: insertError } = await supabase
-                    .from('stages')
+                    .from(EntityKeys.stagesKey)
                     .insert([stageData])
                     .select()
                     .single();
@@ -129,7 +130,7 @@ export default function StageForm() {
                 router.push(appRoutes.stageDetails(tripId, data.id));
             } else {
                 const { error: updateError } = await supabase
-                    .from('stages')
+                    .from(EntityKeys.stagesKey)
                     .update(stageData)
                     .eq('id', stageId);
 

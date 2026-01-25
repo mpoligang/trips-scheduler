@@ -17,6 +17,7 @@ import { appRoutes } from '@/utils/appRoutes';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
 import { createClient } from '@/lib/client';
 import { AuthStatusEnum } from '@/models/Auth';
+import { EntityKeys } from '@/utils/entityKeys';
 
 export default function DashboardPage() {
     const supabase = createClient();
@@ -39,8 +40,8 @@ export default function DashboardPage() {
         setIsLoadingTrips(true);
         try {
             const [ownedRes, partRes] = await Promise.all([
-                supabase.from('trips').select('*').eq('owner_id', user.id).order('created_at', { ascending: false }),
-                supabase.from('trip_participants').select('trips (*)').eq('user_id', user.id)
+                supabase.from(EntityKeys.tripsKey).select('*').eq('owner_id', user.id).order('created_at', { ascending: false }),
+                supabase.from(EntityKeys.participantsKey).select('trips (*)').eq('user_id', user.id)
             ]);
 
             if (ownedRes.error) throw ownedRes.error;
@@ -141,9 +142,9 @@ export default function DashboardPage() {
         setIsDeleting(true);
         try {
             if (selectedTrip.owner_id === user.id) {
-                await supabase.from('trips').delete().eq('id', selectedTrip.id);
+                await supabase.from(EntityKeys.tripsKey).delete().eq('id', selectedTrip.id);
             } else {
-                await supabase.from('trip_participants').delete().eq('trip_id', selectedTrip.id).eq('user_id', user.id);
+                await supabase.from(EntityKeys.participantsKey).delete().eq('trip_id', selectedTrip.id).eq('user_id', user.id);
             }
             await fetchTrips();
             await refreshUserData();

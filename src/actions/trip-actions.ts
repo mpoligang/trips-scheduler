@@ -1,8 +1,8 @@
-// actions/trip-actions.ts
 'use server'
 
 import { createClient } from '@/lib/server';
 import { formatDateForPostgres } from '@/utils/dateTripUtils';
+import { EntityKeys } from '@/utils/entityKeys';
 import { revalidatePath } from 'next/cache';
 
 export async function upsertTripAction(formData: {
@@ -20,7 +20,7 @@ export async function upsertTripAction(formData: {
 
     const isNewTrip = !formData.id || formData.id === 'new';
 
-    // --- 1. CONTROLLO LIMITI (PIANO SCADUTO = FREE) ---
+    // --- 1. CONTROLLO LIMITI ---
     if (isNewTrip) {
         const { data: profile } = await supabase
             .from('profiles')
@@ -31,12 +31,9 @@ export async function upsertTripAction(formData: {
         if (profile) {
             const now = new Date();
             const expirationDate = profile.expiration_plan_date ? new Date(profile.expiration_plan_date) : null;
-
-            // ✅ FIX: Se è Pro ma la data è passata, consideralo Free
             const isPlanExpired = profile.plan !== 'free' && expirationDate && expirationDate < now;
             const effectivePlan = isPlanExpired ? 'free' : profile.plan;
 
-            // Limite di 2 viaggi per piano Free
             if (effectivePlan === 'free' && (profile.total_trips_created || 0) >= 2) {
                 return {
                     error: "limit_reached",
@@ -48,7 +45,7 @@ export async function upsertTripAction(formData: {
         }
     }
 
-    // --- 2. SALVATAGGIO VIAGGIO ---
+    // --- 2. PREPARAZIONE PAYLOAD ---
     const tripPayload = {
         name: formData.name,
         start_date: formatDateForPostgres(formData.startDate),
@@ -60,47 +57,54 @@ export async function upsertTripAction(formData: {
 
     let tripId = formData.id;
 
+    // --- 3. SALVATAGGIO O UPDATE ---
     if (!isNewTrip) {
-        const { error } = await supabase.from('trips').update(tripPayload).eq('id', tripId).eq('owner_id', user.id);
+        const { error } = await supabase.from(EntityKeys.tripsKey).update(tripPayload).eq('id', tripId).eq('owner_id', user.id);
         if (error) return { error: error.message };
     } else {
-        const { data, error } = await supabase.from('trips').insert(tripPayload).select().single();
+        const { data, error } = await supabase.from(EntityKeys.tripsKey).insert(tripPayload).select().single();
         if (error) return { error: error.message };
         tripId = data.id;
-        // Incrementa contatore (se usi una function RPC o trigger)
-        // await supabase.rpc('increment_trips_created', { user_id: user.id });
     }
 
-    // --- 3. SINCRONIZZAZIONE PARTECIPANTI SICURA ---
+    // --- 4. GESTIONE PARTECIPANTI ---
     if (tripId) {
-        // Filtriamo l'owner dalla lista degli ID ricevuti per non creare conflitti
+        // Rimuoviamo l'owner dalla lista per sicurezza (lo gestiamo a parte)
         const guestIds = formData.participantIds.filter(uid => uid !== user.id);
 
-        // A. Rimuovi ospiti vecchi che non sono più nella lista (Escludendo l'owner)
-        // "Cancella dalla tabella partecipanti DOVE trip_id è X, user_id NON è l'owner E user_id NON è nella nuova lista"
+        // A. DELETE: Rimuovi chi non è più nella lista (escluso l'owner)
+        // Logica: Cancella se trip_id coincide AND user_id non è owner AND user_id NON è nella lista guestIds
         if (guestIds.length > 0) {
             await supabase
-                .from('trip_participants')
+                .from(EntityKeys.participantsKey)
                 .delete()
                 .eq('trip_id', tripId)
-                .neq('user_id', user.id) // 🛡️ Protezione Owner
-                .not('user_id', 'in', `(${guestIds.join(',')})`);
+                .neq('user_id', user.id)
+                .not('user_id', 'in', guestIds); // ✅ Sintassi corretta per array
         } else {
-            // Se lista vuota, cancella tutti tranne owner
-            await supabase.from('trip_participants').delete().eq('trip_id', tripId).neq('user_id', user.id);
+            // Se la lista è vuota, cancella tutti tranne l'owner
+            await supabase
+                .from(EntityKeys.participantsKey)
+                .delete()
+                .eq('trip_id', tripId)
+                .neq('user_id', user.id);
         }
 
-        // B. Inserisci/Aggiorna i nuovi ospiti
+        // B. UPSERT: Aggiungi i nuovi o aggiorna esistenti
         if (guestIds.length > 0) {
             const participantsPayload = guestIds.map(uid => ({
                 trip_id: tripId,
                 user_id: uid
             }));
-            await supabase.from('trip_participants').upsert(participantsPayload, { onConflict: 'trip_id, user_id' });
+            await supabase
+                .from(EntityKeys.participantsKey)
+                .upsert(participantsPayload, { onConflict: 'trip_id, user_id' });
         }
 
-        // C. Assicurati che l'owner esista sempre
-        await supabase.from('trip_participants').upsert({ trip_id: tripId, user_id: user.id }, { onConflict: 'trip_id, user_id' });
+        // C. SAFETY: Assicura che l'owner sia sempre dentro
+        await supabase
+            .from(EntityKeys.participantsKey)
+            .upsert({ trip_id: tripId, user_id: user.id }, { onConflict: 'trip_id, user_id' });
     }
 
     revalidatePath('/dashboard');

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/server";
 import { appRoutes } from "@/utils/appRoutes";
 import { revalidatePath } from "next/cache";
 import { redirect } from 'next/navigation';
-
+import { headers } from "next/headers"; // 1. Importa headers
 
 export async function signUpAction(formData: FormData) {
     const supabase = await createClient();
@@ -13,6 +13,7 @@ export async function signUpAction(formData: FormData) {
     const password = formData.get('password') as string;
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
+    const origin = (await headers()).get('origin');
 
     const { data, error } = await supabase.auth.signUp({
         email,
@@ -22,7 +23,7 @@ export async function signUpAction(formData: FormData) {
                 firstName,
                 lastName,
             },
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth-callback`,
+            emailRedirectTo: `${origin}/api/auth-callback`,
         },
     });
 

@@ -15,7 +15,6 @@ export default function ResetPasswordPage() {
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
 
 
     const handleSetNewPassword = async (e: React.FormEvent) => {
@@ -29,8 +28,7 @@ export default function ResetPasswordPage() {
             setError("Errore aggiornamento: " + error.message);
             setIsSubmitting(false);
         } else {
-            setSuccess("Password aggiornata correttamente! Verrai reindirizzato al login...");
-            router.push(appRoutes.login);
+            router.push(appRoutes.passwordUpdatedSuccess);
         }
     };
 
@@ -74,7 +72,6 @@ export default function ResetPasswordPage() {
                     />
 
                     {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                    {success && <p className="text-green-500 text-sm text-center">{success}</p>}
 
 
                     <Button

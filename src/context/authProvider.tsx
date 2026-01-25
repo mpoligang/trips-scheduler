@@ -35,6 +35,7 @@ export function AuthProvider({ children, initialSession }: { children: ReactNode
     appRoutes.landing,
     appRoutes.registrationSuccess,
     appRoutes.processFailed,
+    appRoutes.passwordUpdatedSuccess,
     appRoutes.resetPassword // Fondamentale!
   ], [])
 

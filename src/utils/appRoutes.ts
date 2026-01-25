@@ -14,6 +14,7 @@ export const appRoutes = {
     verifyEmail: '/verify-email',
     privacy: '/privacy',
     registrationSuccess: '/registration-success',
+    passwordUpdatedSuccess: '/password-updated-success',
     processFailed: '/process-failed',
     profile: `${dashboard}/profile`,
     tripMetadata,

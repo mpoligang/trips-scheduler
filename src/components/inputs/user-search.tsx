@@ -8,6 +8,7 @@ import { createClient } from '@/lib/client';
 import { UserData } from '@/models/UserData';
 
 export interface UserResult {
+    id: string;
     uid: string;
     email: string;
     firstName?: string;
@@ -47,9 +48,12 @@ export default function UserSearch({
                 search_term: searchTerm
             });
 
+            console.log(data);
+
+
             if (!error && data) {
                 setResults(data.map((u: UserData) => ({
-                    uid: u.id,
+                    id: u.uid,
                     email: u.email,
                     firstName: u.first_name,
                     lastName: u.last_name

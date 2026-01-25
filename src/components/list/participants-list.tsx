@@ -10,6 +10,7 @@ import EmptyData from '../cards/empty-data';
 import { useTrip } from '@/context/tripContext';
 import { useAuth } from '@/context/authProvider';
 import PageTitle from '../generics/page-title';
+import { EntityKeys } from '@/utils/entityKeys';
 
 export default function ParticipantsList() {
     const supabase = createClient();
@@ -34,7 +35,7 @@ export default function ParticipantsList() {
         setIsProcessing(true);
         try {
             const { error } = await supabase
-                .from('trip_participants')
+                .from(EntityKeys.participantsKey)
                 .insert([
                     {
                         trip_id: trip?.id,
@@ -48,7 +49,6 @@ export default function ParticipantsList() {
             setIsAdding(false);
         } catch (error) {
             console.error("Errore nell'aggiunta del partecipante:", error);
-            alert("Errore durante l'invito.");
         } finally {
             setIsProcessing(false);
         }
@@ -64,7 +64,7 @@ export default function ParticipantsList() {
         setIsProcessing(true);
         try {
             const { error } = await supabase
-                .from('trip_participants')
+                .from(EntityKeys.participantsKey)
                 .delete()
                 .eq('trip_id', trip.id)
                 .eq('user_id', deleteParticipant.id);

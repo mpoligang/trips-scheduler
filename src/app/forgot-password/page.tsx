@@ -27,9 +27,8 @@ export default function ForgotPasswordPage() {
 
         try {
             // Supabase invia un link magico. 
-            // 'redirectTo' deve essere una URL configurata nel tuo pannello Supabase (Authentication -> URL Configuration)
             const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/api/reset-password-callback`, // Reindirizziamo al profilo dove potrà cambiare la pass
+                redirectTo: `${window.location.origin}/api/reset-password-callback`,
             });
 
             if (resetError) throw resetError;

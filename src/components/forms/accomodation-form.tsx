@@ -23,6 +23,7 @@ import Input from '../inputs/input';
 import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
+import { EntityKeys } from '@/utils/entityKeys';
 
 export default function AccommodationForm() {
     const router = useRouter();
@@ -125,8 +126,8 @@ export default function AccommodationForm() {
 
         try {
             const query = isNew
-                ? supabase.from('accommodations').insert([accommodationData])
-                : supabase.from('accommodations').update(accommodationData).eq('id', accommodationId);
+                ? supabase.from(EntityKeys.accommodationsKey).insert([accommodationData])
+                : supabase.from(EntityKeys.accommodationsKey).update(accommodationData).eq('id', accommodationId);
 
             const { error: apiError } = await query;
             if (apiError) { throw apiError; }

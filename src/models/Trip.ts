@@ -23,7 +23,8 @@ export interface Trip {
 }
 
 export interface TripParticipant {
-    uid: string;
+    uid?: string;
+    id?: string;
     email: string;
     displayName?: string;
     first_name?: string;

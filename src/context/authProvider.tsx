@@ -1,84 +1,159 @@
-'use client';
+'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { UserData } from '@/models/UserData'; // Assicurati che il percorso sia corretto
-import { auth, db } from '@/firebase/config';
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback, useRef } from 'react'
+import { User, Session } from '@supabase/supabase-js'
+import { UserData } from '@/models/UserData'
+import { createClient } from '@/lib/client'
+import { AuthStatus, AuthStatusEnum, AuthStateChangeEventEnum } from '@/models/Auth'
+import { usePathname } from 'next/navigation'
+import { appRoutes } from '@/utils/appRoutes'
 
-// La forma del valore del contesto
 interface AuthContextType {
-  user: User | null; // L'utente originale di Firebase auth
-  userData: UserData | null; // I dati utente personalizzati da Firestore
-  loading: boolean;
+  user: User | null
+  userData: UserData | null
+  status: AuthStatus
+  refreshUserData: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({ children, initialSession }: { children: ReactNode, initialSession: Session | null }) {
+  const supabase = useMemo(() => createClient(), [])
+  const pathname = usePathname()
 
-  useEffect(() => {
-    // Listener per lo stato di autenticazione di Firebase
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      // Se l'utente si disconnette, resetta i dati e smetti di caricare
-      if (!currentUser) {
-        setUserData(null);
-        setLoading(false);
-      }
-    });
+  // Ref per evitare loop infiniti di fetch
+  const isFetchingRef = useRef(false)
+  const lastFetchedUserId = useRef<string | null>(null)
 
-    // Pulisce il listener quando il componente viene smontato
-    return () => unsubscribeAuth();
-  }, []);
+  // Lista rotte pubbliche centralizzata per consistenza
+  const publicRoutes = useMemo(() => [
+    appRoutes.login,
+    appRoutes.register,
+    appRoutes.forgotPassword,
+    appRoutes.verifyEmail,
+    appRoutes.privacy,
+    appRoutes.landing,
+    appRoutes.registrationSuccess,
+    appRoutes.processFailed,
+    appRoutes.resetPassword // Fondamentale!
+  ], [])
 
-  useEffect(() => {
-    // Questo effetto si attiva solo quando c'è un utente loggato
-    if (user) {
-      const userDocRef = doc(db, 'users', user.uid);
+  const [user, setUser] = useState<User | null>(initialSession?.user ?? null)
+  const [userData, setUserData] = useState<UserData | null>(null)
+  const [status, setStatus] = useState<AuthStatus>(
+    initialSession ? AuthStatusEnum.LOADING_PROFILE : AuthStatusEnum.INITIALIZING
+  )
 
-      // onSnapshot ascolta le modifiche al documento dell'utente in tempo reale
-      const unsubscribeFirestore = onSnapshot(userDocRef, (doc) => {
-        if (doc.exists()) {
-          // Se il documento esiste, imposta i dati dell'utente
-          setUserData(doc.data() as UserData);
-        } else {
-          // Se non esiste, imposta i dati a null
-          console.log("Nessun documento utente trovato in Firestore per l'UID:", user.uid);
-          setUserData(null);
-        }
-        setLoading(false); // Il caricamento è completo
-      }, (error) => {
-        console.error("Errore con onSnapshot:", error);
-        setUserData(null);
-        setLoading(false);
-      });
+  // ✅ FORCELOGOUT BLINDATO: Non pulisce nulla se siamo su una rotta pubblica
+  const forceLogout = useCallback(() => {
+    const isPublic = publicRoutes.some(route => pathname.startsWith(route))
 
-      // Pulisce il listener di Firestore quando l'utente cambia o si disconnette
-      return () => unsubscribeFirestore();
+    if (typeof window !== 'undefined' && window.location.pathname.includes('reset-password')) {
+      console.log("🛑 BYPASS: Sono in reset-password, non pulisco nulla!");
+      return;
     }
-  }, [user]); // Si riattiva ogni volta che l'oggetto 'user' cambia
 
+    // Se siamo su una rotta pubblica (come reset-password), NON svuotiamo lo stato
+    // altrimenti cancelliamo la sessione appena creata dal server
+    if (isPublic) {
+      console.log("🛡️ AuthProvider: Siamo su rotta pubblica, blocco forceLogout.")
+      return
+    }
 
-  const value = { user, userData, loading };
+    console.log("🚪 AuthProvider: Eseguo logout completo.")
+    setUser(null)
+    setUserData(null)
+    setStatus(AuthStatusEnum.UNAUTHENTICATED)
 
-  // Non renderizza l'app finché non si è verificato lo stato iniziale dell'utente
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+    if (typeof window !== 'undefined') {
+      window.location.href = appRoutes.login
+    }
+  }, [pathname, publicRoutes])
+
+  const fetchUserData = useCallback(async (userId: string) => {
+    if (isFetchingRef.current || lastFetchedUserId.current === userId) return
+    isFetchingRef.current = true
+    try {
+      const { data, error } = await supabase.from('profiles').select(`*, plans:plan(*)`).eq('id', userId).maybeSingle()
+      if (error) throw error
+      if (data) {
+        setUserData({ ...data, plan: data.plans } as UserData)
+        lastFetchedUserId.current = userId
+      }
+      setStatus(AuthStatusEnum.AUTHENTICATED)
+    } catch (err) {
+      console.error("❌ Errore fetch profilo:", err)
+      setStatus(AuthStatusEnum.AUTHENTICATED)
+    } finally {
+      isFetchingRef.current = false
+    }
+  }, [supabase])
+
+  // 1. WATCHDOG NAVIGAZIONE: Ignora le rotte pubbliche
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isPublic = publicRoutes.some(route => pathname.startsWith(route))
+      if (isPublic) return
+
+      const { data: { user: verifiedUser } } = await supabase.auth.getUser()
+      if (!verifiedUser) {
+        forceLogout();
+      }
+    }
+    checkAuth()
+  }, [pathname, publicRoutes, supabase, forceLogout])
+
+  // 2. GESTIONE EVENTI AUTH: Cruciale per PASSWORD_RECOVERY
+  useEffect(() => {
+    if (initialSession?.user && lastFetchedUserId.current !== initialSession.user.id) {
+      fetchUserData(initialSession.user.id)
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`🔑 Auth Event: ${event}`)
+      const isPublic = publicRoutes.some(route => pathname.startsWith(route))
+      const isRecovery = event === AuthStateChangeEventEnum.PASSWORD_RECOVERY
+
+      if (session?.user) {
+        setUser(session.user)
+        const shouldFetch =
+          event === AuthStateChangeEventEnum.SIGNED_IN ||
+          event === AuthStateChangeEventEnum.TOKEN_REFRESHED ||
+          isRecovery ||
+          (event === AuthStateChangeEventEnum.INITIAL_SESSION && lastFetchedUserId.current !== session.user.id);
+
+        if (shouldFetch) {
+          setStatus(AuthStatusEnum.LOADING_PROFILE)
+          await fetchUserData(session.user.id)
+        }
+      } else {
+        // ✅ Evitiamo di sloggare durante l'inizializzazione su rotte pubbliche
+        if (event === AuthStateChangeEventEnum.SIGNED_OUT || (event === AuthStateChangeEventEnum.INITIAL_SESSION && !isPublic)) {
+          forceLogout()
+        }
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase, fetchUserData, initialSession, forceLogout, publicRoutes, pathname])
+
+  const value = useMemo(() => ({
+    user,
+    userData,
+    status,
+    refreshUserData: async () => {
+      if (user) {
+        lastFetchedUserId.current = null;
+        await fetchUserData(user.id);
+      }
+    }
+  }), [user, userData, status, fetchUserData])
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-// Hook personalizzato per usare il contesto in modo semplice e sicuro
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth deve essere usato all\'interno di un AuthProvider');
-  }
-  return context;
-};
-
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) throw new Error('useAuth deve essere usato in AuthProvider')
+  return context
+}

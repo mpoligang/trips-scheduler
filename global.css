@@ -1,0 +1,27 @@
+/* @tailwind directives require Tailwind CSS processing. Uncomment these lines only if using Tailwind CSS build tools. */
+/* @tailwind base; */
+/* @tailwind components; */
+/* @tailwind utilities; */
+
+:root {
+    /* Imposta i colori scuri come default anche qui per sicurezza */
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 17, 24, 39;
+    /* gray-900 */
+    --background-end-rgb: 17, 24, 39;
+}
+
+body {
+    /* Forza il colore di sfondo e testo */
+    background-color: #111827;
+    /* gray-900 */
+    color: #f3f4f6;
+    /* gray-100 */
+}
+
+/* Se usi input o form, forzali scuri per evitare bordi bianchi default del browser */
+input,
+textarea,
+select {
+    color-scheme: dark;
+}

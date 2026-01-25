@@ -9,8 +9,7 @@ import FirstLevelTripTemplate from '@/components/containers/first-level-trip-tem
 
 
 export default function AccommodationsPage() {
-    const { trip, isOwner } = useTrip();
-    const tripId = trip?.id as string;
+    const { trip } = useTrip();
 
 
     const breadcrumbPaths: PathItem[] = [

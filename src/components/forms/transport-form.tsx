@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FaMap, FaPen, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
 import { createClient } from '@/lib/client';
-import { v4 as uuidv4 } from 'uuid';
 
 import { useTrip } from "@/context/tripContext";
 import PageTitle from "../generics/page-title";

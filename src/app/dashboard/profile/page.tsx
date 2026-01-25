@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent, ChangeEvent, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, FormEvent, ChangeEvent, useCallback } from "react";
 import Button from "@/components/actions/button";
 import Input from "@/components/inputs/input";
 import Navbar from "@/components/navigations/navbar";
@@ -10,7 +9,6 @@ import { createClient } from "@/lib/client"; // ✅ Client Supabase
 import { PathItem } from "@/models/PathItem";
 import { FaSignOutAlt, FaTrash, FaPen, FaUndo } from "react-icons/fa";
 import PageTitle from "@/components/generics/page-title";
-import Loader from "@/components/generics/loader";
 import { appRoutes } from "@/utils/appRoutes";
 import ActionStickyBar from "@/components/actions/action-sticky-bar";
 import FormSection from "@/components/generics/form-section";
@@ -20,10 +18,8 @@ import { GrUpdate } from "react-icons/gr";
 import { sendEmailToUpgrade } from "@/utils/openMailer";
 import DialogComponent from "@/components/modals/confirm-modal";
 import ContextMenu, { ContextMenuItem } from "@/components/actions/context-menu";
-import { Attachment } from "@/models/Attachment";
 
 export default function ProfilePage() {
-    const router = useRouter();
     const supabase = createClient();
     const { user, userData, refreshUserData } = useAuth();
 

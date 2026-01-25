@@ -13,7 +13,6 @@ import DetailItemCard from '../cards/detail-item-card';
 import EmptyData from '../cards/empty-data';
 import PageTitle from '../generics/page-title';
 import { useTrip } from '@/context/tripContext';
-import { Attachment } from '@/models/Attachment';
 
 /**
  * Formatta la data ISO (2024-05-24T...) per il raggruppamento

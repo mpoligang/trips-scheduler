@@ -1,4 +1,3 @@
-import { FaInstagram, FaTwitter, FaFacebook } from "react-icons/fa";
 import Logo from "../generics/logo";
 import Link from "next/link";
 

@@ -1,7 +1,7 @@
 // @/app/reset-password/page.tsx
 'use client';
 
-import { useEffect, useState, useRef, ChangeEvent } from 'react';
+import { useState, ChangeEvent } from 'react';
 import { createClient } from '@/lib/client';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/actions/button';

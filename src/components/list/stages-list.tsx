@@ -71,7 +71,7 @@ export default function StagesList() {
 
             if (error) { throw error; }
 
-            await refreshData();
+            await refreshData(true);
 
         } catch (error) {
             console.error("Errore durante l'eliminazione della tappa:", error);

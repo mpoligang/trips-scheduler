@@ -138,7 +138,7 @@ export default function StageForm() {
 
                 setIsReadOnly(true);
             }
-            await refreshData(); // Aggiorna il context globale
+            await refreshData(true); // Aggiorna il context globale
         } catch (err) {
             console.error("Errore salvataggio Supabase:", err);
             setError("Impossibile salvare la tappa. Riprova.");

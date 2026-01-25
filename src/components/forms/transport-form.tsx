@@ -272,7 +272,7 @@ export default function TransportForm() {
 
             if (dbError) throw dbError;
 
-            await refreshData();
+            await refreshData(true);
             if (isNew) {
                 router.push(appRoutes.transports(tripId));
             } else {

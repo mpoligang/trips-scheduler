@@ -77,7 +77,7 @@ export default function TransportsList() {
 
             if (error) throw error;
 
-            await refreshData();
+            await refreshData(true);
         } catch (e) {
             console.error("Errore durante l'eliminazione del trasporto:", e);
             alert("Errore tecnico durante l'eliminazione del trasporto.");

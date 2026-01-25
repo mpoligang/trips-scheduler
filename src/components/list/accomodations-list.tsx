@@ -78,7 +78,7 @@ export default function AccommodationsList() {
 
             if (error) throw error;
 
-            await refreshData();
+            await refreshData(true);
         } catch (error) {
             console.error("Errore durante l'eliminazione dell'alloggio:", error);
             alert("Errore tecnico durante l'eliminazione.");

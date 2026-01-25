@@ -25,7 +25,7 @@ import { sendEmailToUpgrade } from '@/utils/openMailer';
 
 export default function TripForm() {
     const { user, refreshUserData, userData } = useAuth();
-    const { trip, participants, loading: contextLoading } = useTrip();
+    const { trip, participants, loading: contextLoading, refreshData } = useTrip();
 
     const router = useRouter();
     const params = useParams();
@@ -96,10 +96,8 @@ export default function TripForm() {
             last_name: searchResult.lastName,
             trip_id: tripId
         };
-        console.log(newParticipant);
 
         setParticipants(() => [...participantsState, newParticipant]);
-        console.log("Current participants:", participantsState);
     };
 
     const handleRemoveParticipant = (identifier: string) => {
@@ -154,6 +152,7 @@ export default function TripForm() {
                 setError(result.error);
             } else {
                 if (trip?.id) {
+                    await refreshData(true);
                     await refreshUserData();
                 } else {
                     router.push(appRoutes.home);
@@ -217,7 +216,7 @@ export default function TripForm() {
                             className="flex-grow"
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddDestination(); } }}
                         />
-                        <Button variant="secondary" type="button" onClick={handleAddDestination} size="sm">
+                        <Button variant="secondary" type="button" onClick={handleAddDestination} size="sm" className='h-10'>
                             <FaPlus className="mr-2" /> Aggiungi
                         </Button>
                     </div>
@@ -246,7 +245,7 @@ export default function TripForm() {
                     {participantsState.length > 0 ? (
                         <ul className="divide-y divide-gray-100 dark:divide-gray-800 rounded-lg overflow-hidden">
                             {participantsState.map((p: any) => (
-                                <li key={p.uid || p.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                <li key={p.email} className="flex mb-4 items-center justify-between p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="h-9 w-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
                                             {(p.first_name || p.email || '?').charAt(0).toUpperCase()}

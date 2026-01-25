@@ -45,7 +45,7 @@ export default function ParticipantsList() {
 
             if (error) throw error;
 
-            await refreshData(); // Ricarica i dati del viaggio tramite Context
+            await refreshData(true); // Ricarica i dati del viaggio tramite Context
             setIsAdding(false);
         } catch (error) {
             console.error("Errore nell'aggiunta del partecipante:", error);
@@ -71,7 +71,7 @@ export default function ParticipantsList() {
 
             if (error) throw error;
 
-            await refreshData();
+            await refreshData(true);
         } catch (error) {
             console.error("Errore nella rimozione del partecipante:", error);
         } finally {

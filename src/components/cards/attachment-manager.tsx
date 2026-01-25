@@ -224,7 +224,7 @@ export default function AttachmentsManager({
 
             if (dbError) throw dbError;
 
-            await refreshData();
+            await refreshData(true);
             await refreshUserData();
             setIsModalOpen(false);
         } catch (error) {
@@ -246,7 +246,7 @@ export default function AttachmentsManager({
                 await supabase.storage.from('attachments').remove([att.storage_path]);
             }
             await supabase.from('attachments').delete().eq('id', deleteId);
-            await refreshData();
+            await refreshData(true);
             await refreshUserData();
         } catch (error) {
             console.error("Errore eliminazione:", error);

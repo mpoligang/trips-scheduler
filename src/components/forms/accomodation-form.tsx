@@ -132,7 +132,7 @@ export default function AccommodationForm() {
             const { error: apiError } = await query;
             if (apiError) { throw apiError; }
 
-            await refreshData();
+            await refreshData(true);
 
             if (isNew) router.push(appRoutes.accommodations(tripId));
             else setIsReadOnly(true);

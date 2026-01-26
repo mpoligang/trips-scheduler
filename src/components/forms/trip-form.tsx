@@ -7,7 +7,6 @@ import { useAuth } from '@/context/authProvider';
 import { upsertTripAction } from '@/actions/trip-actions';
 import { useTrip } from '@/context/tripContext';
 import { appRoutes } from '@/utils/appRoutes';
-import { UserResult } from '@/components/inputs/user-search';
 
 // Components
 import DateRangePicker from '@/components/inputs/date-range-picker';
@@ -22,6 +21,7 @@ import FormSection from '../generics/form-section';
 import DialogComponent from '@/components/modals/confirm-modal';
 import { FaPlus, FaTimes, FaTrashAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
+import { UserData } from '@/models/UserData';
 
 export default function TripForm() {
     const { user, refreshUserData, userData } = useAuth();
@@ -32,16 +32,12 @@ export default function TripForm() {
     const tripId = params.tripId as string;
     const isEditMode = tripId !== 'new';
 
-    // Form State
     const [name, setName] = useState('');
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [destinations, setDestinations] = useState<string[]>([]);
     const [currentDestination, setCurrentDestination] = useState('');
+    const [participantsState, setParticipants] = useState<Partial<UserData>[]>([]);
 
-    // Inizializza vuoto, verrà popolato dall'useEffect
-    const [participantsState, setParticipants] = useState<any[]>([]);
-
-    // UI State
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [limitError, setLimitError] = useState<{ title: string; message: string } | null>(null);
@@ -77,32 +73,18 @@ export default function TripForm() {
 
     const handleRemoveDestination = (dest: string) => setDestinations(prev => prev.filter(d => d !== dest));
 
-    // 2. GESTIONE PARTECIPANTI
-    const handleAddParticipant = (searchResult: UserResult) => {
-        console.log("Selected user from search:", searchResult);
-
-        // // Evita duplicati (controlla sia id che uid) o se stesso
-        // const alreadyExists = participantsState.some(p => (p.id === searchResult.uid) || (p.uid === searchResult.uid));
-        // console.log("Selected user from search:", alreadyExists);
-
-        // if (alreadyExists) return;
-        if (searchResult.uid === user?.id) return;
-
+    const handleAddParticipant = (searchResult: Partial<UserData>) => {
         const newParticipant = {
-            uid: searchResult.uid,      // ID per i nuovi utenti
-            id: searchResult.id,       // Aggiungiamo anche 'id' per uniformità con quelli dal DB
-            email: searchResult.email,
-            first_name: searchResult.firstName,
-            last_name: searchResult.lastName,
+            id: searchResult.id,
+            first_name: searchResult.first_name,
+            last_name: searchResult.last_name,
             trip_id: tripId
         };
-
         setParticipants(() => [...participantsState, newParticipant]);
     };
 
     const handleRemoveParticipant = (identifier: string) => {
-        // Rimuove basandosi su id o uid
-        setParticipants((prev) => prev.filter(p => (p.id !== identifier) && (p.uid !== identifier)));
+        setParticipants((prev) => prev.filter(p => (p.id !== identifier)));
     };
 
     // 3. SUBMIT
@@ -237,35 +219,32 @@ export default function TripForm() {
                     <div className="mb-6">
                         <UserSearch
                             onSelect={handleAddParticipant}
-                            placeholder="Cerca per email..."
-                            excludeIds={[user?.id || '', ...participantsState.map((p: any) => p.uid || p.id || '')]}
+                            excludeIds={[user?.id || '', ...participantsState.map((p: Partial<UserData>) => p.id as string)]}
                         />
                     </div>
 
                     {participantsState.length > 0 ? (
                         <ul className="divide-y divide-gray-100 dark:divide-gray-800 rounded-lg overflow-hidden">
-                            {participantsState.map((p: any) => (
-                                <li key={p.email} className="flex mb-4 items-center justify-between p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            {participantsState.map((p) => (
+                                <li key={p.username} className="flex mb-4 items-center rounded-md justify-between p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-9 w-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
-                                            {(p.first_name || p.email || '?').charAt(0).toUpperCase()}
+                                        <div className="h-9 w-9 flex-shrink-0 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                                            {(p.first_name as string).charAt(0).toUpperCase()}
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                {p.first_name ? `${p.first_name} ${p.last_name || ''}` : p.email?.split('@')[0]}
+                                                {p.first_name} {p.last_name}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        {(p.id === trip?.owner_id || p.uid === trip?.owner_id) && (
-                                            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">Owner</span>
-                                        )}
+
                                         {/* Mostra il cestino solo se NON è l'owner e NON è l'utente corrente */}
-                                        {(p.id !== trip?.owner_id && p.uid !== trip?.owner_id) && (
+                                        {(p.id !== trip?.owner_id) && (
                                             <button
                                                 type="button"
-                                                onClick={() => handleRemoveParticipant(p.uid || p.id)}
+                                                onClick={() => handleRemoveParticipant(p.id as string)}
                                                 className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
                                             >
                                                 <FaTrashAlt size={14} />

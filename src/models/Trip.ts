@@ -1,12 +1,11 @@
 import { Stage } from "./Stage";
 import { Transport } from "./Transport";
 import { Accommodation } from "./Accommodation";
+import { UserData } from "./UserData";
 
 export interface Trip {
     stages?: Stage[];
     accommodations?: Accommodation[];
-    participants?: TripParticipant[];
-    participantIds?: string[];
     transports?: Transport[];
     id: string;                // uuid (Generato da Supabase)
     owner_id: string;          // uuid (Riferimento all'utente proprietario)
@@ -17,19 +16,8 @@ export interface Trip {
     created_at?: string;       // timestamp with time zone
     updated_at?: string;       // timestamp with time zone
     trip_participants?: {
-        profiles: TripParticipant;
+        profiles: Partial<UserData>;
         user_id: string;
     }[];
 }
 
-export interface TripParticipant {
-    uid?: string;
-    id?: string;
-    email: string;
-    displayName?: string;
-    first_name?: string;
-    last_name?: string;
-    trip_id: string;           // uuid
-    user_id: string;           // uuid
-    joined_at?: string;         // timestamp with time zone
-}

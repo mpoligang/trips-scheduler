@@ -8,6 +8,7 @@ import Input from '@/components/inputs/input';
 import { appRoutes } from '@/utils/appRoutes';
 import Logo from '@/components/generics/logo';
 import Checkbox from '@/components/inputs/checkbox';
+import { ImSpinner8 } from 'react-icons/im';
 
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
@@ -124,8 +125,9 @@ export default function RegisterPage() {
 
                         {error && <p className={`text-sm text-center mb-4 ${error.includes('riuscita') ? 'text-green-500' : 'text-red-500'}`}>{error}</p>}
 
-                        <Button disabled={isLoading} size="default">
-                            {isLoading ? 'Creazione account...' : 'Registra Account'}
+                        <Button type="submit" disabled={isLoading}>
+                            <ImSpinner8 className={`animate-spin mr-2 ${isLoading ? 'inline-block' : 'hidden'}`} />
+                            Crea Account
                         </Button>
 
                         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-8">

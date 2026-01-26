@@ -3,19 +3,20 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/client';
-import { Trip, TripParticipant } from '@/models/Trip';
+import { Trip } from '@/models/Trip';
 import { useAuth } from '@/context/authProvider';
 import { Stage } from '@/models/Stage';
 import { Accommodation } from '@/models/Accommodation';
 import { Transport } from '@/models/Transport';
 import { EntityKeys } from '@/utils/entityKeys';
+import { UserData } from '@/models/UserData';
 
 interface TripContextType {
     trip: Trip | null;
     stages: Stage[];
     accommodations: Accommodation[];
     transports: Transport[];
-    participants: TripParticipant[];
+    participants: Partial<UserData>[];
     loading: boolean;
     error: string | null;
     isOwner: boolean;
@@ -65,7 +66,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
                     stages(*, attachments(*)),
                     accommodations(*, attachments(*)),
                     transports(*, attachments(*)),
-                    trip_participants (profiles (id, email, first_name, last_name))
+                    trip_participants (profiles (id, username, first_name, last_name))
                 `)
                 .eq('id', tripId)
                 .order('position', { referencedTable: EntityKeys.stagesKey, ascending: true })
@@ -117,7 +118,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         stages: trip?.stages || [],
         accommodations: trip?.accommodations || [],
         transports: trip?.transports || [],
-        participants: trip?.trip_participants?.map((p: { profiles: TripParticipant }) => ({ ...p.profiles })) || [],
+        participants: trip?.trip_participants?.map((p: { profiles: Partial<UserData> }) => ({ ...p.profiles })) || [],
         loading,
         error,
         isOwner: trip?.owner_id === user?.id,

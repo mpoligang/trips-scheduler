@@ -70,25 +70,59 @@ export function AuthProvider({ children, initialSession }: { children: ReactNode
       window.location.href = appRoutes.login
     }
   }, [pathname, publicRoutes])
-
   const fetchUserData = useCallback(async (userId: string) => {
-    if (isFetchingRef.current || lastFetchedUserId.current === userId) return
-    isFetchingRef.current = true
+    // Evita chiamate duplicate
+    if (isFetchingRef.current || lastFetchedUserId.current === userId) return;
+
+    isFetchingRef.current = true;
+
     try {
-      const { data, error } = await supabase.from('profiles').select(`*, plans:plan(*)`).eq('id', userId).maybeSingle()
-      if (error) throw error
-      if (data) {
-        setUserData({ ...data, plan: data.plans } as UserData)
-        lastFetchedUserId.current = userId
+      // 1. ✅ STEP SICUREZZA: Usiamo la RPC invece della Select diretta
+      // La select diretta fallirebbe perché non hai i permessi di lettura su 'email' e 'plan'
+      const { data: profileData, error: profileError } = await supabase
+        .rpc('get_my_private_profile')
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      if (profileData) {
+        // 2. Recuperiamo i dettagli del piano
+        // La RPC ci dà solo l'ID (es. 'free'), ma la tua UI probabilmente vuole l'oggetto intero.
+        // La tabella 'plans' è pubblica, quindi possiamo leggerla direttamente.
+        let planDetails = null;
+
+        const profile = profileData as UserData;
+
+        if (profile.plan) {
+          const { data: planData } = await supabase
+            .from('plans')
+            .select('*')
+            .eq('id', profile.plan)
+            .single();
+          planDetails = planData;
+        }
+
+
+
+
+        // 3. Uniamo i dati per matchare la tua interfaccia UserData
+        setUserData({
+          ...profile,
+          plan: planDetails,
+        } as unknown as UserData);
+
+        lastFetchedUserId.current = userId;
       }
-      setStatus(AuthStatusEnum.AUTHENTICATED)
+
+      setStatus(AuthStatusEnum.AUTHENTICATED);
     } catch (err) {
-      console.error("❌ Errore fetch profilo:", err)
-      setStatus(AuthStatusEnum.AUTHENTICATED)
+      console.error("❌ Errore fetch profilo:", err);
+      // Anche se fallisce il profilo, l'utente è tecnicamente autenticato su Auth
+      setStatus(AuthStatusEnum.AUTHENTICATED);
     } finally {
-      isFetchingRef.current = false
+      isFetchingRef.current = false;
     }
-  }, [supabase])
+  }, [supabase]);
 
   // 1. WATCHDOG NAVIGAZIONE: Ignora le rotte pubbliche
   useEffect(() => {

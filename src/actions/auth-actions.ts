@@ -20,8 +20,8 @@ export async function signUpAction(formData: FormData) {
         password,
         options: {
             data: {
-                firstName,
-                lastName,
+                first_name: firstName,
+                last_name: lastName,
             },
             emailRedirectTo: `${origin}/api/auth-callback`,
         },

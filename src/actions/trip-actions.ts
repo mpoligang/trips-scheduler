@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/server';
+import { UserData } from '@/models/UserData';
 import { formatDateForPostgres } from '@/utils/dateTripUtils';
 import { EntityKeys } from '@/utils/entityKeys';
 import { revalidatePath } from 'next/cache';
@@ -20,21 +21,32 @@ export async function upsertTripAction(formData: {
 
     const isNewTrip = !formData.id || formData.id === 'new';
 
-    // --- 1. CONTROLLO LIMITI ---
+    // --- 1. CONTROLLO LIMITI (Aggiornato per Security By Column) ---
     if (isNewTrip) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('plan, total_trips_created, expiration_plan_date')
-            .eq('id', user.id)
+        // ✅ MODIFICA: Usiamo la RPC sicura invece della select diretta
+        // La tabella 'profiles' non permette più di leggere 'plan' direttamente.
+        const { data: profile, error: profileError } = await supabase
+            .rpc('get_my_private_profile')
             .single();
 
-        if (profile) {
-            const now = new Date();
-            const expirationDate = profile.expiration_plan_date ? new Date(profile.expiration_plan_date) : null;
-            const isPlanExpired = profile.plan !== 'free' && expirationDate && expirationDate < now;
-            const effectivePlan = isPlanExpired ? 'free' : profile.plan;
 
-            if (effectivePlan === 'free' && (profile.total_trips_created || 0) >= 2) {
+
+        if (profileError || !profile) {
+            console.error("Errore recupero piano utente:", profileError);
+            return { error: "Impossibile verificare il piano di abbonamento." };
+        }
+
+        if (profile) {
+            const profileData = profile as UserData;
+            const now = new Date();
+            const expirationDate = profileData.expiration_plan_date ? new Date(profileData.expiration_plan_date) : null;
+
+            // Logica scadenza piano
+            const isPlanExpired = profileData.plan.name !== 'free' && expirationDate && expirationDate < now;
+            const effectivePlan = isPlanExpired ? 'free' : profileData.plan.name;
+
+            // Logica blocco creazione
+            if (effectivePlan === 'free' && (profileData.total_trips_created || 0) >= 2) {
                 return {
                     error: "limit_reached",
                     message: isPlanExpired
@@ -58,53 +70,74 @@ export async function upsertTripAction(formData: {
     let tripId = formData.id;
 
     // --- 3. SALVATAGGIO O UPDATE ---
-    if (!isNewTrip) {
-        const { error } = await supabase.from(EntityKeys.tripsKey).update(tripPayload).eq('id', tripId).eq('owner_id', user.id);
-        if (error) return { error: error.message };
-    } else {
-        const { data, error } = await supabase.from(EntityKeys.tripsKey).insert(tripPayload).select().single();
-        if (error) return { error: error.message };
-        tripId = data.id;
+    try {
+        if (!isNewTrip) {
+            // Update sicuro con controllo owner_id (IDOR protection)
+            const { error } = await supabase
+                .from(EntityKeys.tripsKey)
+                .update(tripPayload)
+                .eq('id', tripId)
+                .eq('owner_id', user.id);
+
+            if (error) throw error;
+        } else {
+            // Insert nuovo viaggio
+            const { data, error } = await supabase
+                .from(EntityKeys.tripsKey)
+                .insert(tripPayload)
+                .select()
+                .single();
+
+            if (error) throw error;
+            tripId = data.id;
+        }
+    } catch (error: any) {
+        return { error: error.message || "Errore durante il salvataggio del viaggio" };
     }
 
     // --- 4. GESTIONE PARTECIPANTI ---
     if (tripId) {
-        // Rimuoviamo l'owner dalla lista per sicurezza (lo gestiamo a parte)
-        const guestIds = formData.participantIds.filter(uid => uid !== user.id);
+        try {
+            // Rimuoviamo l'owner dalla lista per sicurezza (lo gestiamo a parte)
+            const guestIds = formData.participantIds.filter(id => id !== user.id);
 
-        // A. DELETE: Rimuovi chi non è più nella lista (escluso l'owner)
-        // Logica: Cancella se trip_id coincide AND user_id non è owner AND user_id NON è nella lista guestIds
-        if (guestIds.length > 0) {
+            // A. DELETE: Rimuovi chi non è più nella lista (escluso l'owner)
+            if (guestIds.length > 0) {
+                await supabase
+                    .from(EntityKeys.participantsKey)
+                    .delete()
+                    .eq('trip_id', tripId)
+                    .neq('user_id', user.id)
+                    .not('user_id', 'in', guestIds);
+            } else {
+                // Se la lista è vuota, cancella tutti tranne l'owner
+                await supabase
+                    .from(EntityKeys.participantsKey)
+                    .delete()
+                    .eq('trip_id', tripId)
+                    .neq('user_id', user.id);
+            }
+
+            // B. UPSERT: Aggiungi i nuovi o aggiorna esistenti
+            if (guestIds.length > 0) {
+                const participantsPayload = guestIds.map(id => ({
+                    trip_id: tripId,
+                    user_id: id
+                }));
+                await supabase
+                    .from(EntityKeys.participantsKey)
+                    .upsert(participantsPayload, { onConflict: 'trip_id, user_id' });
+            }
+
+            // C. SAFETY: Assicura che l'owner sia sempre dentro
             await supabase
                 .from(EntityKeys.participantsKey)
-                .delete()
-                .eq('trip_id', tripId)
-                .neq('user_id', user.id)
-                .not('user_id', 'in', guestIds); // ✅ Sintassi corretta per array
-        } else {
-            // Se la lista è vuota, cancella tutti tranne l'owner
-            await supabase
-                .from(EntityKeys.participantsKey)
-                .delete()
-                .eq('trip_id', tripId)
-                .neq('user_id', user.id);
+                .upsert({ trip_id: tripId, user_id: user.id }, { onConflict: 'trip_id, user_id' });
+
+        } catch (error) {
+            console.error("Errore gestione partecipanti:", error);
+            // Non blocchiamo il return success se falliscono i partecipanti, ma logghiamo l'errore
         }
-
-        // B. UPSERT: Aggiungi i nuovi o aggiorna esistenti
-        if (guestIds.length > 0) {
-            const participantsPayload = guestIds.map(uid => ({
-                trip_id: tripId,
-                user_id: uid
-            }));
-            await supabase
-                .from(EntityKeys.participantsKey)
-                .upsert(participantsPayload, { onConflict: 'trip_id, user_id' });
-        }
-
-        // C. SAFETY: Assicura che l'owner sia sempre dentro
-        await supabase
-            .from(EntityKeys.participantsKey)
-            .upsert({ trip_id: tripId, user_id: user.id }, { onConflict: 'trip_id, user_id' });
     }
 
     revalidatePath('/dashboard');

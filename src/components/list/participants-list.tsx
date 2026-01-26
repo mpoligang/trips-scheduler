@@ -11,6 +11,7 @@ import { useTrip } from '@/context/tripContext';
 import { useAuth } from '@/context/authProvider';
 import PageTitle from '../generics/page-title';
 import { EntityKeys } from '@/utils/entityKeys';
+import { UserData } from '@/models/UserData';
 
 export default function ParticipantsList() {
     const supabase = createClient();
@@ -28,9 +29,9 @@ export default function ParticipantsList() {
      * ✅ LOGICA AGGIUNTA PARTECIPANTE
      * Inseriamo una riga nella tabella di giunzione 'trip_participants'
      */
-    const handleAddParticipant = async (userToAdd: any) => {
-        if (!userToAdd || isProcessing) return;
+    const handleAddParticipant = async (userToAdd: Partial<UserData>) => {
 
+        if (!userToAdd || isProcessing) { return; }
 
         setIsProcessing(true);
         try {
@@ -43,7 +44,7 @@ export default function ParticipantsList() {
                     }
                 ]);
 
-            if (error) throw error;
+            if (error) { throw error; }
 
             await refreshData(true); // Ricarica i dati del viaggio tramite Context
             setIsAdding(false);
@@ -115,7 +116,7 @@ export default function ParticipantsList() {
                         onSelect={handleAddParticipant}
                         placeholder="Inserisci l'email dell'utente..."
                         // Escludiamo l'utente corrente e i partecipanti già presenti
-                        excludeIds={[currentUserId, ...participants.map(p => p.user_id)]}
+                        excludeIds={[currentUserId, ...participants.map(p => p.id as string)]}
                     />
                     <div className="flex justify-end">
                         <Button
@@ -133,15 +134,15 @@ export default function ParticipantsList() {
             {participants && participants.length > 0 ? (
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {participants.map((participant) => {
-                        const displayName = participant.first_name
-                            ? `${participant.first_name} ${participant.last_name || ''}`
-                            : participant.email.split('@')[0];
+                        const displayName = `${participant.first_name} ${participant.last_name}`;
 
                         return (
-                            <li key={participant.user_id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+                            <li key={participant.username} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                                        {displayName.charAt(0).toUpperCase()}
+                                        {participant?.first_name?.charAt(0).toUpperCase()}
+                                        {participant?.last_name?.charAt(0).toUpperCase()}
+
                                     </div>
                                     <div>
                                         <p className="font-semibold text-gray-800 dark:text-white text-sm">
@@ -150,7 +151,7 @@ export default function ParticipantsList() {
                                     </div>
                                 </div>
 
-                                {isOwner && participant.user_id !== currentUserId && (
+                                {isOwner && participant.id !== currentUserId && (
                                     <button
                                         onClick={() => setDeleteParticipant(participant)}
                                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
@@ -160,7 +161,7 @@ export default function ParticipantsList() {
                                     </button>
                                 )}
 
-                                {participant.user_id === currentUserId && (
+                                {participant.id === currentUserId && (
                                     <span className="text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-medium">
                                         Tu
                                     </span>

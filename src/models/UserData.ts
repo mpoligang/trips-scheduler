@@ -1,17 +1,12 @@
 
 export interface UserData {
-    uid: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    plan: Plan;
-    expirationPlanDate: string | null;
-    totalTripsCreated: number;
-    totalStorageUsedInBytes: number;
-    expiration_plan_date: string | null;
+    id: string;
     first_name: string | null;
-    id: string | null;
     last_name: string | null;
+    email: string;
+    username: string | null;
+    plan: Plan;
+    expiration_plan_date: string | null;
     total_storage_used_in_bytes: number | null;
     total_trips_created: number | null;
     updated_at: string | null;

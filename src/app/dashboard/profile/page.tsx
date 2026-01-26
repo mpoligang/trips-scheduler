@@ -24,11 +24,12 @@ export default function ProfilePage() {
     const supabase = createClient();
     const { user, userData, refreshUserData } = useAuth();
 
-    const [firstName, setFirstName] = useState<string>('');
-    const [lastName, setLastName] = useState<string>('');
+    const [firstName, setFirstName] = useState<string>();
+    const [lastName, setLastName] = useState<string>();
+    const [username, setUsername] = useState<string>();
+
     const [isUpdating, setIsUpdating] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isReadOnly, setIsReadOnly] = useState<boolean>(true);
     const [isDeletingAccount, setIsDeletingAccount] = useState<boolean>(false);
     const [openDeleteAccount, setOpenDeleteAccount] = useState<boolean>(false);
@@ -38,12 +39,11 @@ export default function ProfilePage() {
         { label: 'Profilo', href: appRoutes.profile }
     ];
 
-
-
     useEffect(() => {
         if (userData) {
             setFirstName(userData.first_name || '');
             setLastName(userData.last_name || '');
+            setUsername(userData.username || '');
         }
     }, [userData]);
 
@@ -51,6 +51,7 @@ export default function ProfilePage() {
         setError(null);
         setFirstName(userData?.first_name || '');
         setLastName(userData?.last_name || '');
+        setUsername(userData?.username || '');
     }, [userData]);
 
     const handleCancel = () => {
@@ -66,7 +67,6 @@ export default function ProfilePage() {
         if (!user || isUpdating) return;
 
         setError(null);
-        setSuccessMessage(null);
         setIsUpdating(true);
 
         try {
@@ -78,9 +78,8 @@ export default function ProfilePage() {
                 })
                 .eq('id', user.id);
 
-            if (updateError) throw updateError;
+            if (updateError) { throw updateError; }
 
-            setSuccessMessage("Profilo aggiornato con successo!");
             await refreshUserData();
             setIsReadOnly(true);
         } catch (err) {
@@ -115,7 +114,7 @@ export default function ProfilePage() {
             }
 
             await handleLogout();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Errore eliminazione:", error);
             setError("Errore durante la cancellazione dei dati.");
         } finally {
@@ -172,14 +171,24 @@ export default function ProfilePage() {
 
                 <form className="space-y-6" onSubmit={handleUpdateProfile}>
                     <FormSection title="Informazioni Personali">
-                        <Input
-                            className="mb-6"
-                            id="email"
-                            label="Indirizzo Email"
-                            type="email"
-                            value={user?.email || ''}
-                            readOnly
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+
+                            <Input
+                                id="email"
+                                label="Indirizzo Email"
+                                type="email"
+                                value={user?.email || ''}
+                                readOnly
+                            />
+                            <Input
+                                id="username"
+                                label="Username"
+                                type="text"
+                                value={username}
+                                required
+                                readOnly
+                            />
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                             <Input
                                 id="firstName"
@@ -322,7 +331,6 @@ export default function ProfilePage() {
                     </FormSection>
 
                     {error && <p className="text-red-500 text-sm text-center font-medium bg-red-50 p-2 rounded">{error}</p>}
-                    {successMessage && <p className="text-green-500 text-sm text-center font-medium bg-green-50 p-2 rounded">{successMessage}</p>}
 
                     {!isReadOnly && (
                         <ActionStickyBar

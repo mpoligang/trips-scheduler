@@ -31,7 +31,7 @@ export default function DateRangePicker({ value, onChange, readOnly, className, 
     };
 
     return (
-        <div className={`flex flex-col sm:flex-row gap-4 ${className}`}>
+        <div className={`flex flex-col sm:flex-row gap-6 ${className}`}>
             <SingleDatePicker
                 required={required}
                 label="Data di Inizio"

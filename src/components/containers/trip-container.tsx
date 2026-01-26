@@ -138,7 +138,7 @@ function TripLayoutContent({
                 </div>
 
                 {/* Navigation Links */}
-                <nav className="flex-1 px-4 py-8 space-y-3 overflow-y-auto no-scrollbar text-left">
+                <nav className="flex-2 px-4 py-8 space-y-3 overflow-y-auto no-scrollbar text-left">
                     {menuItems.map((item) => (
 
 

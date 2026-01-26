@@ -93,7 +93,7 @@ function TripLayoutContent({
     }
 
     return (
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+        <div className="flex h-screen bg-gray-900 overflow-hidden">
 
             {/* --- MOBILE OVERLAY --- */}
             {isMobileOpen && (
@@ -105,14 +105,14 @@ function TripLayoutContent({
 
             {/* --- SIDEBAR --- */}
             <aside className={`
-        fixed inset-y-0 left-0 z-[9000] bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700
+        fixed inset-y-0 left-0 z-[9000] bg-gray-800 border-r border-gray-700
         transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col shadow-2xl lg:shadow-none
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${isCollapsed ? 'lg:w-20' : 'lg:w-72 w-80'}
       `}>
 
                 {/* Sidebar Header: Toggle desktop */}
-                <div className="p-6 flex items-center justify-between h-16 border-b border-gray-50 dark:border-gray-700/50">
+                <div className="p-6 flex items-center justify-between h-16 border-b border-gray-700/50">
                     {!isCollapsed ? (
                         <Logo size="small" />
                     ) : (
@@ -121,7 +121,7 @@ function TripLayoutContent({
 
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="hidden lg:flex p-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-400 transition-all border border-transparent"
+                        className="hidden lg:flex p-2 rounded-xl bg-gray-700/50 text-gray-400 transition-all border border-transparent"
                     >
                         {isCollapsed ? <FaChevronRight size={18} /> : <FaChevronLeft size={18} />}
                     </button>
@@ -130,7 +130,7 @@ function TripLayoutContent({
 
                     <button
                         onClick={() => setIsMobileOpen(false)}
-                        className="lg:hidden p-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-400 transition-all border border-transparent"
+                        className="lg:hidden p-2 rounded-xl bg-gray-700/50 text-gray-400 transition-all border border-transparent"
                     >
                         <FaTimes size={16} />
                     </button>
@@ -191,7 +191,7 @@ function TripLayoutContent({
 
                         <button
                             onClick={() => { setIsMobileOpen(!isMobileOpen); setIsCollapsed(false); }}
-                            className="lg:hidden p-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-gray-400 transition-all border border-transparent"
+                            className="lg:hidden p-2 rounded-xl bg-gray-700/50 text-gray-400 transition-all border border-transparent"
                         >
                             <FaBars size={24} />
                         </button>
@@ -199,7 +199,7 @@ function TripLayoutContent({
                 </Navbar>
 
                 {/* Area Contenuto */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#f8fafc] dark:bg-gray-900">
+                <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-900">
                     <div className="p-6">
                         <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
                             {children}

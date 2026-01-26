@@ -26,7 +26,7 @@ const RichTextEditor = ({ value, onChange, className, readOnly = false }: RichTe
             Link.configure({
                 openOnClick: false,
                 HTMLAttributes: {
-                    class: 'text-gray-900 dark:text-white bg-gradient-to-r from-purple-600 to-indigo-700 bg-[length:100%_2px] bg-no-repeat bg-bottom pb-[2px] font-medium transition-opacity hover:opacity-80 cursor-pointer',
+                    class: 'text-white bg-gradient-to-r from-purple-600 to-indigo-700 bg-[length:100%_2px] bg-no-repeat bg-bottom pb-[2px] font-medium transition-opacity hover:opacity-80 cursor-pointer',
                 },
             }),
         ],
@@ -39,7 +39,7 @@ const RichTextEditor = ({ value, onChange, className, readOnly = false }: RichTe
         editorProps: {
             attributes: {
                 class: twMerge(
-                    'focus:outline-none min-h-[100px] max-w-full text-gray-800 dark:text-gray-200',
+                    'focus:outline-none min-h-[100px] max-w-full text-gray-200',
                     '[&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:pl-1',
                     readOnly ? 'p-0' : 'p-4'
                 ),
@@ -85,13 +85,13 @@ const RichTextEditor = ({ value, onChange, className, readOnly = false }: RichTe
         <div className="w-full">
             <div
                 className={twMerge(
-                    'relative rounded-lg p-[1.5px] transition-all duration-300 bg-gray-200 dark:bg-gray-600',
+                    'relative rounded-lg p-[1.5px] transition-all duration-300 bg-gray-600',
                     'focus-within:bg-gradient-to-br focus-within:from-purple-600 focus-within:to-indigo-700',
                     className
                 )}
             >
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-[7px] overflow-hidden">
-                    <div className="flex flex-wrap gap-1 p-1.5 border-b border-gray-200 dark:border-gray-600 bg-gray-100/50 dark:bg-gray-800/50">
+                <div className="bg-gray-700 rounded-[7px] overflow-hidden">
+                    <div className="flex flex-wrap gap-1 p-1.5 border-b border-gray-600 bg-gray-800/50">
                         <ToolbarButton
                             onClick={() => editor.chain().focus().toggleBold().run()}
                             active={editor.isActive('bold')}
@@ -107,7 +107,7 @@ const RichTextEditor = ({ value, onChange, className, readOnly = false }: RichTe
                             active={editor.isActive('orderedList')}
                             icon={<ListOrdered size={16} />}
                         />
-                        <div className="w-[1px] h-4 bg-gray-300 dark:bg-gray-600 mx-1 self-center" />
+                        <div className="w-[1px] h-4 bg-gray-600 mx-1 self-center" />
                         <ToolbarButton
                             onClick={setLink}
                             active={editor.isActive('link')}
@@ -138,7 +138,7 @@ const ToolbarButton = ({ onClick, active, icon }: { onClick: () => void; active?
             'p-1.5 rounded transition-all duration-200',
             active
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'text-gray-400 hover:bg-gray-600'
         )}
     >
         {icon}

@@ -16,10 +16,10 @@ const buttonVariants = cva(
           'bg-gradient-to-br from-purple-600 to-indigo-700 text-white hover:opacity-90 focus:ring-purple-600 focus:ring-opacity-50',
         // Variante secondaria (es. login con Google)
         secondary:
-          'bg-transparent border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 ',
+          'bg-transparent border border-gray-600 text-gray-200 hover:bg-gray-800 ',
         // Variante solo per le icone (senza bordo, con sfondo al hover)
         icon:
-          'bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ',
+          'bg-transparent text-gray-200 hover:bg-gray-800 ',
       },
       size: {
         default: 'py-3 px-5 text-sm w-full',

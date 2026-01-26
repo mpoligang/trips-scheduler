@@ -148,7 +148,7 @@ export default function ProfilePage() {
     if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-900">
             <Navbar breadcrumb={breadcrumbPaths} />
 
             <DialogComponent
@@ -287,7 +287,7 @@ export default function ProfilePage() {
                     </FormSection>
 
                     <FormSection title="Azioni Account">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-gray-400">
                             Contattaci per aggiornare il tuo piano e ottenere più funzionalità.
                         </p>
                         <div className="w-full mb-6">
@@ -301,7 +301,7 @@ export default function ProfilePage() {
                             </Button>
                         </div>
 
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-gray-400">
                             Eliminando il tuo account, tutti i dati associati verranno rimossi in modo permanente.
                         </p>
                         <div className="w-full mb-6">
@@ -315,7 +315,7 @@ export default function ProfilePage() {
                             </Button>
                         </div>
 
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-gray-400">
                             Puoi effettuare il logout dal tuo account in modo sicuro.
                         </p>
                         <div className="w-full mb-6">

@@ -10,14 +10,14 @@ import { appRoutes } from '@/utils/appRoutes';
 export default function RegistrationSuccessPage() {
 
     return (
-        <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-center p-4 font-sans text-gray-900 dark:text-gray-100">
+        <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-4 font-sans text-gray-100">
 
             <div className="w-full max-w-md relative z-10">
                 {/* Logo più discreto */}
 
 
                 {/* Card Compatta */}
-                <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 text-center">
+                <div className="bg-gray-900 rounded-3xl p-8 shadow-sm border border-gray-800 text-center">
                     <div className="flex justify-center mb-8 opacity-90">
                         <Logo className="h-8 w-auto" />
                     </div>
@@ -31,7 +31,7 @@ export default function RegistrationSuccessPage() {
                         Registrazione avvenuta con successo
                     </h1>
 
-                    <p className="text-[15px] text-gray-500 dark:text-gray-400 mb-8 leading-relaxed px-2">
+                    <p className="text-[15px]text-gray-400 mb-8 leading-relaxed px-2">
                         Vai alla pagina di Login e inserisci le tue credenziali.
                     </p>
 

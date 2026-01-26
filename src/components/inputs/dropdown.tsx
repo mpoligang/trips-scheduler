@@ -35,11 +35,11 @@ export default function Dropdown<T extends Record<string, any>>({
     if (readOnly) {
         return (
             <div className={twMerge("w-full", className)}>
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <label className="block text-sm font-medium text-gray-400 mb-1">
                     {label}
                 </label>
                 {/* Valore mostrato come testo semplice, senza padding orizzontale */}
-                <p className="w-full py-2 text-gray-800 dark:text-gray-200 ">
+                <p className="w-full py-2 text-gray-200 ">
                     {selected ? String(selected[optionLabel]) : '-'}
                 </p>
             </div>
@@ -51,22 +51,22 @@ export default function Dropdown<T extends Record<string, any>>({
         <Listbox as="div" value={selected} onChange={onSelect} className={twMerge("w-full relative", className)}>
             {({ open }) => (
                 <>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                         {label} {required && <span className="text-red-500">*</span>}
                     </label>
                     {/* Wrapper per l'effetto gradiente del bordo */}
                     <div className={`relative rounded-lg p-[1.5px] transition-colors duration-300 ${open ? 'bg-gradient-to-br from-purple-600 to-indigo-700' : 'bg-transparent'}`}>
-                        <ListboxButton className="relative w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-md text-left font-normal focus:outline-none cursor-pointer">
-                            <span className="block truncate text-gray-800 dark:text-gray-200">
+                        <ListboxButton className="relative w-full flex items-center justify-between px-4 py-2 bg-gray-700 rounded-md text-left font-normal focus:outline-none cursor-pointer">
+                            <span className="block truncate text-gray-200">
                                 {selected ? String(selected[optionLabel]) : placeholder}
                             </span>
-                            <FaChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
+                            <FaChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
                         </ListboxButton>
                     </div>
                     <ListboxOptions
                         anchor="bottom"
                         transition
-                        className="w-[var(--button-width)] z-10 mt-2 origin-top rounded-lg bg-white dark:bg-gray-800 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] data-[closed]:scale-95 data-[closed]:opacity-0"
+                        className="w-[var(--button-width)] z-10 mt-2 origin-top rounded-lg bg-gray-800 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] data-[closed]:scale-95 data-[closed]:opacity-0"
                     >
                         <div className="max-h-60 overflow-y-auto p-1">
                             {items.length === 0 ? (
@@ -76,10 +76,10 @@ export default function Dropdown<T extends Record<string, any>>({
                                     <ListboxOption
                                         key={String(item[optionValue])}
                                         value={item}
-                                        className="group flex cursor-pointer items-center gap-2 rounded-md py-2 px-3 data-[focus]:bg-purple-100 dark:data-[focus]:bg-purple-900/50"
+                                        className="group flex cursor-pointer items-center gap-2 rounded-md py-2 px-3 data-[focus]:bg-purple-900/50"
                                     >
-                                        <FaCheck className="invisible h-4 w-4 text-purple-600 dark:text-purple-400 group-data-[selected]:visible" />
-                                        <span className="text-sm text-gray-800 dark:text-gray-200">{String(item[optionLabel])}</span>
+                                        <FaCheck className="invisible h-4 w-4 text-purple-400 group-data-[selected]:visible" />
+                                        <span className="text-sm text-gray-200">{String(item[optionLabel])}</span>
                                     </ListboxOption>
                                 ))
                             )}

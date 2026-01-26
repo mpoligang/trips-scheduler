@@ -105,7 +105,7 @@ export default function LinkPreview({
                     />
                     <div className="absolute right-3 top-[42px] text-gray-400">
                         {isLoading ? (
-                            <FaSpinner className="animate-spin h-4 w-4 text-purple-600 dark:text-purple-400" />
+                            <FaSpinner className="animate-spin h-4 w-4 text-purple-400" />
                         ) : (
                             <FaLink className="h-4 w-4" />
                         )}
@@ -116,12 +116,12 @@ export default function LinkPreview({
             {/* Modalità ReadOnly: Mostra Etichetta e Link testuale (fallback) */}
             {readOnly && (
                 <div>
-                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">
                         {label}
                     </label>
                     {/* Se non c'è la card (o sta caricando), mostra il link come testo */}
                     {(!data || isLoading) && (
-                        <div className="w-full py-2 text-gray-800 dark:text-gray-200  truncate">
+                        <div className="w-full py-2 text-gray-200  truncate">
                             {(() => {
                                 if (isLoading) {
                                     return (
@@ -146,14 +146,14 @@ export default function LinkPreview({
 
             {/* Card di Anteprima (mostrata sia in edit che in readonly se i dati ci sono) */}
             {!isLoading && data && !error && (
-                <div className="relative group overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="relative group overflow-hidden rounded-lg border border-gray-700 bg-gray-800 shadow-sm hover:shadow-md transition-shadow duration-300">
 
                     {/* Pulsante Rimuovi Link (Solo in modalità modifica) */}
                     {!readOnly && (
                         <button
                             type="button"
                             onClick={() => onChange('')}
-                            className="absolute top-2 right-2 z-10 p-1.5 bg-white/90 dark:bg-gray-900/90 text-gray-500 hover:text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 z-10 p-1.5 bg-gray-900/90 text-gray-500 hover:text-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Rimuovi link"
                         >
                             <FaTimes className="h-3 w-3" />
@@ -180,13 +180,13 @@ export default function LinkPreview({
 
                         {/* Contenuto Testuale */}
                         <div className="flex flex-col justify-center p-4 min-w-0">
-                            <h4 className="font-bold text-sm text-gray-800 dark:text-gray-100 line-clamp-1 mb-1">
+                            <h4 className="font-bold text-sm text-gray-100 line-clamp-1 mb-1">
                                 {data.title || value}
                             </h4>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
+                            <p className="text-xs text-gray-400 line-clamp-2 mb-2">
                                 {data.description || 'Nessuna descrizione disponibile.'}
                             </p>
-                            <div className="flex items-center text-xs text-purple-600 dark:text-purple-400 font-medium">
+                            <div className="flex items-center text-xs text-purple-400 font-medium">
                                 <FaExternalLinkAlt className="mr-1.5 h-3 w-3" />
                                 {data.publisher || new URL(value).hostname}
                             </div>
@@ -197,7 +197,7 @@ export default function LinkPreview({
 
             {/* Stato di Errore (solo in edit mode, in readOnly mostriamo il link testuale sopra) */}
             {!readOnly && !isLoading && error && value && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 italic px-1">
+                <div className="text-xs text-gray-400 italic px-1">
                     Nessuna anteprima disponibile per questo link.
                 </div>
             )}

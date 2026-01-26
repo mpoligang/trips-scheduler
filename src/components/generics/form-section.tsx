@@ -13,8 +13,8 @@ interface FormSectionProps {
  */
 export default function FormSection({ title, children, className }: FormSectionProps) {
     return (
-        <div className={twMerge("border-b border-gray-50 dark:border-gray-700", className)}>
-            <h4 className=" font-bold text-gray-800 dark:text-white tracking-tight">
+        <div className={twMerge("border-b border-gray-700", className)}>
+            <h4 className=" font-bold text-white tracking-tight">
                 {title}
             </h4>
 

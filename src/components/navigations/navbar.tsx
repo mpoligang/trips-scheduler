@@ -17,7 +17,7 @@ interface NavbarProps {
 export default function Navbar({ breadcrumb, children, showLogo = true }: NavbarProps) {
 
     return (
-        <header className="w-full bg-white dark:bg-gray-800 shadow-md sticky top-0 z-8888">
+        <header className="w-full bg-gray-800 shadow-md sticky top-0 z-8888">
             <nav className=" px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center h-16">
                     <div className="flex items-center justify-between w-full">

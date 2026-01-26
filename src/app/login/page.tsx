@@ -50,8 +50,8 @@ export default function LoginPage() {
 
 
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
-            <div className="w-full max-w-4xl flex min-h-[550px] bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+        <div className="flex h-screen w-full items-center justify-center bg-gray-900">
+            <div className="w-full max-w-4xl flex min-h-[550px] bg-gray-800 shadow-lg rounded-lg overflow-hidden">
 
                 <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-12 text-white">
                     <div className="text-center">
@@ -63,8 +63,8 @@ export default function LoginPage() {
                 <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
                     <Logo className="mb-4 flex justify-center" />
 
-                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white text-center mb-4">Accedi</h2>
-                    <p className="text-center text-gray-600 dark:text-gray-300 mb-0">Inserisci le tue credenziali per accedere</p>
+                    <h2 className="text-3xl font-bold text-white text-center mb-4">Accedi</h2>
+                    <p className="text-center text-gray-300 mb-0">Inserisci le tue credenziali per accedere</p>
 
                     {/* <Button variant="secondary" onClick={handleGoogleLogin} disabled={isLoading} className="flex items-center justify-center w-full">
                         <FaGoogle className="text-gray-700 dark:text-gray-200" />
@@ -72,9 +72,9 @@ export default function LoginPage() {
                     </Button> */}
 
                     <div className="flex items-center my-10">
-                        <hr className="flex-grow border-gray-300 dark:border-gray-600" />
+                        <hr className="flex-grow border-gray-600" />
                         {/* <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">oppure</span> */}
-                        <hr className="flex-grow border-gray-300 dark:border-gray-600" />
+                        <hr className="flex-grow border-gray-600" />
                     </div>
 
                     <form onSubmit={handleLogin}>
@@ -84,7 +84,7 @@ export default function LoginPage() {
                         <div className="mb-6">
                             <Input label='Password' type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                             <div className="flex justify-end mt-2">
-                                <a href={appRoutes.forgotPassword} className="text-xs font-medium text-purple-600 hover:underline dark:text-purple-400">
+                                <a href={appRoutes.forgotPassword} className="text-xs font-medium hover:underline text-purple-400">
                                     Password dimenticata?
                                 </a>
                             </div>
@@ -97,9 +97,9 @@ export default function LoginPage() {
                             Accedi
                         </Button>
 
-                        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-8">
+                        <p className="text-center text-sm text-gray-400 mt-8">
                             Non hai un account?{' '}
-                            <a href={appRoutes.register} className="font-medium text-purple-600 hover:underline dark:text-purple-400">Registrati</a>
+                            <a href={appRoutes.register} className="font-medium hover:underline text-purple-400">Registrati</a>
                         </p>
                     </form>
                 </div>

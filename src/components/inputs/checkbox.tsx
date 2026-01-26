@@ -26,7 +26,7 @@ export default function Checkbox({
                     checked={checked}
                     onChange={(e) => onChange(e.target.checked)}
                     required={required}
-                    className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 transition-all checked:border-purple-600 checked:bg-purple-600 hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                    className="peer h-5 w-5 cursor-pointer appearance-none rounded border border-gray-600 bg-gray-700 transition-all checked:border-purple-600 checked:bg-purple-600 hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
                 />
                 {/* Icona di spunta personalizzata (SVG) che appare quando checked */}
                 <svg
@@ -44,7 +44,7 @@ export default function Checkbox({
             </div>
             <label
                 htmlFor={id}
-                className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none leading-tight"
+                className="text-sm text-gray-400 cursor-pointer select-none leading-tight"
             >
                 {children}
             </label>

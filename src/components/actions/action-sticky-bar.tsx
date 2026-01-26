@@ -10,8 +10,8 @@ interface ActionStickyBarProps {
 
 export default function ActionStickyBar({ handleCancel, isSubmitting }: ActionStickyBarProps) {
     return (
-        <div className='w-full bg-white dark:bg-gray-900 shadow-md fixed bottom-0 z-8888 left-0 h-20 flex items-center justify-end px-4
-                    border-t border-gray-50 dark:border-gray-700
+        <div className='w-full bg-gray-900 shadow-md fixed bottom-0 z-8888 left-0 h-20 flex items-center justify-end px-4
+                    border-t border-gray-700
                     '>
             <Button
                 variant="secondary"

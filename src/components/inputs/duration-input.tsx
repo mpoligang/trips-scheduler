@@ -72,10 +72,10 @@ export default function DurationInput({
     if (readOnly) {
         return (
             <div className={twMerge("w-full", className)}>
-                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <label className="block text-sm font-medium text-gray-400 mb-1">
                     {label}
                 </label>
-                <div className="flex items-center gap-2 py-2 text-gray-800 dark:text-gray-200 ">
+                <div className="flex items-center gap-2 py-2 text-gray-200 ">
                     <span>{value || '-'}</span>
                 </div>
             </div>
@@ -84,13 +84,13 @@ export default function DurationInput({
 
     return (
         <div className={twMerge("w-full", className)}>
-            <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-2">
                 {label} {required && <span className="text-red-500">*</span>}
             </label>
 
             {/* Wrapper per l'effetto bordo gradiente */}
             <div className="relative rounded-[7px] p-[1.5px] transition-all duration-300 bg-transparent focus-within:bg-gradient-to-br focus-within:from-purple-600 focus-within:to-indigo-700">
-                <div className="flex items-center w-full bg-gray-50 dark:bg-gray-700 rounded-[7px] overflow-hidden px-4 py-2">
+                <div className="flex items-center w-full bg-gray-700 rounded-[7px] overflow-hidden px-4 py-2">
 
                     {/* Segmento Ore */}
                     <div className="flex items-center gap-1">
@@ -99,13 +99,13 @@ export default function DurationInput({
                             value={hours}
                             onChange={onHoursChange}
                             placeholder="0"
-                            className="w-8 bg-transparent border-none p-0 text-gray-900 dark:text-white  text-left outline-none  placeholder-gray-400"
+                            className="w-8 bg-transparent border-none p-0 text-white  text-left outline-none  placeholder-gray-400"
                         />
                         <span className="text-xs text-gray-400 uppercase select-none">h</span>
                     </div>
 
                     {/* Separatore visivo */}
-                    <div className="mx-3 h-4 w-[1px] bg-gray-200 dark:bg-gray-600" />
+                    <div className="mx-3 h-4 w-[1px] bg-gray-600" />
 
                     {/* Segmento Minuti */}
                     <div className="flex items-center gap-1">
@@ -115,7 +115,7 @@ export default function DurationInput({
                             onChange={onMinutesChange}
                             placeholder="00"
                             maxLength={2}
-                            className="w-8 bg-transparent border-none p-0 text-gray-900 dark:text-white  outline-none text-left placeholder-gray-400"
+                            className="w-8 bg-transparent border-none p-0 text-white  outline-none text-left placeholder-gray-400"
                         />
                         <span className="text-xs text-gray-400 uppercase select-none">m</span>
                     </div>

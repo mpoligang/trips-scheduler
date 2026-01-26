@@ -36,8 +36,8 @@ export default function ResetPasswordPage() {
 
 
 
-    return (<div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <div className="w-full max-w-4xl flex min-h-[550px] bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+    return (<div className="flex h-screen w-full items-center justify-center bg-gray-900">
+        <div className="w-full max-w-4xl flex min-h-[550px] bg-gray-800 shadow-lg rounded-lg overflow-hidden">
             {/* --- Sezione Sinistra: Immagine/Gradiente (UI ORIGINALE) --- */}
             <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-12 text-white">
                 <div className="text-center">
@@ -51,10 +51,10 @@ export default function ResetPasswordPage() {
             {/* --- Sezione Destra: Form di Reset (UI ORIGINALE) --- */}
             <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
                 <div className="text-center">
-                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+                    <h2 className="text-3xl font-bold text-white mb-4">
                         Resetta la Password
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-300 mb-8">
+                    <p className="text-gray-300 mb-8">
                         Inserisci la tua nuova password e torna con noi.
                     </p>
                 </div>

@@ -91,15 +91,15 @@ export default function UserSearch({
             {({ open }) => (
                 <>
                     {label && (
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
                             {label}
                         </label>
                     )}
 
                     <div className={`relative rounded-lg p-[1.5px] transition-colors duration-300 ${open ? 'bg-gradient-to-br from-purple-600 to-indigo-700' : 'bg-transparent'}`}>
-                        <div className="relative flex items-center bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 focus-within:border-transparent">
+                        <div className="relative flex items-center bg-gray-700 rounded-md border border-gray-600 focus-within:border-transparent">
                             <ComboboxInput
-                                className="w-full bg-transparent border-none py-2 pl-4 pr-10 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 placeholder-gray-500 dark:placeholder-gray-400 rounded-md"
+                                className="w-full bg-transparent border-none py-2 pl-4 pr-10 text-gray-200 focus:outline-none focus:ring-0 placeholder-gray-400 rounded-md"
                                 id="user-search-input"
                                 placeholder={placeholder}
                                 displayValue={() => searchTerm}
@@ -109,7 +109,7 @@ export default function UserSearch({
 
                             <div className="absolute right-3 flex items-center">
                                 {isLoading && searchTerm.length !== 0 ? (
-                                    <FaSpinner className="animate-spin h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                    <FaSpinner className="animate-spin h-4 w-4 text-purple-400" />
                                 ) : searchTerm && (
                                     <button
                                         onClick={(e) => {
@@ -131,26 +131,26 @@ export default function UserSearch({
                         <ComboboxOptions
                             static
                             anchor="bottom"
-                            className="w-[var(--input-width)] z-50 mt-2 origin-top rounded-lg bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 transition duration-100 ease-out p-1 focus:outline-none max-h-60 overflow-y-auto"
+                            className="w-[var(--input-width)] z-50 mt-2 origin-top rounded-lg bg-gray-800 shadow-xl border border-gray-700 transition duration-100 ease-out p-1 focus:outline-none max-h-60 overflow-y-auto"
                         >
                             {results.map((user) => (
                                 <ComboboxOption
                                     key={user.id}
                                     value={user}
-                                    className="group flex cursor-pointer items-center gap-3 rounded-md py-2 px-3 data-[focus]:bg-purple-50 dark:data-[focus]:bg-purple-900/20 transition-colors"
+                                    className="group flex cursor-pointer items-center gap-3 rounded-md py-2 px-3 data-[focus]:bg-purple-900/20 transition-colors"
                                 >
-                                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 font-bold text-sm">
+                                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-indigo-900/50 text-indigo-300 font-bold text-sm">
                                         <FaUser className="h-4 w-4" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
-                                        <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        <span className="text-sm font-medium text-white truncate">
                                             {user.first_name} {user.last_name}
                                         </span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        <span className="text-xs text-gray-400 truncate">
                                             @{user.username}
                                         </span>
                                     </div>
-                                    <FaUserPlus className="ml-auto h-4 w-4 text-gray-300 group-data-[focus]:text-purple-600 dark:group-data-[focus]:text-purple-400" />
+                                    <FaUserPlus className="ml-auto h-4 w-4 text-gray-300 group-data-[focus]:text-purple-400" />
                                 </ComboboxOption>
                             ))}
                         </ComboboxOptions>
@@ -160,9 +160,9 @@ export default function UserSearch({
                         <ComboboxOptions
                             static
                             anchor="bottom"
-                            className="w-[var(--input-width)] z-50 mt-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 focus:outline-none"
+                            className="w-[var(--input-width)] z-50 mt-2 p-2 bg-gray-800 rounded-lg shadow-lg border border-gray-700 focus:outline-none"
                         >
-                            <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+                            <div className="px-4 py-2 text-sm text-gray-400 text-center">
                                 Nessun utente trovato con questo nome o username.
                             </div>
                         </ComboboxOptions>

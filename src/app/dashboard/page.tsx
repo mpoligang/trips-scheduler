@@ -77,7 +77,7 @@ export default function DashboardPage() {
     if (status === AuthStatusEnum.UNAUTHENTICATED) return null;
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-900">
             <Navbar breadcrumb={[]} />
 
             {/* Modali */}

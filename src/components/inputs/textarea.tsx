@@ -11,7 +11,7 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, label, id, required, ...props }, ref) => {
     return (
         <div className="w-full">
-            <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-2">
                 {label}  {required && <span className="text-red-500">*</span>}
             </label>
             {/* Wrapper per l'effetto gradiente del bordo al focus */}
@@ -20,7 +20,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, la
                     id={id}
                     ref={ref}
                     className={twMerge(
-                        "w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border-0 rounded-md text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0",
+                        "w-full px-4 py-2 bg-gray-700 border-0 rounded-md text-gray-200 focus:outline-none focus:ring-0",
                         "min-h-[120px]", // Altezza minima di default
                         className
                     )}

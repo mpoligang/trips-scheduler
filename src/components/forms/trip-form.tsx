@@ -169,7 +169,7 @@ export default function TripForm() {
             >
                 <div className="flex flex-col items-center text-center py-4">
                     <FaExclamationTriangle className="text-amber-500 text-4xl mb-4" />
-                    <p className="text-gray-600 dark:text-gray-400">{limitError?.message}</p>
+                    <p className="text-gray-400">{limitError?.message}</p>
                 </div>
             </DialogComponent>
 
@@ -205,7 +205,7 @@ export default function TripForm() {
 
                     <div className="mt-4 flex flex-wrap gap-2">
                         {destinations.map(dest => (
-                            <span key={dest} className="flex items-center gap-2 bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 text-sm font-medium px-3 py-1 rounded-full border border-purple-200 dark:border-purple-800">
+                            <span key={dest} className="flex items-center gap-2 bg-purple-900/40 text-purple-200 text-sm font-medium px-3 py-1 rounded-full border border-purple-800">
                                 {dest}
                                 <button type="button" onClick={() => handleRemoveDestination(dest)} className="text-purple-500 hover:text-red-500 transition-colors">
                                     <FaTimes size={12} />
@@ -224,15 +224,15 @@ export default function TripForm() {
                     </div>
 
                     {participantsState.length > 0 ? (
-                        <ul className="divide-y divide-gray-100 dark:divide-gray-800 rounded-lg overflow-hidden">
+                        <ul className="divide-y divide-gray-800 rounded-lg overflow-hidden">
                             {participantsState.map((p) => (
-                                <li key={p.username} className="flex mb-4 items-center rounded-md justify-between p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                <li key={p.username} className="flex mb-4 items-center rounded-md justify-between p-3 bg-gray-800 hover:bg-gray-700/50 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="h-9 w-9 flex-shrink-0 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
                                             {(p.first_name as string).charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <p className="font-medium text-gray-900 dark:text-gray-100">
+                                            <p className="font-medium text-gray-100">
                                                 {p.first_name} {p.last_name}
                                             </p>
                                         </div>
@@ -245,7 +245,7 @@ export default function TripForm() {
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveParticipant(p.id as string)}
-                                                className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-900/20"
                                             >
                                                 <FaTrashAlt size={14} />
                                             </button>
@@ -260,7 +260,7 @@ export default function TripForm() {
                 </FormSection>
 
                 {error && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 p-4 rounded-lg text-center text-sm">
+                    <div className="bg-red-900/20 border border-red-800 text-red-300 p-4 rounded-lg text-center text-sm">
                         {error}
                     </div>
                 )}

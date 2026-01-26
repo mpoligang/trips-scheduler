@@ -32,7 +32,7 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
             <div ref={ref} className={twMerge("w-full", className)}>
                 {/* Header: Label e Dettaglio (valore/totale + %) */}
                 <div className="flex justify-between items-end mb-2">
-                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">
                         {label}
                     </label>
 
@@ -41,7 +41,7 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
                 {/* Contenitore della barra (Tracciato) */}
                 <div
                     className={twMerge(
-                        "relative w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden p-[1px]",
+                        "relative w-full h-3 bg-gray-700 rounded-full overflow-hidden p-[1px]",
                         "transition-all duration-300"
                     )}
                 >
@@ -55,9 +55,9 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
                     />
                 </div>
                 {showValue && (
-                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 text-right mt-2">
+                    <div className="text-xs font-semibold text-gray-400 text-right mt-2">
                         <span className="mr-1">{value} {unitMeasure} / {total} {unitMeasure}</span>
-                        <span className="text-gray-800 dark:text-gray-200">({clampedValue}%)</span>
+                        <span className="text-gray-200">({clampedValue}%)</span>
                     </div>
                 )}
             </div>

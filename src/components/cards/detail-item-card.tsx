@@ -49,7 +49,7 @@ export default function DetailItemCard({
                 label: 'Elimina',
                 icon: <FaTrash />,
                 onClick: onDelete,
-                className: 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20',
+                className: 'text-red-400 hover:bg-red-900/20',
             }
         );
     }
@@ -61,7 +61,7 @@ export default function DetailItemCard({
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && handleCardClick()}
-                className="w-full flex flex-row items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl gap-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 group"
+                className="w-full flex flex-row items-center justify-between p-4 bg-gray-700/50 rounded-2xl gap-4 cursor-pointer hover:bg-gray-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 group"
                 aria-label={`Apri dettaglio di ${title}`}
             >
                 {/* Sezione Sinistra: Icona e Testi */}
@@ -73,7 +73,7 @@ export default function DetailItemCard({
 
                     {/* Container Testo con min-w-0 per permettere il truncate del figlio */}
                     <div className="ml-4 flex-1 min-w-0">
-                        <p className="font-bold text-gray-800 dark:text-white  text-sm md:text-base">
+                        <p className="font-bold text-white  text-sm md:text-base">
                             {title}
                         </p>
 

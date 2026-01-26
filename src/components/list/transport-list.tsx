@@ -122,7 +122,7 @@ export default function TransportsList() {
                 <div className="space-y-6">
                     {sortedDates.map(date => (
                         <div key={date}>
-                            <h4 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-3 pb-2 capitalize">
+                            <h4 className="font-semibold text-lg text-gray-300 mb-3 pb-2 capitalize">
                                 {date === 'Altro' ? date : formatDateForGroup(date)}
                             </h4>
 

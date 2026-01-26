@@ -48,7 +48,7 @@ export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
             label: 'Elimina',
             icon: <FaTrash />,
             onClick: onDelete,
-            className: 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20',
+            className: 'text-red-400 hover:bg-red-900/20',
         },
     ];
 
@@ -61,11 +61,11 @@ export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
         <div
             onClick={(event: React.MouseEvent<HTMLDivElement>) => handleNavigateToDetail(event)}
             role="button"
-            className="bg-white p-6 dark:bg-gray-800 rounded-lg shadow-lg flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+            className="p-6 bg-gray-800 rounded-lg shadow-lg flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 cursor-pointer"
         >
             <div className="flex items-start justify-between">
                 <div className="flex flex-col w-full pr-4">
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-white truncate">
+                    <h3 className="text-xl font-bold text-white truncate">
                         {trip.name}
                     </h3>
                 </div>
@@ -73,9 +73,9 @@ export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
                 {isOwner && <ContextMenu items={menuItems} />}
             </div>
 
-            <div className="border-t border-gray-100 dark:border-gray-700 mt-4 pt-4">
-                <div className="flex items-center text-sm text-gray-500 dark:text-gray-300">
-                    <FaCalendarAlt className="mr-2 text-purple-500 dark:text-white flex-shrink-0" />
+            <div className="border-t border-gray-700 mt-4 pt-4">
+                <div className="flex items-center text-sm text-gray-300">
+                    <FaCalendarAlt className="mr-2 text-white flex-shrink-0" />
                     {/* Usiamo i nomi dei campi aggiornati: start_date e end_date */}
                     <span>{formatDate(trip.start_date)} - {formatDate(trip.end_date)}</span>
                 </div>

@@ -8,19 +8,18 @@ import {
 import Logo from '@/components/generics/logo';
 import { appRoutes } from '@/utils/appRoutes';
 import SiteFooter from '@/components/templates/site-footer';
-import { appConfig } from '@/configs/app-config';
 import { sendPlanInfoRequest } from '@/utils/openMailer';
 
 export default function LandingPage() {
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-purple-500/30 flex flex-col overflow-x-hidden">
+        <div className="min-h-screen bg-gray-950 text-slate-100 font-sans selection:bg-purple-500/30 flex flex-col overflow-x-hidden">
 
             {/* Effetto Overlay Texture */}
             <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[9999] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
 
             {/* --- HEADER --- */}
-            <header className="fixed w-full top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/50">
+            <header className="fixed w-full top-0 z-50  backdrop-blur-xl border-b  bg-slate-900/50 border-y border-slate-800/50">
                 <div className="container mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
                     <Link href="/" className="transition-transform active:scale-95">
                         <Logo className="scale-75 md:scale-100 origin-left" />
@@ -48,9 +47,8 @@ export default function LandingPage() {
                     </div>
 
                     <div className="container mx-auto px-4 relative z-10 text-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-purple-600 dark:text-purple-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-8">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-purple-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-8">
                             <span className="relative flex h-2 w-2">
-                                {/* MODIFICA 1: Pulse Verde */}
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                             </span>
@@ -62,11 +60,11 @@ export default function LandingPage() {
                                 perfettamente organizzato.
                             </span>
                         </h1>
-                        <p className="text-sm md:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+                        <p className="text-sm md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
                             Dimentica lo stress della pianificazione. Gestisci itinerari, prenotazioni e amici in un&apos;unica dashboard intelligente.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Link href="/register" className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-lg shadow-xl hover:-translate-y-1 transition-all">
+                            <Link href="/register" className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold text-lg shadow-xl hover:-translate-y-1 transition-all">
                                 Crea Itinerario
                             </Link>
                         </div>
@@ -74,11 +72,11 @@ export default function LandingPage() {
                 </section>
 
                 {/* --- FEATURES SECTION --- */}
-                <section id="features" className="py-20 md:py-32 bg-white dark:bg-slate-900/50 border-y border-slate-100 dark:border-slate-800/50">
+                <section id="features" className="py-20 md:py-32 bg-slate-900/50 border-y border-slate-800/50">
                     <div className="container mx-auto px-4">
                         <div className="max-w-3xl mx-auto text-center mb-16 md:mb-24">
                             <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">Tutto ciò che ti serve</h2>
-                            <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg">
+                            <p className="text-slate-400 text-base md:text-lg">
                                 Centralizza ogni aspetto della tua avventura ed elimina i fogli di calcolo disordinati.
                             </p>
                         </div>
@@ -97,9 +95,8 @@ export default function LandingPage() {
                 {/* --- BUSINESS SECTION --- */}
                 <section className="py-20">
                     <div className="container mx-auto px-4">
-                        <div className="relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-slate-900 dark:bg-slate-800 p-8 md:p-20 text-center">
+                        <div className="relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-slate-800 p-8 md:p-20 text-center">
                             <div className="relative z-10 max-w-3xl mx-auto">
-                                {/* MODIFICA 2: Badge uguale a quello in alto */}
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-[10px] md:text-xs font-bold uppercase tracking-widest mb-8">
                                     <span className="relative flex h-2 w-2">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -111,16 +108,15 @@ export default function LandingPage() {
                                 <p className="text-slate-400 text-base md:text-xl mb-10 leading-relaxed">
                                     Porta i tuoi follower in viaggio con te. Offriamo strumenti per Travel Influencer e Agenzie che vogliono offrire itinerari interattivi, brandizzati e professionali.
                                 </p>
-                                <a
+                                <button
                                     onClick={(e) => {
                                         e.preventDefault();
                                         sendPlanInfoRequest()
                                     }}
-                                    href={`mailto:${appConfig.supportEmail}`}
                                     className="inline-flex items-center gap-4 px-8 py-4 md:px-10 md:py-5 rounded-2xl bg-white text-slate-900 font-black text-base md:text-lg hover:bg-purple-50 transition-all shadow-xl active:scale-95"
                                 >
                                     Contattaci
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -133,7 +129,6 @@ export default function LandingPage() {
                     <div className="container mx-auto px-4 relative z-10">
                         <div className="flex flex-col lg:flex-row items-center gap-12 md:gap-20">
                             <div className="lg:w-1/2 text-left">
-                                {/* MODIFICA 3: Presto Disponibile */}
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-purple-200 text-xs font-bold uppercase mb-6">
                                     <FaRobot className="animate-bounce" />
                                     Presto Disponibile
@@ -151,7 +146,6 @@ export default function LandingPage() {
 
                             <div className="lg:w-1/2 w-full">
                                 <div className="relative rounded-3xl bg-slate-900/50 backdrop-blur-xl border border-white/10 p-6 md:p-10 shadow-2xl overflow-hidden group">
-                                    {/* Overlay per rinforzare l'idea di "non ancora pronto" */}
                                     <div className="absolute inset-0 bg-slate-900/40 backdrop-grayscale-[0.5] z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                                         <span className="px-6 py-3 bg-white text-slate-900 font-bold rounded-full shadow-2xl transform -rotate-3 text-sm">Coming Soon 2026</span>
                                     </div>
@@ -183,25 +177,22 @@ export default function LandingPage() {
                 </section>
             </main>
 
-            {/* --- FOOTER --- */}
             <SiteFooter />
         </div>
     );
 }
 
-// --- SUPPORT COMPONENTS ---
-
 function FeatureCard({ icon, title, desc, comingSoon = false }: { readonly icon: React.ReactNode; readonly title: string; readonly desc: string; readonly comingSoon?: boolean }) {
     return (
-        <div className="group p-8 rounded-[2rem] bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500">
+        <div className="group p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500">
             <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-purple-500/20 transition-transform group-hover:scale-110 mb-6">
                 {icon}
             </div>
-            <h3 className="text-xl md:text-2xl font-bold mb-4 text-slate-900 dark:text-white flex items-center gap-3">
+            <h3 className="text-xl md:text-2xl font-bold mb-4 text-white flex items-center gap-3">
                 {title}
-                {comingSoon && <span className="text-[10px] uppercase bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-md font-bold">Soon</span>}
+                {comingSoon && <span className="text-[10px] uppercase bg-slate-700 text-slate-400 px-2 py-0.5 rounded-md font-bold">Soon</span>}
             </h3>
-            <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-sm md:text-base text-slate-400 leading-relaxed">
                 {desc}
             </p>
         </div>

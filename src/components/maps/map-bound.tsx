@@ -32,7 +32,7 @@ interface StagesMapProps {
 
 export default function StagesMap({ stages }: StagesMapProps) {
     if (!stages || stages.length === 0) {
-        return <div className="h-[400px] bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center text-center text-gray-500">Nessuna tappa da mostrare sulla mappa.</div>;
+        return <div className="h-[400px] bg-gray-700 rounded-lg flex items-center justify-center text-center text-gray-500">Nessuna tappa da mostrare sulla mappa.</div>;
     }
 
     const positions = stages.map(stage => [stage?.lat, stage?.lng] as [number, number]);

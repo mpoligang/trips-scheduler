@@ -18,13 +18,17 @@ export default function PrivacyPolicyPage() {
     const router = useRouter()
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-purple-500/30 flex flex-col overflow-x-hidden">
+        // RIMOSSO: bg-slate-50, text-slate-900
+        // PROMOSSO: bg-gray-950, text-slate-100
+        <div className="min-h-screen bg-gray-950 text-slate-100 font-sans selection:bg-purple-500/30 flex flex-col overflow-x-hidden">
 
             {/* Texture Overlay (Coerenza Landing) */}
             <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[9999] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
 
             {/* --- HEADER --- */}
-            <header className="fixed w-full top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/50">
+            {/* RIMOSSO: bg-white/80, border-slate-200 */}
+            {/* PROMOSSO: bg-gray-950/80, border-slate-800/50 */}
+            <header className="fixed w-full top-0 z-50 bg-gray-950/80 backdrop-blur-xl border-b border-slate-800/50">
                 <div className="container mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
 
                     <Logo className="scale-75 md:scale-90" />
@@ -39,7 +43,9 @@ export default function PrivacyPolicyPage() {
             <main className="flex-grow pt-32 pb-20">
                 {/* --- HERO SECTION --- */}
                 <section className="container mx-auto px-4 max-w-4xl text-center mb-16 md:mb-24">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-purple-600 text-[10px] md:text-xs font-black uppercase tracking-widest mb-6">
+                    {/* RIMOSSO: bg-white, border-slate-200 */}
+                    {/* PROMOSSO: bg-slate-900, border-slate-800 */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-purple-600 text-[10px] md:text-xs font-black uppercase tracking-widest mb-6">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -50,7 +56,9 @@ export default function PrivacyPolicyPage() {
                         Privacy & <br />
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-500">Sicurezza</span>
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-2xl mx-auto">
+                    {/* RIMOSSO: text-slate-500 */}
+                    {/* PROMOSSO: text-slate-400 */}
+                    <p className="text-slate-400 font-medium text-lg max-w-2xl mx-auto">
                         In AItinerante.it la protezione dei tuoi viaggi inizia dalla protezione dei tuoi dati. Semplice, trasparente, sicura.
                     </p>
                 </section>
@@ -58,14 +66,22 @@ export default function PrivacyPolicyPage() {
                 <div className="container mx-auto px-4 max-w-5xl space-y-24">
 
                     {/* 1. SEZIONE INTRODUTTIVA */}
-                    <section className="flex flex-col md:flex-row gap-8 items-start bg-white dark:bg-slate-900/40 p-8 md:p-12 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-sm">
-                        <div className="w-16 h-16 rounded-2xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 text-3xl shrink-0 shadow-inner">
+                    {/* RIMOSSO: bg-white, border-slate-200/50 */}
+                    {/* PROMOSSO: bg-slate-900/40, border-slate-800/50 */}
+                    <section className="flex flex-col md:flex-row gap-8 items-start bg-slate-900/40 p-8 md:p-12 rounded-[2.5rem] border border-slate-800/50 shadow-sm">
+                        {/* RIMOSSO: bg-purple-100 */}
+                        {/* PROMOSSO: bg-purple-900/30 */}
+                        <div className="w-16 h-16 rounded-2xl bg-purple-900/30 flex items-center justify-center text-purple-600 text-3xl shrink-0 shadow-inner">
                             <FaShieldAlt />
                         </div>
                         <div>
                             <h2 className="text-2xl font-black mb-4 tracking-tight">Il nostro Impegno</h2>
-                            <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                                Benvenuto su <span className="text-slate-900 dark:text-white font-bold">AItinerante.it</span>. Crediamo che la tecnologia debba essere al servizio dell&apos;esplorazione, non del controllo. I tuoi dati personali sono protetti da infrastrutture crittografate e gestiti esclusivamente per rendere la tua esperienza di viaggio impeccabile.
+                            {/* RIMOSSO: text-slate-600 */}
+                            {/* PROMOSSO: text-slate-400 */}
+                            <p className="text-slate-400 leading-relaxed font-medium">
+                                {/* RIMOSSO: text-slate-900 */}
+                                {/* PROMOSSO: text-white */}
+                                Benvenuto su <span className="text-white font-bold">AItinerante.it</span>. Crediamo che la tecnologia debba essere al servizio dell&apos;esplorazione, non del controllo. I tuoi dati personali sono protetti da infrastrutture crittografate e gestiti esclusivamente per rendere la tua esperienza di viaggio impeccabile.
                             </p>
                         </div>
                     </section>
@@ -76,7 +92,9 @@ export default function PrivacyPolicyPage() {
                             <h3 className="text-sm font-black uppercase tracking-[0.2em] text-purple-500 mb-4 flex items-center gap-3">
                                 <FaUserLock /> Raccolta Dati
                             </h3>
-                            <p className="text-slate-500 dark:text-slate-400 font-medium italic">Gestiamo solo le informazioni necessarie per la tua avventura.</p>
+                            {/* RIMOSSO: text-slate-500 */}
+                            {/* PROMOSSO: text-slate-400 */}
+                            <p className="text-slate-400 font-medium italic">Gestiamo solo le informazioni necessarie per la tua avventura.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -99,7 +117,8 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     {/* 3. TRASPARENZA TECNOLOGICA (DARK SECTION) */}
-                    <section className="relative overflow-hidden rounded-[3rem] bg-slate-900 dark:bg-slate-800 p-8 md:p-16 text-white shadow-2xl">
+                    {/* NOTA: Qui bg-slate-900 era la versione light, bg-slate-800 la dark. Mantengo la dark. */}
+                    <section className="relative overflow-hidden rounded-[3rem] bg-slate-800 p-8 md:p-16 text-white shadow-2xl">
                         <div className="absolute top-0 right-0 w-80 h-80 bg-purple-600/10 blur-[100px]"></div>
                         <div className="relative z-10">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
@@ -123,21 +142,30 @@ export default function PrivacyPolicyPage() {
 
                     {/* 4. BUSINESS & DIRITTI */}
                     <section className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-8">
-                        <div className="p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800">
+                        {/* RIMOSSO: border-slate-200 */}
+                        {/* PROMOSSO: border-slate-800 */}
+                        <div className="p-8 rounded-[2rem] border border-slate-800">
                             <h3 className="text-xl font-black mb-4 flex items-center gap-3">
                                 <FaBriefcase className="text-purple-600" /> Business & Pro
                             </h3>
-                            <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm font-medium">
+                            {/* RIMOSSO: text-slate-500 */}
+                            {/* PROMOSSO: text-slate-400 */}
+                            <p className="text-slate-400 leading-relaxed text-sm font-medium">
                                 Per gli utenti Influencer e le Agenzie, AItinerante.it agisce come Responsabile del Trattamento. Garantiamo la massima conformità per i dati dei vostri clienti finali.
                             </p>
                         </div>
-                        <div className="p-8 rounded-[2rem] bg-slate-900/5 dark:bg-white/5 border border-slate-200 dark:border-slate-800">
+
+                        {/* RIMOSSO: bg-slate-900/5, border-slate-200 */}
+                        {/* PROMOSSO: bg-white/5, border-slate-800 */}
+                        <div className="p-8 rounded-[2rem] bg-white/5 border border-slate-800">
                             <h3 className="text-xl font-black mb-4 flex items-center gap-3">
                                 <FaCheckCircle className="text-emerald-500" /> Diritti GDPR
                             </h3>
                             <div className="flex flex-wrap gap-2 mb-4">
                                 {['Accesso', 'Oblio', 'Portabilità', 'Rettifica'].map(tag => (
-                                    <span key={tag} className="px-3 py-1 bg-white dark:bg-slate-800 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+                                    // RIMOSSO: bg-white, border-slate-200
+                                    // PROMOSSO: bg-slate-800, border-slate-700
+                                    <span key={tag} className="px-3 py-1 bg-slate-800 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-700">
                                         {tag}
                                     </span>
                                 ))}
@@ -147,7 +175,9 @@ export default function PrivacyPolicyPage() {
                     </section>
 
                     {/* 5. FOOTER PRIVACY */}
-                    <div className="pt-20 border-t border-slate-200 dark:border-slate-800 text-center">
+                    {/* RIMOSSO: border-slate-200 */}
+                    {/* PROMOSSO: border-slate-800 */}
+                    <div className="pt-20 border-t border-slate-800 text-center">
                         <div className="flex flex-col items-center">
                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-lg mb-6 group-hover:rotate-12 transition-transform">
                                 <FaEnvelopeOpenText />
@@ -156,7 +186,9 @@ export default function PrivacyPolicyPage() {
                             <p className="text-slate-500 text-sm mb-8 max-w-xs mx-auto">Siamo a tua disposizione per qualsiasi chiarimento sui tuoi dati.</p>
                             <a
                                 href={`mailto:${appConfig.supportEmail}`}
-                                className="px-10 py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-lg hover:scale-105 transition-all shadow-xl shadow-slate-900/10"
+                                // RIMOSSO: bg-slate-900, text-white
+                                // PROMOSSO: bg-white, text-slate-900 (Nota: inversione colori del bottone in dark mode)
+                                className="px-10 py-4 rounded-2xl bg-white text-slate-900 font-black text-lg hover:scale-105 transition-all shadow-xl shadow-slate-900/10"
                             >
                                 Contattaci
                             </a>
@@ -174,15 +206,21 @@ export default function PrivacyPolicyPage() {
 
 function PrivacyDataCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
     return (
-        <div className="group p-8 rounded-[2rem] bg-white dark:bg-white/5 border border-slate-200/50 dark:border-white/5 hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 flex flex-col h-full">
+        // RIMOSSO: bg-white, border-slate-200/50, hover:border-purple-500/30 (conflitti non specificati ma ho pulito)
+        // PROMOSSO: bg-white/5, border-white/5
+        <div className="group p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 flex flex-col h-full">
             {/* AVATAR ICON - ESATTAMENTE COME NELLA LANDING */}
             <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-purple-500/20 transition-transform group-hover:scale-110 mb-6">
                 {icon}
             </div>
-            <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">
+            {/* RIMOSSO: text-slate-900 */}
+            {/* PROMOSSO: text-white */}
+            <h3 className="text-xl font-bold mb-4 text-white">
                 {title}
             </h3>
-            <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+            {/* RIMOSSO: text-slate-500 */}
+            {/* PROMOSSO: text-slate-400 */}
+            <p className="text-sm md:text-base text-slate-400 leading-relaxed font-medium">
                 {desc}
             </p>
         </div>

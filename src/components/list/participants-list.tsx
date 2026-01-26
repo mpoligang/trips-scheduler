@@ -111,7 +111,7 @@ export default function ParticipantsList() {
             </PageTitle>
 
             {isAdding && (
-                <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-200 dark:border-gray-700 animate-fade-in mb-6">
+                <div className="bg-gray-700/30 p-4 rounded-lg border border-gray-700 animate-fade-in mb-6">
                     <UserSearch
                         onSelect={handleAddParticipant}
                         placeholder="Inserisci l'email dell'utente..."
@@ -137,7 +137,7 @@ export default function ParticipantsList() {
                         const displayName = `${participant.first_name} ${participant.last_name}`;
 
                         return (
-                            <li key={participant.username} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+                            <li key={participant.username} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
                                         {participant?.first_name?.charAt(0).toUpperCase()}
@@ -145,7 +145,7 @@ export default function ParticipantsList() {
 
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-gray-800 dark:text-white text-sm">
+                                        <p className="font-semibold text-white text-sm">
                                             {displayName}
                                         </p>
                                     </div>
@@ -154,7 +154,7 @@ export default function ParticipantsList() {
                                 {isOwner && participant.id !== currentUserId && (
                                     <button
                                         onClick={() => setDeleteParticipant(participant)}
-                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
+                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-900/20 rounded-full transition-colors"
                                         title="Rimuovi dal viaggio"
                                     >
                                         <FaTrash size={14} />
@@ -162,7 +162,7 @@ export default function ParticipantsList() {
                                 )}
 
                                 {participant.id === currentUserId && (
-                                    <span className="text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-medium">
+                                    <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-1 rounded-full font-medium">
                                         Tu
                                     </span>
                                 )}

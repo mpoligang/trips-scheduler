@@ -80,7 +80,7 @@ function AddAttachmentModal({ isOpen, onClose, onConfirm, maxFileSizeMb, isLoadi
                 />
 
                 <div className={`${linkUrl ? 'opacity-50 pointer-events-none' : ''}`}>
-                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                    <label className="block text-sm font-medium mb-2 text-gray-300">
                         File (Immagini o PDF - Max {maxFileSizeMb}MB)
                     </label>
                     <input
@@ -101,7 +101,7 @@ function AddAttachmentModal({ isOpen, onClose, onConfirm, maxFileSizeMb, isLoadi
                             <FaPaperclip className="mr-2" /> Scegli File
                         </Button>
                     ) : (
-                        <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800">
+                        <div className="flex items-center justify-between p-2 bg-blue-900/20 rounded border border-blue-800">
                             <span className="text-sm truncate pr-2">{file.name}</span>
                             <button onClick={() => setFile(null)} disabled={isLoading} className="text-gray-500 hover:text-red-500">
                                 <FaTimes />
@@ -111,9 +111,9 @@ function AddAttachmentModal({ isOpen, onClose, onConfirm, maxFileSizeMb, isLoadi
                 </div>
 
                 <div className="relative flex items-center py-2">
-                    <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+                    <div className="flex-grow border-t border-gray-700"></div>
                     <span className="mx-2 text-xs text-gray-400 font-bold uppercase">oppure</span>
-                    <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+                    <div className="flex-grow border-t border-gray-700"></div>
                 </div>
 
                 <div className={`${file ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -127,7 +127,7 @@ function AddAttachmentModal({ isOpen, onClose, onConfirm, maxFileSizeMb, isLoadi
                     />
                 </div>
 
-                {error && <p className="text-red-500 text-xs mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded">{error}</p>}
+                {error && <p className="text-red-500 text-xs mt-2 bg-red-900/20 p-2 rounded">{error}</p>}
             </div>
         </DialogComponent>
     );
@@ -275,7 +275,7 @@ export default function AttachmentsManager({
                 isLoading={false}
                 confirmText="Contattaci"
             >
-                <p className="text-gray-600 dark:text-gray-400">{limitError?.message}</p>
+                <p className="text-gray-400">{limitError?.message}</p>
             </DialogComponent>
 
             <AddAttachmentModal
@@ -303,13 +303,13 @@ export default function AttachmentsManager({
             {attachments.length > 0 ? (
                 <ul className="grid grid-cols-1 gap-3">
                     {attachments.map((att) => (
-                        <li key={att.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                        <li key={att.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700 shadow-sm hover:shadow-md transition-shadow">
                             <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 flex-grow overflow-hidden group">
-                                <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                                <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-gray-700/50">
                                     {att.file_type === 'file' ? (att.name.toLowerCase().endsWith('.pdf') ? <FaFilePdf className="text-red-500" /> : <FaImage className="text-blue-500" />) : <FaLink className="text-green-500" />}
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{att.name}</span>
+                                    <span className="text-sm font-medium text-gray-200 truncate">{att.name}</span>
                                     <span className="text-xs text-gray-500">
                                         {att.file_type === 'file' ? `Documento (${att.size_in_bytes ? bytesToMb(att.size_in_bytes).toFixed(2) : '0'} MB)` : 'Link esterno'}
                                     </span>
@@ -319,7 +319,7 @@ export default function AttachmentsManager({
                                 <button
                                     onClick={() => setDeleteId(att.id)}
                                     disabled={isProcessing}
-                                    className="p-2 ml-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all"
+                                    className="p-2 ml-2 text-gray-400 hover:text-red-500 hover:bg-red-900/20 rounded-full transition-all"
                                     title="Elimina allegato"
                                 >
                                     <FaTrash />

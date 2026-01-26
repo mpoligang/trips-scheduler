@@ -30,7 +30,7 @@ export default function ContextMenu({ items, className }: Readonly<ContextMenuPr
                             e.stopPropagation();
                         }
                     }}
-                    className="flex items-center justify-center p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                    className="flex items-center justify-center p-2   text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-gray-800">
                     <FaEllipsisV />
                 </MenuButton>
             </div>
@@ -38,7 +38,7 @@ export default function ContextMenu({ items, className }: Readonly<ContextMenuPr
             {/* Pannello del menu */}
             <MenuItems
                 transition
-                className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-lg bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
+                className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-lg bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
             >
                 <div className="p-1">
                     {items.map((item, index) => {
@@ -50,8 +50,8 @@ export default function ContextMenu({ items, className }: Readonly<ContextMenuPr
                                     item.onClick();
                                 }}
                                 className={twMerge(
-                                    "group flex w-full items-center gap-2 rounded-md py-2 px-3 text-sm text-gray-800 dark:text-gray-200 transition-colors",
-                                    "data-[focus]:bg-purple-100 dark:data-[focus]:bg-purple-900/50 data-[focus]:text-purple-900 dark:data-[focus]:text-purple-100",
+                                    "group flex w-full items-center gap-2 rounded-md py-2 px-3 text-sm text-gray-200 transition-colors",
+                                    "data-[focus]:bg-purple-900/50 data-[focus]:text-purple-100",
                                     item.className
                                 )}
                             >

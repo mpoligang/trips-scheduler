@@ -10,7 +10,7 @@ interface SidebarItemProps {
 const SidebarItem = ({ icon: Icon, label, active, collapsed, onClick }: SidebarItemProps) => {
     const textStyle = active
         ? "text-indigo-50"
-        : "text-gray-600 dark:text-gray-300 group-hover:text-indigo-50";
+        : "text-gray-300 group-hover:text-indigo-50";
 
     return (
         <button
@@ -24,7 +24,7 @@ const SidebarItem = ({ icon: Icon, label, active, collapsed, onClick }: SidebarI
             <div className="flex-shrink-0 w-6 flex justify-center">
                 <Icon
                     size={20}
-                    className={`transition-colors duration-300 ${active ? 'text-indigo-50' : 'text-gray-500 dark:text-gray-400 group-hover:text-indigo-50/90'}`}
+                    className={`transition-colors duration-300 ${active ? 'text-indigo-50' : 'text-gray-400 group-hover:text-indigo-50/90'}`}
                 />
             </div>
 

@@ -14,7 +14,7 @@ import { mapNavigationUrl } from '@/utils/appRoutes';
 // Carica la mappa dinamicamente
 const MapPicker = dynamic(() => import('@/components/maps/map'), {
     ssr: false,
-    loading: () => <div className="h-full w-full bg-gray-100 dark:bg-gray-700 animate-pulse flex items-center justify-center text-gray-500">Caricamento mappa...</div>
+    loading: () => <div className="h-full w-full bg-gray-700 animate-pulse flex items-center justify-center text-gray-500">Caricamento mappa...</div>
 });
 
 interface LocationResult {
@@ -128,17 +128,17 @@ export default function SearchLocation({
         <>
             {readOnly ? (
                 <div className={className}>
-                    <label htmlFor={id} className="block text-sm text-gray-500 dark:text-gray-400 mb-1">
+                    <label htmlFor={id} className="block text-sm text-gray-400 mb-1">
                         {label}
                     </label>
                     <div className="flex items-start justify-between w-full py-2">
-                        <p className="text-gray-800 dark:text-gray-200 pr-4 whitespace-normal break-words">
+                        <p className="text-gray-200 pr-4 whitespace-normal break-words">
                             {!value?.address ? '-' : value?.address}
                         </p>
                         {value && (
                             <button
                                 onClick={() => setShowMap(true)}
-                                className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 mt-1 flex-shrink-0"
+                                className="text-purple-400 hover:text-purple-300 mt-1 flex-shrink-0"
                                 title="Visualizza sulla mappa"
                                 type="button"
                             >
@@ -157,15 +157,15 @@ export default function SearchLocation({
                         {({ open }) => (
                             <>
                                 {label && (
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
                                         {label} {required && <span className="text-red-500">*</span>}
                                     </label>
                                 )}
 
                                 <div className={`relative rounded-lg p-[1.5px] transition-colors duration-300 ${open ? 'bg-gradient-to-br from-purple-600 to-indigo-700' : 'bg-transparent'}`}>
-                                    <div className="relative flex items-center bg-gray-50 dark:bg-gray-700 rounded-md">
+                                    <div className="relative flex items-center bg-gray-700 rounded-md">
                                         <ComboboxInput
-                                            className="w-full pl-4 pr-24 py-2 bg-transparent border-none rounded-md text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 placeholder-gray-500 dark:placeholder-gray-400"
+                                            className="w-full pl-4 pr-24 py-2 bg-transparent border-none rounded-md text-gray-200 focus:outline-none focus:ring-0 placeholder-gray-400"
                                             displayValue={(item: any) => item?.address || query}
                                             onChange={(event) => setQuery(event.target.value)}
                                             placeholder={placeholder}
@@ -174,7 +174,7 @@ export default function SearchLocation({
 
                                         <div className="absolute right-3 flex items-center gap-2 z-10">
                                             {isLoading && (
-                                                <FaSpinner className="animate-spin h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                                <FaSpinner className="animate-spin h-4 w-4 text-purple-400" />
                                             )}
 
                                             {!isLoading && (query || value) && (
@@ -185,7 +185,7 @@ export default function SearchLocation({
                                                         setQuery('');
                                                         onSelect(null);
                                                     }}
-                                                    className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 transition-colors"
+                                                    className="p-1 rounded-full hover:bg-gray-600 text-gray-500 transition-colors"
                                                     type="button"
                                                 >
                                                     <FaTimes className="h-3 w-3" />
@@ -198,7 +198,7 @@ export default function SearchLocation({
                                                     e.preventDefault();
                                                     setShowMap(true);
                                                 }}
-                                                className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${showMap ? 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30' : 'text-gray-500'}`}
+                                                className={`p-1.5 rounded-full hover:bg-gray-600 transition-colors ${showMap ? 'text-purple-400 bg-purple-900/30' : 'text-gray-500'}`}
                                                 type="button"
                                             >
                                                 <FaMap className="h-4 w-4" />
@@ -211,17 +211,17 @@ export default function SearchLocation({
                                     <ComboboxOptions
                                         static
                                         anchor="bottom"
-                                        className="w-[var(--input-width)] z-[9999] mt-2 origin-top rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 focus:outline-none"
+                                        className="w-[var(--input-width)] z-[9999] mt-2 origin-top rounded-lg bg-gray-800 shadow-lg border border-gray-700 focus:outline-none"
                                     >
                                         <div className="max-h-60 overflow-y-auto p-1">
                                             {results.map((item) => (
                                                 <ComboboxOption
                                                     key={item.place_id}
                                                     value={item}
-                                                    className="group flex cursor-pointer items-start gap-3 rounded-md py-2 px-3 data-[focus]:bg-purple-100 dark:data-[focus]:bg-purple-900/50"
+                                                    className="group flex cursor-pointer items-start gap-3 rounded-md py-2 px-3 data-[focus]:data-[focus]:bg-purple-900/50"
                                                 >
-                                                    <FaMapMarkerAlt className="flex-shrink-0 h-4 w-4 mt-1 text-gray-400 group-data-[focus]:text-purple-600 dark:text-gray-500 dark:group-data-[focus]:text-purple-400" />
-                                                    <span className="text-sm text-gray-800 dark:text-gray-200 whitespace-normal break-words leading-snug">
+                                                    <FaMapMarkerAlt className="flex-shrink-0 h-4 w-4 mt-1 text-gray-400 group-data-[focus]:group-data-[focus]:text-purple-400" />
+                                                    <span className="text-sm text-gray-200 whitespace-normal break-words leading-snug">
                                                         {item.display_name}
                                                     </span>
                                                 </ComboboxOption>

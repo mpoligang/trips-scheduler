@@ -114,7 +114,7 @@ export default function StagesList() {
                 confirmText="Sì, elimina"
             >
                 <p>
-                    Stai per eliminare la tappa <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedStage?.name}</strong>.
+                    Stai per eliminare la tappa <strong className="font-semibold text-gray-200">{selectedStage?.name}</strong>.
                 </p>
             </DialogComponent>
 
@@ -130,17 +130,17 @@ export default function StagesList() {
                 <div className="space-y-6">
                     {sortedDates.map(date => (
                         <div key={date}>
-                            <h4 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-3 pb-2 capitalize">
+                            <h4 className="font-semibold text-lg text-gray-300 mb-3 pb-2 capitalize">
                                 {date === 'no-date' ? 'Senza Data' : formatDateForGroup(date)}
                             </h4>
                             <div className="space-y-4 mt-3">
                                 {Object.keys(groupedStages[date]).sort().map(destination => (
                                     <div className='w-auto' key={destination}>
-                                        <span className="inline-block bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 text-sm font-medium px-3 py-1 rounded-full">
+                                        <span className="inline-block bg-purple-900/50 text-purple-200 text-sm font-medium px-3 py-1 rounded-full">
                                             {destination}
                                         </span>
 
-                                        <ul className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600 mt-4">
+                                        <ul className="space-y-4 pl-4 border-l-2 border-gray-600 mt-4">
                                             {groupedStages[date][destination].map((stage) => (
                                                 <DetailItemCard
                                                     key={stage.id}

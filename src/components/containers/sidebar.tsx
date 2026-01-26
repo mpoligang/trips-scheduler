@@ -53,22 +53,22 @@ export default function Sidebar(props: Readonly<SidebarProps>) {
             {/* Drawer (Pannello Laterale) */}
             <dialog
                 className={twMerge(
-                    `relative w-full max-w-lg h-full bg-white dark:bg-gray-900 shadow-2xl flex flex-col duration-300 ${animationClasses}`,
+                    `relative w-full max-w-lg h-full bg-gray-900 shadow-2xl flex flex-col duration-300 ${animationClasses}`,
                     className
                 )}
                 aria-modal="true"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 z-10 flex-shrink-0">
+                <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 z-10 flex-shrink-0">
                     <div className="flex-1 min-w-0 pr-4">
-                        {title && <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">{title}</h3>}
-                        {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{subtitle}</p>}
+                        {title && <h3 className="text-lg font-bold text-white truncate">{title}</h3>}
+                        {subtitle && <p className="text-xs text-gray-400 truncate">{subtitle}</p>}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                         {headerActions}
                         <button
                             onClick={onClose}
-                            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            className="p-2   text-gray-400 hover:text-gray-200 rounded-full hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
                             aria-label="Chiudi sidebar"
                         >
                             <FaTimes size={20} />

@@ -112,7 +112,7 @@ export default function AccommodationsList() {
                 confirmText="Sì, elimina"
             >
                 <p>
-                    Stai per eliminare l&apos;alloggio <strong className="font-semibold text-gray-800 dark:text-gray-200">{selectedAccommodation?.name}</strong>. Questa azione è irreversibile.
+                    Stai per eliminare l&apos;alloggio <strong className="font-semibold text-gray-200">{selectedAccommodation?.name}</strong>. Questa azione è irreversibile.
                 </p>
             </DialogComponent>
 
@@ -136,16 +136,16 @@ export default function AccommodationsList() {
                     {sortedDestinations.map(destination => (
                         <div key={destination}>
                             {/* Badge Destinazione */}
-                            <span className="inline-block mb-4 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 text-sm font-medium px-3 py-1 rounded-full">
+                            <span className="inline-block mb-4 bg-purple-900/50 text-purple-200 text-sm font-medium px-3 py-1 rounded-full">
                                 {destination}
                             </span>
 
                             {/* Lista Card */}
-                            <div className="space-y-4 pl-4 border-l-2 border-gray-100 dark:border-gray-700">
+                            <div className="space-y-4 pl-4 border-l-2 border-gray-700">
                                 {groupedAccommodations[destination].map((accommodation) => (
                                     <div key={accommodation.id} className="flex flex-col gap-1">
                                         {/* Periodo di soggiorno */}
-                                        <h4 className="font-semibold text-lg text-gray-700 dark:text-gray-300 mb-3 border-b border-gray-200 dark:border-gray-700 pb-2 capitalize">
+                                        <h4 className="font-semibold text-lg text-gray-300 mb-3 border-b border-gray-700 pb-2 capitalize">
                                             {formatStayPeriod(accommodation.start_date, accommodation.end_date)}
                                         </h4>
 

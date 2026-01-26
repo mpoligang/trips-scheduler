@@ -66,8 +66,8 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-gray-900">
-            <div className="w-full max-w-4xl flex h-auto min-h-[600px] bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+        <div className="flex h-screen w-full items-center justify-center bg-gray-900">
+            <div className="w-full max-w-4xl flex h-auto min-h-[600px] bg-gray-800 shadow-lg rounded-lg overflow-hidden">
 
                 {/* --- Sezione Sinistra --- */}
                 <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 p-12 text-white">
@@ -81,8 +81,8 @@ export default function RegisterPage() {
                 <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
                     <Logo className="mb-4 flex justify-center" />
 
-                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white text-center mb-4">Crea il tuo Account</h2>
-                    <p className="text-center text-gray-600 dark:text-gray-300 mb-0">Inizia gratuitamente</p>
+                    <h2 className="text-3xl font-bold text-white text-center mb-4">Crea il tuo Account</h2>
+                    <p className="text-center text-gray-400 mb-0">Inizia gratuitamente</p>
 
                     {/* <Button className="mb-6" variant="secondary" onClick={handleGoogleRegister} disabled={isLoading}>
                         <FaGoogle className="text-gray-700 dark:text-gray-200" />
@@ -90,9 +90,9 @@ export default function RegisterPage() {
                     </Button> */}
 
                     <div className="flex items-center my-10">
-                        <hr className="flex-grow border-gray-300 dark:border-gray-600" />
-                        {/* <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">compila il form</span> */}
-                        <hr className="flex-grow border-gray-300 dark:border-gray-600" />
+                        <hr className="flex-grow border-gray-600" />
+                        {/* <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">oppure</span> */}
+                        <hr className="flex-grow border-gray-600" />
                     </div>
 
                     <form onSubmit={handleRegister}>
@@ -119,7 +119,7 @@ export default function RegisterPage() {
 
                         <div className="mb-6">
                             <Checkbox id="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e)} required>
-                                <span className="text-sm text-slate-500 dark:text-slate-400">Accetto i termini e le condizioni</span>
+                                <span className="text-sm text-slate-400">Accetto i termini e le condizioni</span>
                             </Checkbox>
                         </div>
 
@@ -130,9 +130,9 @@ export default function RegisterPage() {
                             Crea Account
                         </Button>
 
-                        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-8">
+                        <p className="text-center text-sm text-gray-400 mt-8">
                             Hai già un account?{' '}
-                            <a href={appRoutes.login} className="font-medium text-purple-600 hover:underline dark:text-purple-400">Accedi</a>
+                            <a href={appRoutes.login} className="font-medium text-purple-400 hover:underline">Accedi</a>
                         </p>
                     </form>
                 </div>

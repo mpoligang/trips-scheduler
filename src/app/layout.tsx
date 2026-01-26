@@ -24,7 +24,7 @@ export default async function RootLayout({
   const { data: { session } } = await supabase.auth.getSession();
   return (
     <html lang="it">
-      <body style={{ colorScheme: 'dark' }} className={`${inter.className} dark bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100`}>
+      <body className={`${inter.className}  bg-gray-900 text-gray-100`}>
         <AuthProvider initialSession={session}>
           {children}
         </AuthProvider>

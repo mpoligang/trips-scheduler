@@ -10,7 +10,7 @@ export default function Avatar({ className }: AvatarProps) {
     const { userData } = useAuth();
 
     if (!userData) {
-        return <div className={twMerge("h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-700 animate-pulse", className)} />;
+        return <div className={twMerge("h-10 w-10 rounded-full bg-gray-700 animate-pulse", className)} />;
     }
 
     // Estrae le iniziali. Gestisce il caso in cui i dati non siano disponibili.

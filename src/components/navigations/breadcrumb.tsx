@@ -32,13 +32,13 @@ export default function Breadcrumb({ paths, className }: BreadcrumbProps) {
                             {/* Elemento del percorso */}
                             <li>
                                 {isLast ? (
-                                    <span className="font-semibold text-gray-900 dark:text-white" aria-current="page">
+                                    <span className="font-semibold text-white" aria-current="page">
                                         {path.label}
                                     </span>
                                 ) : (
                                     <Link
                                         href={path.href}
-                                        className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                        className="text-gray-300 hover:text-white transition-colors"
                                     >
                                         {path.label}
                                     </Link>

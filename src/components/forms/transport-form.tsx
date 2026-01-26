@@ -463,7 +463,7 @@ export default function TransportForm() {
                                     </Button>
                                 )}
                                 {stopovers.map((stopover, index) => (
-                                    <div key={stopover.id || index} className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 ${index < stopovers.length - 1 ? 'border-b' : ''} border-gray-100 dark:border-gray-700 pb-6 relative`}>
+                                    <div key={stopover.id || index} className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 ${index < stopovers.length - 1 ? 'border-b' : ''} border-gray-700 pb-6 relative`}>
                                         <Input
                                             id={`sp-place-${index}`}
                                             label="Luogo di Scalo"

@@ -7,6 +7,7 @@ import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import { appRoutes } from '@/utils/appRoutes';
 import { ImSpinner8 } from 'react-icons/im';
+import Logo from '@/components/generics/logo';
 
 export default function ForgotPasswordPage() {
     const supabase = createClient();
@@ -64,6 +65,7 @@ export default function ForgotPasswordPage() {
 
                 {/* --- Sezione Destra: Form di Reset (UI ORIGINALE) --- */}
                 <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
+                    <Logo className="mb-4 flex justify-center" />
                     <div className="text-center">
                         <h2 className="text-3xl font-bold text-white mb-4">
                             Resetta la Password
@@ -71,6 +73,10 @@ export default function ForgotPasswordPage() {
                         <p className="text-gray-300 mb-8">
                             Inserisci la tua email per ricevere le istruzioni.
                         </p>
+                    </div>
+                    <div className="flex items-center mb-10">
+                        <hr className="flex-grow border-gray-600" />
+                        <hr className="flex-grow border-gray-600" />
                     </div>
 
                     <form className="space-y-6" onSubmit={handleResetPassword}>

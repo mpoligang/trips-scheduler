@@ -6,6 +6,7 @@ import { createClient } from '@/lib/client'; // ✅ Client Supabase
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import { appRoutes } from '@/utils/appRoutes';
+import { ImSpinner8 } from 'react-icons/im';
 
 export default function ForgotPasswordPage() {
     const supabase = createClient();
@@ -87,12 +88,11 @@ export default function ForgotPasswordPage() {
                         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
                         {successMessage && <p className="text-green-500 text-sm text-center">{successMessage}</p>}
 
-                        <Button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full"
-                        >
-                            {isLoading ? 'Invio in corso...' : 'Invia Email di Reset'}
+
+
+                        <Button type="submit" disabled={isLoading}>
+                            <ImSpinner8 className={`animate-spin mr-2 ${isLoading ? 'inline-block' : 'hidden'}`} />
+                            Invia Email di Reset
                         </Button>
 
                         <p className="text-center text-sm text-gray-400 mt-8">

@@ -65,6 +65,7 @@ export default function DialogComponent({
                         onClick={onConfirm}
                         disabled={isLoading}
                     >
+                        {confirmText}
                         <ImSpinner8 className={`animate-spin mr-2 ${isLoading ? 'inline-block' : 'hidden'}`} />
                         <FaCheck size={12} className={!isLoading ? 'inline-block' : 'hidden'} />
                     </Button>

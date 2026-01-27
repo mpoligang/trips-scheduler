@@ -13,13 +13,14 @@ export async function GET(request: NextRequest) {
 
         // 2. Scambiamo il codice con una sessione reale
         // Questo logga l'utente automaticamente nel browser impostando i cookie
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        const { error, data } = await supabase.auth.exchangeCodeForSession(code)
 
         if (!error) {
             console.log("Sessione recuperata con successo via Code Exchange.")
             // 3. Reindirizziamo l'utente alla pagina di modifica password
             // Essendo ora loggato, potrà salvare la nuova password senza problemi
-            return NextResponse.redirect(`${origin}${appRoutes.resetPassword}`)
+            const { access_token, refresh_token } = data.session
+            return NextResponse.redirect(`${origin}${appRoutes.resetPassword}#access_token=${access_token}&refresh_token=${refresh_token}&type=recovery`)
         }
 
         console.error("Errore scambio codice sessione:", error.message)

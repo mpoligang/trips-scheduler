@@ -21,11 +21,10 @@ export default async function RootLayout({
 
   const supabase = await createClient();
 
-  const { data: { session } } = await supabase.auth.getSession();
-  return (
+  const { data: { user } } = await supabase.auth.getUser(); return (
     <html lang="it">
       <body className={`${inter.className}  bg-gray-900 text-gray-100`}>
-        <AuthProvider initialSession={session}>
+        <AuthProvider initialUser={user}>
           {children}
         </AuthProvider>
       </body>

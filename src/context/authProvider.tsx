@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback, useRef } from 'react'
-import { User, Session } from '@supabase/supabase-js'
+import { User } from '@supabase/supabase-js'
 import { UserData } from '@/models/UserData'
 import { createClient } from '@/lib/client'
 import { AuthStatus, AuthStatusEnum, AuthStateChangeEventEnum } from '@/models/Auth'
@@ -17,7 +17,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children, initialSession }: { children: ReactNode, initialSession: Session | null }) {
+export function AuthProvider({ children, initialUser }: { children: ReactNode, initialUser: User | null }) {
   const supabase = useMemo(() => createClient(), [])
   const pathname = usePathname()
 
@@ -39,10 +39,10 @@ export function AuthProvider({ children, initialSession }: { children: ReactNode
     appRoutes.resetPassword // Fondamentale!
   ], [])
 
-  const [user, setUser] = useState<User | null>(initialSession?.user ?? null)
+  const [user, setUser] = useState<User | null>(initialUser);
   const [userData, setUserData] = useState<UserData | null>(null)
   const [status, setStatus] = useState<AuthStatus>(
-    initialSession ? AuthStatusEnum.LOADING_PROFILE : AuthStatusEnum.INITIALIZING
+    initialUser ? AuthStatusEnum.LOADING_PROFILE : AuthStatusEnum.INITIALIZING
   )
 
   // ✅ FORCELOGOUT BLINDATO: Non pulisce nulla se siamo su una rotta pubblica
@@ -140,8 +140,8 @@ export function AuthProvider({ children, initialSession }: { children: ReactNode
 
   // 2. GESTIONE EVENTI AUTH: Cruciale per PASSWORD_RECOVERY
   useEffect(() => {
-    if (initialSession?.user && lastFetchedUserId.current !== initialSession.user.id) {
-      fetchUserData(initialSession.user.id)
+    if (initialUser && lastFetchedUserId.current !== initialUser.id) {
+      fetchUserData(initialUser.id)
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -170,7 +170,7 @@ export function AuthProvider({ children, initialSession }: { children: ReactNode
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase, fetchUserData, initialSession, forceLogout, publicRoutes, pathname])
+  }, [supabase, fetchUserData, initialUser, forceLogout, publicRoutes, pathname])
 
   const value = useMemo(() => ({
     user,

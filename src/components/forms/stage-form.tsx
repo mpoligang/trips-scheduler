@@ -18,6 +18,8 @@ import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
 import { EntityKeys } from '@/utils/entityKeys';
+import { hasRealContent } from '@/utils/fileSizeUtils';
+import { AttachmentList } from '../cards/attachment-manager';
 
 export default function StageForm() {
     const router = useRouter();
@@ -29,6 +31,7 @@ export default function StageForm() {
     const stageId = params.id as string;
     const tripId = params.tripId as string;
     const isNew = stageId === 'new';
+    const attachments = stages?.find(s => s.id === stageId)?.attachments || [];
 
     // Su Supabase usiamo owner_id
     const isOwner = trip?.owner_id === user?.id;
@@ -227,13 +230,29 @@ export default function StageForm() {
                     </div>
                 </FormSection>
 
-                <FormSection title='Contenuti Aggiuntivi'>
-                    <RichTextInput
-                        value={additionalContents}
-                        onChange={setAdditionalContents}
-                        readOnly={isReadOnly}
-                    />
-                </FormSection>
+                {
+                    isReadOnly && hasRealContent(additionalContents) && (
+                        <FormSection title='Contenuti Aggiuntivi'>
+                            <RichTextInput
+                                value={additionalContents}
+                                onChange={setAdditionalContents}
+                                readOnly={isReadOnly}
+                            />
+                        </FormSection>
+                    )
+                }
+
+                {
+                    isReadOnly && attachments.length > 0 && (
+                        <FormSection title="Allegati">
+                            <AttachmentList
+                                attachments={attachments}
+                                isReadOnly={true}
+                            />
+                        </FormSection>
+                    )
+                }
+
 
                 {error && (
                     <div className="bg-red-50 p-4 rounded-xl text-red-700 text-sm text-center font-medium">

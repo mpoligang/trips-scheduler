@@ -24,6 +24,7 @@ const buttonVariants = cva(
       size: {
         default: 'py-3 px-5 text-sm w-full',
         sm: 'py-2 px-4 text-xs',
+        md: 'py-3 px-5 text-sm',
         lg: 'py-4 px-6 text-base',
         // Dimensione specifica per i bottoni con solo icona
         icon: 'h-10 w-10',

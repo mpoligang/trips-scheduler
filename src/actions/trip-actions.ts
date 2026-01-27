@@ -143,3 +143,37 @@ export async function upsertTripAction(formData: {
     revalidatePath('/dashboard');
     return { success: true, id: tripId };
 }
+
+
+export async function downloadAttachment(storagePath: string, fileName: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.storage
+        .from(EntityKeys.attachmentsKey)
+        .createSignedUrl(storagePath, 60); // URL valido per 60 secondi
+
+    if (error) {
+        console.error("Errore:", error.message);
+        return;
+    }
+
+    // Avvia il download
+    const a = document.createElement('a');
+    a.href = data.signedUrl;
+    a.download = fileName;
+    a.click();
+}
+
+export const getFileUrl = async (path: string) => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .storage
+        .from(EntityKeys.attachmentsKey)
+        .createSignedUrl(path, 60); // Scade dopo 60 secondi
+
+    if (error) {
+        console.error(error);
+        return null;
+    }
+
+    return data.signedUrl; // Questo URL lo puoi mettere nel src di un'immagine
+};

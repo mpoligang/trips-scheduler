@@ -10,12 +10,12 @@ interface PageTitleProps {
 
 export default function PageTitle({ title, subtitle, children, className }: PageTitleProps) {
     return (
-        <div className={twMerge("flex flex-row justify-between items-start mb-5 gap-4 border-b border-gray-700 pb-5", className)}>
-            <div className="w-full">
-                {title && <h1 className="text-xl font-bold text-white">{title}</h1>}
-                {subtitle && <p className="text-gray-400 mt-1">{subtitle}</p>}
+        <div className={twMerge("flex flex-col mb-5  border-b border-gray-700 pb-5", className)}>
+            <div className="w-full flex flex-row justify-between items-center">
+                {title && <h1 className="text-xl font-bold text-white mb-0">{title}</h1>}
+                {children}
             </div>
-            {children}
+            {subtitle && <p className="text-gray-400 mt-4">{subtitle}</p>}
         </div>
     );
 }

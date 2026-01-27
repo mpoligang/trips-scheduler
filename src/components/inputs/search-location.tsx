@@ -218,7 +218,7 @@ export default function SearchLocation({
                                                 <ComboboxOption
                                                     key={item.place_id}
                                                     value={item}
-                                                    className="group flex cursor-pointer items-start gap-3 rounded-md py-2 px-3 data-[focus]:data-[focus]:bg-purple-900/50"
+                                                    className="group flex cursor-pointer items-start gap-3 rounded-md py-2 px-3 data-[focus]:data-[focus]:bg-gradient-to-br from-purple-600 to-indigo-700"
                                                 >
                                                     <FaMapMarkerAlt className="flex-shrink-0 h-4 w-4 mt-1 text-gray-400 group-data-[focus]:group-data-[focus]:text-purple-400" />
                                                     <span className="text-sm text-gray-200 whitespace-normal break-words leading-snug">

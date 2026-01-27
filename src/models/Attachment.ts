@@ -28,7 +28,7 @@ export interface Attachment {
      * Necessario per l'eliminazione del file fisico dallo storage.
      * Sarà null se l'allegato è un link esterno.
      */
-    storage_path: string | null;
+    storage_path: string;
 
     /** Dimensione del file in byte (0 per i link) */
     size_in_bytes: number;

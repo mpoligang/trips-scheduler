@@ -56,7 +56,7 @@ export default function DialogComponent({
                 <div className="p-6 pt-4 mt-4 flex md:flex-row flex-col justify-end gap-4 border-t border-gray-700 mx-6 border-x-0 border-b-0 px-0">
                     {
                         showCancelButton && (
-                            <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+                            <Button size="md" variant="secondary" onClick={onClose} disabled={isLoading}>
                                 {cancelText}
                             </Button>
                         )
@@ -64,10 +64,11 @@ export default function DialogComponent({
                     <Button
                         onClick={onConfirm}
                         disabled={isLoading}
+                        size="md"
                     >
-                        {confirmText}
                         <ImSpinner8 className={`animate-spin mr-2 ${isLoading ? 'inline-block' : 'hidden'}`} />
-                        <FaCheck size={12} className={!isLoading ? 'inline-block' : 'hidden'} />
+                        <FaCheck size={12} className={`mr-2 ${!isLoading ? 'inline-block' : 'hidden'}`} />
+                        {confirmText}
                     </Button>
                 </div>
             </div>

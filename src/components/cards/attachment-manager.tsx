@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { FaPaperclip, FaLink, FaFilePdf, FaImage, FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaPaperclip, FaLink, FaFilePdf, FaImage, FaTimes, FaPlus, FaTrash, FaDownload } from 'react-icons/fa';
 import { createClient } from '@/lib/client';
 
 import { Attachment } from '@/models/Attachment';
@@ -14,6 +14,8 @@ import { useTrip } from '@/context/tripContext';
 import { mbToBytes, bytesToMb } from '@/utils/fileSizeUtils';
 import { useAuth } from '@/context/authProvider';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
+import ContextMenu from '../actions/context-menu';
+import { downloadAttachment, getFileUrl } from '@/actions/trip-actions';
 
 // --- MODALE AGGIUNTA ALLEGATO ---
 interface AddModalProps {
@@ -300,22 +302,69 @@ export default function AttachmentsManager({
                 </DialogComponent>
             )}
 
+            <AttachmentList
+                attachments={attachments}
+                setDeleteId={setDeleteId}
+                isReadOnly={isReadOnly}
+                isProcessing={isProcessing}
+            />
+
+
+        </div>
+    );
+}
+
+
+export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnly, isProcessing = false }: {
+    attachments: Attachment[],
+    setDeleteId?: (id: string | null) => void,
+    isReadOnly: boolean,
+    isProcessing?: boolean
+}) => {
+
+    const handleOpen = async (attachmentPath: string) => {
+        const url = await getFileUrl(attachmentPath);
+        if (url) {
+            window.open(url, '_blank');
+        }
+    };
+
+    return (
+        <>
             {attachments.length > 0 ? (
                 <ul className="grid grid-cols-1 gap-3">
                     {attachments.map((att) => (
                         <li key={att.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700 shadow-sm hover:shadow-md transition-shadow">
-                            <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 flex-grow overflow-hidden group">
+                            <a onClick={() => handleOpen(att.storage_path)} className="flex items-center gap-3 flex-grow overflow-hidden group">
                                 <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-gray-700/50">
                                     {att.file_type === 'file' ? (att.name.toLowerCase().endsWith('.pdf') ? <FaFilePdf className="text-red-500" /> : <FaImage className="text-blue-500" />) : <FaLink className="text-green-500" />}
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                    <span className="text-sm font-medium text-gray-200 truncate">{att.name}</span>
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-sm font-medium text-gray-200 ">{att.name}</span>
+                                    <span className="text-xs text-gray-500 mt-1">
                                         {att.file_type === 'file' ? `Documento (${att.size_in_bytes ? bytesToMb(att.size_in_bytes).toFixed(2) : '0'} MB)` : 'Link esterno'}
                                     </span>
                                 </div>
                             </a>
-                            {!isReadOnly && (
+                            {!isReadOnly ? (
+                                <ContextMenu
+                                    items={[
+                                        {
+                                            label: 'Scarica',
+                                            icon: <FaDownload />,
+                                            onClick: async () => {
+                                                await downloadAttachment(att.storage_path as string, att.name);
+
+                                            }
+                                        },
+                                        {
+                                            label: 'Elimina',
+                                            icon: <FaTrash />,
+                                            onClick: () => setDeleteId(att.id)
+                                        },
+                                    ]}
+                                />
+                            ) : (
                                 <button
                                     onClick={() => setDeleteId(att.id)}
                                     disabled={isProcessing}
@@ -334,6 +383,6 @@ export default function AttachmentsManager({
                     subtitle={isReadOnly ? "Non ci sono allegati." : "Carica file o link utili."}
                 />
             )}
-        </div>
-    );
+        </>
+    )
 }

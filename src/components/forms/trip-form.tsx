@@ -133,9 +133,9 @@ export default function TripForm() {
             } else if (result.error) {
                 setError(result.error);
             } else {
+                await refreshUserData();
                 if (trip?.id) {
                     await refreshData(true);
-                    await refreshUserData();
                 } else {
                     router.push(appRoutes.home);
                 }

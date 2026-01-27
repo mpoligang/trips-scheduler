@@ -11,8 +11,6 @@ export async function GET(request: Request) {
     // Supabase recupera automaticamente il JWT dai cookie della sessione
     const { data: { user } } = await supabase.auth.getUser();
 
-    console.log(user);
-
 
     if (!user) {
         return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
@@ -38,7 +36,6 @@ export async function GET(request: Request) {
 
     try {
         const response = await fetch(apiUrl);
-        console.log(response);
 
         if (!response.ok) {
             throw new Error(`LocationIQ ha risposto con status: ${response.status}`);

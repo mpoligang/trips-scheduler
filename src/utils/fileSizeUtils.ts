@@ -24,3 +24,16 @@ export const formatFileSize = (bytes: number | null | undefined): string => {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
+
+export const hasRealContent = (htmlContent: string | null | undefined) => {
+    if (!htmlContent) return false;
+
+    // 1. Rimuove tutti i tag HTML (es. <p>, <div>, <br>)
+    const textOnly = htmlContent.replace(/<[^>]*>/g, '');
+
+    // 2. Rimuove gli spazi "non-breaking" (&nbsp;) che gli editor spesso inseriscono
+    const cleanText = textOnly.replace(/&nbsp;/g, ' ');
+
+    // 3. Controlla se, tolti gli spazi vuoti, è rimasto qualcosa
+    return cleanText.trim().length > 0;
+};

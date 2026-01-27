@@ -24,6 +24,8 @@ import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
 import { EntityKeys } from '@/utils/entityKeys';
+import { hasRealContent } from '@/utils/fileSizeUtils';
+import { AttachmentList } from '../cards/attachment-manager';
 
 export default function AccommodationForm() {
     const router = useRouter();
@@ -35,6 +37,7 @@ export default function AccommodationForm() {
     const tripId = params.tripId as string;
     const accommodationId = params.id as string;
     const isNew = accommodationId === 'new';
+    const attachments = accommodations?.find(a => a.id === accommodationId)?.attachments || [];
 
     // Stati del Form
     const [isReadOnly, setIsReadOnly] = useState(!isNew);
@@ -200,17 +203,14 @@ export default function AccommodationForm() {
                             onSelect={setLocation}
                             label="Indirizzo"
                             readOnly={isReadOnly}
+                            required
                         />
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="md:col-span-2">
-                                <LinkPreview
-                                    label="Link prenotazione"
-                                    value={link}
-                                    onChange={setLink}
-                                    readOnly={isReadOnly}
-                                />
-                            </div>
-                        </div>
+                        <LinkPreview
+                            label="Link prenotazione"
+                            value={link}
+                            onChange={setLink}
+                            readOnly={isReadOnly}
+                        />
                     </div>
                 </FormSection>
 
@@ -239,13 +239,28 @@ export default function AccommodationForm() {
                     </div>
                 </FormSection>
 
-                <FormSection title='Contenuti Aggiuntivi'>
-                    <RichTextInput
-                        value={notes}
-                        onChange={setNotes}
-                        readOnly={isReadOnly}
-                    />
-                </FormSection>
+                {
+                    hasRealContent(notes) && isReadOnly && (
+                        <FormSection title='Contenuti Aggiuntivi'>
+                            <RichTextInput
+                                value={notes}
+                                onChange={setNotes}
+                                readOnly={isReadOnly}
+                            />
+                        </FormSection>
+                    )
+                }
+                {
+                    isReadOnly && attachments.length > 0 && (
+                        <FormSection title="Allegati">
+                            <AttachmentList
+                                attachments={attachments}
+                                isReadOnly={true}
+                            />
+                        </FormSection>
+                    )
+                }
+
 
                 {error && (
                     <div className="bg-red-50 border border-red-200 p-4 rounded-xl text-red-700 text-center text-sm font-semibold">

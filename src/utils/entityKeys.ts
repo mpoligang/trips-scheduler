@@ -7,4 +7,5 @@ export enum EntityKeys {
     accommodationsKey = 'accommodations',
     transportsKey = 'transports',
     stagesKey = 'stages',
+    attachmentsKey = 'attachments',
 };

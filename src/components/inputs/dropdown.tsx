@@ -76,9 +76,9 @@ export default function Dropdown<T extends Record<string, any>>({
                                     <ListboxOption
                                         key={String(item[optionValue])}
                                         value={item}
-                                        className="group flex cursor-pointer items-center gap-2 rounded-md py-2 px-3 data-[focus]:bg-purple-900/50"
+                                        className="group flex cursor-pointer items-center gap-2 rounded-md py-2 px-3 data-[focus]:bg-gradient-to-br from-purple-600 to-indigo-700"
                                     >
-                                        <FaCheck className="invisible h-4 w-4 text-purple-400 group-data-[selected]:visible" />
+                                        <FaCheck className="invisible h-4 w-4 text-white group-data-[selected]:visible" />
                                         <span className="text-sm text-gray-200">{String(item[optionLabel])}</span>
                                     </ListboxOption>
                                 ))

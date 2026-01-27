@@ -25,6 +25,8 @@ import { Transport, TransportDetails, StopoverV2, StopoverInstanceV2, TransportT
 import { generateDateOptions, selectDateOption } from "@/utils/dateTripUtils";
 import { appRoutes, mapNavigationUrl } from "@/utils/appRoutes";
 import { EntityKeys } from '@/utils/entityKeys';
+import { hasRealContent } from '@/utils/fileSizeUtils';
+import { AttachmentList } from '../cards/attachment-manager';
 
 export default function TransportForm() {
     const supabase = createClient();
@@ -35,6 +37,7 @@ export default function TransportForm() {
     const transportId = Array.isArray(params.id) ? params.id[0] : params.id;
     const tripId = params.tripId as string;
     const isNew = transportId === 'new';
+    const attachments = transports?.find(t => t.id === transportId)?.attachments || [];
 
     const [isReadOnly, setIsReadOnly] = useState(!isNew);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -670,7 +673,7 @@ export default function TransportForm() {
                 )}
 
                 {/* ✅ UI CLEANUP: Mostra le note solo se non è readonly o se c'è testo */}
-                {(!isReadOnly || additionalContents.replace(/<[^>]*>/g, '').length > 0) && (
+                {(!isReadOnly || hasRealContent(additionalContents)) && (
                     <FormSection title="Contenuti Aggiuntivi">
                         <RichTextInput
                             value={additionalContents}
@@ -679,6 +682,18 @@ export default function TransportForm() {
                         />
                     </FormSection>
                 )}
+
+                {
+                    isReadOnly && attachments.length > 0 && (
+                        <FormSection title="Allegati">
+                            <AttachmentList
+                                attachments={attachments}
+                                isReadOnly={true}
+                            />
+                        </FormSection>
+                    )
+                }
+
 
                 {!isReadOnly && (
                     <ActionStickyBar

@@ -19,6 +19,7 @@ export const appRoutes = {
     profile: `${dashboard}/profile`,
     tripMetadata,
     tripDetails,
+    mapTrip: (tripId: string) => `${tripDetails(tripId)}/map`,
     accommodations: (tripId: string) => `${tripDetails(tripId)}/accommodations`,
     transports: (tripId: string) => `${tripDetails(tripId)}/transports`,
     stages: (tripId: string) => `${tripDetails(tripId)}/stages`,

@@ -15,7 +15,8 @@ import { mbToBytes, bytesToMb } from '@/utils/fileSizeUtils';
 import { useAuth } from '@/context/authProvider';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
 import ContextMenu from '../actions/context-menu';
-import { downloadAttachment, getFileUrl } from '@/actions/trip-actions';
+import { downloadAttachment, getFileUrl } from '@/actions/files-actions';
+import Image from 'next/image';
 
 // --- MODALE AGGIUNTA ALLEGATO ---
 interface AddModalProps {
@@ -322,11 +323,27 @@ export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnl
     isProcessing?: boolean
 }) => {
 
-    const handleOpen = async (attachmentPath: string) => {
+    const handleDownload = async (attachmentPath: string, fileName: string) => {
+        const url = await downloadAttachment(attachmentPath, fileName);
+        if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+        }
+    };
+
+    const handleOpenImage = async (attachmentPath: string) => {
+        const newWindow = window.open('', '_blank');
+
         const url = await getFileUrl(attachmentPath);
         if (url) {
-            window.open(url, '_blank');
+            if (newWindow) {
+                newWindow.location.href = url;
+            }
         }
+
+
     };
 
     return (
@@ -334,8 +351,8 @@ export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnl
             {attachments.length > 0 ? (
                 <ul className="grid grid-cols-1 gap-3">
                     {attachments.map((att) => (
-                        <li key={att.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700 shadow-sm hover:shadow-md transition-shadow">
-                            <a onClick={() => handleOpen(att.storage_path)} className="flex items-center gap-3 flex-grow overflow-hidden group">
+                        <li onClick={() => handleOpenImage(att.storage_path as string)} key={att.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                            <a className="flex items-center gap-3 flex-grow overflow-hidden group">
                                 <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-gray-700/50">
                                     {att.file_type === 'file' ? (att.name.toLowerCase().endsWith('.pdf') ? <FaFilePdf className="text-red-500" /> : <FaImage className="text-blue-500" />) : <FaLink className="text-green-500" />}
                                 </div>
@@ -352,9 +369,8 @@ export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnl
                                         {
                                             label: 'Scarica',
                                             icon: <FaDownload />,
-                                            onClick: async () => {
-                                                await downloadAttachment(att.storage_path as string, att.name);
-
+                                            onClick: async (e: MouseEvent | undefined) => {
+                                                handleDownload(att.storage_path as string, att.name);
                                             }
                                         },
                                         {
@@ -366,12 +382,11 @@ export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnl
                                 />
                             ) : (
                                 <button
-                                    onClick={() => setDeleteId(att.id)}
-                                    disabled={isProcessing}
-                                    className="p-2 ml-2 text-gray-400 hover:text-red-500 hover:bg-red-900/20 rounded-full transition-all"
-                                    title="Elimina allegato"
+                                    onClick={() => handleDownload(att.storage_path as string, att.name)}
+                                    className="p-2 cursor-pointer ml-2 text-gray-400 hover:text-white  hover:bg-gradient-to-br hover:from-purple-600 hover:to-indigo-700 rounded-full transition-all"
+                                    title="Scarica allegato"
                                 >
-                                    <FaTrash />
+                                    <FaDownload />
                                 </button>
                             )}
                         </li>

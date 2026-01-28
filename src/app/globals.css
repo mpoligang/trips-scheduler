@@ -9,3 +9,15 @@ body {
 .rdp-chevron {
   fill: white !important;
 }
+
+.leaflet-popup-content-wrapper {
+  background-color: #101828 !important;
+}
+
+.leaflet-popup-tip {
+  background-color: #101828 !important;
+}
+
+.leaflet-popup-content p {
+  margin: 0.5rem 0 !important;
+}

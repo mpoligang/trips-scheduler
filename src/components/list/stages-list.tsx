@@ -14,6 +14,7 @@ import EmptyData from '../cards/empty-data';
 import PageTitle from '../generics/page-title';
 import { useTrip } from '@/context/tripContext';
 import { EntityKeys } from '@/utils/entityKeys';
+import Badge from '../generics/badge';
 
 /**
  * Formatta la data ISO (2024-05-24T...) per il raggruppamento
@@ -136,11 +137,8 @@ export default function StagesList() {
                             <div className="space-y-4 mt-3">
                                 {Object.keys(groupedStages[date]).sort().map(destination => (
                                     <div className='w-auto' key={destination}>
-                                        <span className="inline-block bg-purple-900/50 text-purple-200 text-sm font-medium px-3 py-1 rounded-full">
-                                            {destination}
-                                        </span>
-
-                                        <ul className="space-y-4 pl-4 border-l-2 border-gray-600 mt-4">
+                                        <Badge text={destination} className='mb-4' />
+                                        <ul className="space-y-4 pl-4 border-l-2 border-gray-600">
                                             {groupedStages[date][destination].map((stage) => (
                                                 <DetailItemCard
                                                     key={stage.id}

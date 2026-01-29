@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     }
 
     // 4. Esegui la chiamata a LocationIQ (usiamo fetch nativo di Next.js)
-    const apiUrl = `https://us1.locationiq.com/v1/search?key=${apiKey}&q=${encodeURIComponent(query)}&format=json`;
+    const apiUrl = `https://us1.locationiq.com/v1/search?key=${apiKey}&q=${encodeURIComponent(query)}&format=json&accept-language=it,en`;
 
     try {
         const response = await fetch(apiUrl);

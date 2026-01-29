@@ -5,11 +5,11 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MapPin, Hotel, Plane, Train, Navigation } from 'lucide-react';
+import { MapPin, Hotel, Plane, Train, Car, Ship, Bus } from 'lucide-react';
 import { useTrip } from '@/context/tripContext';
 import { Stage } from '@/models/Stage';
 import { Accommodation } from '@/models/Accommodation';
-import { Transport } from '@/models/Transport';
+import { Transport, TransportType } from '@/models/Transport';
 import { Trip } from '@/models/Trip';
 import FormSection from '../generics/form-section';
 import Button from '../actions/button';
@@ -39,7 +39,9 @@ const icons = {
     accommodation: createCustomIcon(Hotel, '#10b981'), // Verde
     flight: createCustomIcon(Plane, '#8b5cf6'), // Viola
     train: createCustomIcon(Train, '#f59e0b'), // Arancio
-    defaultTransport: createCustomIcon(Navigation, '#64748b') // Slate
+    car: createCustomIcon(Car, '#ef4444'), // Rosso
+    boat: createCustomIcon(Ship, '#0ea5e9'), // Azzurro,
+    bus: createCustomIcon(Bus, '#f97316'), // Arancione Scuro
 };
 
 function MapBounds({ stages, accommodations, transports }: Partial<Trip>) {
@@ -86,6 +88,21 @@ export default function TripMap() {
         );
     }
 
+    const getIconByTransportType = (type: TransportType) => {
+        switch (type) {
+            case TransportType.Flight:
+                return icons.flight;
+            case TransportType.Train:
+                return icons.train;
+            case TransportType.Bus:
+                return icons.bus;
+            case TransportType.Ferry:
+                return icons.boat;
+            default:
+                return icons.car;
+        }
+    };
+
     return (
         <MapContainer
             center={routePath[0] || [0, 0]}
@@ -130,12 +147,14 @@ export default function TripMap() {
                 </Marker>
             ))}
 
+
+
             {/* 4. TRASPORTI (Linee e icone partenza/arrivo) */}
             {transports.map((trans) => (
                 <div key={`trans-group-${trans.id}`}>
 
                     {trans.dep_lat && (
-                        <Marker position={[trans.dep_lat as number, trans.dep_lng as number]} icon={trans.type === 'Volo' ? icons.flight : icons.train}>
+                        <Marker position={[trans.dep_lat as number, trans.dep_lng as number]} icon={getIconByTransportType(trans.type as TransportType)}>
                             <Popup>
                                 <PopupDetail title="Informazioni Trasporto" name={trans.title} address={trans.dep_address || ''} navigateToDetail={() => {
                                     router.push(appRoutes.transportDetails(trip?.id as string, trans.id as string));

@@ -19,9 +19,10 @@ import EmptyData from '@/components/cards/empty-data';
 import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import DialogComponent from '@/components/modals/confirm-modal';
-import { FaPlus, FaTimes, FaTrashAlt, FaExclamationTriangle } from 'react-icons/fa';
+import { FaPlus, FaTrashAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
 import { UserData } from '@/models/UserData';
+import Badge from '../generics/badge';
 
 export default function TripForm() {
     const { user, refreshUserData, userData } = useAuth();
@@ -113,8 +114,6 @@ export default function TripForm() {
                 return null;
             }).filter((id) => id !== null) as string[];
 
-            console.log("Participant IDs to submit:", participantIds);
-
 
             const result = await upsertTripAction({
                 id: isEditMode ? tripId : 'new',
@@ -205,12 +204,7 @@ export default function TripForm() {
 
                     <div className="mt-4 flex flex-wrap gap-2">
                         {destinations.map(dest => (
-                            <span key={dest} className="flex items-center gap-2 bg-purple-900/40 text-purple-200 text-sm font-medium px-3 py-1 rounded-full border border-purple-800">
-                                {dest}
-                                <button type="button" onClick={() => handleRemoveDestination(dest)} className="text-purple-500 hover:text-red-500 transition-colors">
-                                    <FaTimes size={12} />
-                                </button>
-                            </span>
+                            <Badge key={dest} text={dest} remove={handleRemoveDestination} showRemove />
                         ))}
                     </div>
                 </FormSection>

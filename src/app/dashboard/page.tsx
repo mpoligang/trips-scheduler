@@ -40,10 +40,41 @@ export default function DashboardPage() {
         setIsLoadingTrips(true);
         try {
             const [ownedRes, partRes] = await Promise.all([
-                supabase.from(EntityKeys.tripsKey).select('*').eq('owner_id', user.id).order('created_at', { ascending: false }),
-                supabase.from(EntityKeys.participantsKey).select('trips (*)').eq('user_id', user.id)
-            ]);
+                // 1. Viaggi di cui sono proprietario + i loro partecipanti
+                supabase
+                    .from(EntityKeys.tripsKey)
+                    .select(`
+            *,
+            trip_participants (
+                user_id,
+                profiles:profiles (
+                    first_name,
+                    last_name,
+                    username
+                )
+            )
+        `)
+                    .eq('owner_id', user.id)
+                    .order('created_at', { ascending: false }),
 
+                // 2. Viaggi a cui partecipo (ma non sono proprietario) + gli altri partecipanti
+                supabase
+                    .from(EntityKeys.participantsKey)
+                    .select(`
+            trips (
+                *,
+                trip_participants (
+                    user_id,
+                    profiles:profiles (
+                        first_name,
+                        last_name,
+                        username
+                    )
+                )
+            )
+        `)
+                    .eq('user_id', user.id)
+            ]);
             if (ownedRes.error) throw ownedRes.error;
             setOwnedTrips(ownedRes.data || []);
 

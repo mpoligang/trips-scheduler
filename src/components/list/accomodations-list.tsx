@@ -14,6 +14,7 @@ import PageTitle from '../generics/page-title';
 import { RiHotelLine } from 'react-icons/ri';
 import { useTrip } from '@/context/tripContext';
 import { EntityKeys } from '@/utils/entityKeys';
+import Badge from '../generics/badge';
 
 const formatStayPeriod = (start: string | undefined, end: string | undefined) => {
     if (!start || !end) { return ''; }
@@ -136,10 +137,7 @@ export default function AccommodationsList() {
                     {sortedDestinations.map(destination => (
                         <div key={destination}>
                             {/* Badge Destinazione */}
-                            <span className="inline-block mb-4 bg-purple-900/50 text-purple-200 text-sm font-medium px-3 py-1 rounded-full">
-                                {destination}
-                            </span>
-
+                            <Badge text={destination} className='mb-4' />
                             {/* Lista Card */}
                             <div className="space-y-4 pl-4 border-l-2 border-gray-700">
                                 {groupedAccommodations[destination].map((accommodation) => (

@@ -9,7 +9,7 @@ import { FiShoppingCart } from "react-icons/fi";
 
 export default function HistoryExpensesList() {
 
-    const { expenses } = useTrip();
+    const { expenses, refreshData } = useTrip();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedExpenseId, setSelectedExpenseId] = useState<{ trip_id: string, expense_id: string }>({ trip_id: '', expense_id: '' });
     const [isDeleting, setIsDeleting] = useState(false);
@@ -26,6 +26,7 @@ export default function HistoryExpensesList() {
         }
         // Logica per eliminare la spesa usando selectedExpenseId
         // ...
+        await refreshData();
         setIsDeleting(false);
         setIsDeleteModalOpen(false);
     }

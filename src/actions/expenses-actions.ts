@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/server';
+import { EntityKeys } from '@/utils/entityKeys';
 import { z } from 'zod';
 
 // Schema di validazione
@@ -72,13 +73,15 @@ export async function deleteExpenseAction(formData: { expense_id: string; trip_i
 
     // 1. Validazione input
     const validated = DeleteExpenseSchema.parse(formData);
+    console.log("Validated:", validated);
 
     // 2. Esecuzione eliminazione
     // RLS si occuperà di verificare se l'utente ha i permessi per eliminare
     const { error } = await supabase
-        .from('expenses')
+        .from(EntityKeys.expensesKey)
         .delete()
         .eq('id', validated.expense_id);
+
 
     if (error) {
         console.error("Errore eliminazione spesa:", error.message);

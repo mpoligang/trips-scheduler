@@ -98,7 +98,7 @@ function TripLayoutContent({
             {/* --- MOBILE OVERLAY --- */}
             {isMobileOpen && (
                 <div
-                    className="fixed inset-0 bg-black/60 z-[100] lg:hidden backdrop-blur-md animate-in fade-in"
+                    className="fixed inset-0 bg-black/60 z-[18] lg:hidden backdrop-blur-md animate-in fade-in"
                     onClick={() => setIsMobileOpen(false)}
                 />
             )}

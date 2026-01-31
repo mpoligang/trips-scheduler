@@ -66,7 +66,7 @@ export default function Dropdown<T extends Record<string, any>>({
                     <ListboxOptions
                         anchor="bottom"
                         transition
-                        className="w-[var(--button-width)] z-10 mt-2 origin-top rounded-lg bg-gray-800 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] data-[closed]:scale-95 data-[closed]:opacity-0"
+                        className="w-[var(--button-width)] z-30 mt-2 origin-top rounded-lg bg-gray-800 shadow-lg transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] data-[closed]:scale-95 data-[closed]:opacity-0"
                     >
                         <div className="max-h-60 overflow-y-auto p-1">
                             {items.length === 0 ? (

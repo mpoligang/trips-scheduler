@@ -8,4 +8,6 @@ export enum EntityKeys {
     transportsKey = 'transports',
     stagesKey = 'stages',
     attachmentsKey = 'attachments',
+    expensesKey = 'expenses',
+    expenseSplitsKey = 'expense_splits',
 };

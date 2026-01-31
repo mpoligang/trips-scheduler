@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-geosearch/dist/geosearch.css";
 import { createClient } from '@/lib/server'
 import { AuthProvider } from "@/context/authProvider";
+import ToasterProvider from "@/context/toastProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,6 +25,7 @@ export default async function RootLayout({
   const { data: { user } } = await supabase.auth.getUser(); return (
     <html lang="it">
       <body className={`${inter.className}  bg-gray-900 text-gray-100`}>
+        <ToasterProvider />
         <AuthProvider initialUser={user}>
           {children}
         </AuthProvider>

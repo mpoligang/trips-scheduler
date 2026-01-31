@@ -34,7 +34,7 @@ export default function DialogComponent({
 
     return (
         <div
-            className={`fixed inset-0 bg-[#000000c9] z-[9999] flex justify-center items-center ${fullScreen ? 'p-0' : 'p-6'}`}
+            className={`fixed inset-0 bg-[#000000c9] z-29 flex justify-center items-center ${fullScreen ? 'p-0' : 'p-6'}`}
         >
 
             <div className={`

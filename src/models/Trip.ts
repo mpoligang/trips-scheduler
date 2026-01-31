@@ -2,11 +2,13 @@ import { Stage } from "./Stage";
 import { Transport } from "./Transport";
 import { Accommodation } from "./Accommodation";
 import { UserData } from "./UserData";
+import { Expense } from "./Expenses";
 
 export interface Trip {
     stages?: Stage[];
     accommodations?: Accommodation[];
     transports?: Transport[];
+    expenses?: Expense[];
     id: string;                // uuid (Generato da Supabase)
     owner_id: string;          // uuid (Riferimento all'utente proprietario)
     name: string;              // text

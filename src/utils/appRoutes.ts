@@ -22,6 +22,8 @@ export const appRoutes = {
     mapTrip: (tripId: string) => `${tripDetails(tripId)}/map`,
     accommodations: (tripId: string) => `${tripDetails(tripId)}/accommodations`,
     transports: (tripId: string) => `${tripDetails(tripId)}/transports`,
+    expenses: (tripId: string) => `${tripDetails(tripId)}/expenses`,
+
     stages: (tripId: string) => `${tripDetails(tripId)}/stages`,
     settings: (tripId: string) => `${tripDetails(tripId)}/settings`,
     members: (tripId: string) => `${tripDetails(tripId)}/members`,

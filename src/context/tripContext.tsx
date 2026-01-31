@@ -10,6 +10,7 @@ import { Accommodation } from '@/models/Accommodation';
 import { Transport } from '@/models/Transport';
 import { EntityKeys } from '@/utils/entityKeys';
 import { UserData } from '@/models/UserData';
+import { Expense } from '@/models/Expenses';
 
 interface TripContextType {
     trip: Trip | null;
@@ -17,6 +18,7 @@ interface TripContextType {
     accommodations: Accommodation[];
     transports: Transport[];
     participants: Partial<UserData>[];
+    expenses: Expense[];
     loading: boolean;
     error: string | null;
     isOwner: boolean;
@@ -32,11 +34,11 @@ export function TripProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const tripId = params.tripId as string;
 
-    const [trip, setTrip] = useState<Trip | null>(null);
+    // Estendo localmente il tipo Trip per includere il join delle spese
+    const [trip, setTrip] = useState<(Trip) | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // 🚩 CACHE REF: Memorizza l'ultimo ID caricato per evitare fetch inutili
     const lastLoadedId = useRef<string | null>(null);
 
     const fetchAllData = useCallback(async (force = false) => {
@@ -45,18 +47,12 @@ export function TripProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        // ✅ GUARDIA: Se l'ID è lo stesso e non forziamo, non chiamare il DB
         if (lastLoadedId.current === tripId && !force) {
-            console.log("⚡ Cache hit: dati già presenti per questo ID.");
             setLoading(false);
             return;
         }
 
-        // ✅ UX OPTIMIZATION: Mostriamo il loader solo se cambiamo viaggio, 
-        // non se stiamo solo rinfrescando i dati dello stesso viaggio.
         if (lastLoadedId.current !== tripId) setLoading(true);
-
-        console.log(`📡 Fetching ${force ? 'FORZATO' : 'INIZIALE'} per Trip:`, tripId);
 
         try {
             const { data, error: supabaseError } = await supabase
@@ -66,6 +62,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
                     stages(*, attachments(*)),
                     accommodations(*, attachments(*)),
                     transports(*, attachments(*)),
+                    expenses(
+                        *,
+                        profiles:paid_by (id, first_name, last_name, username),
+                        expense_splits (
+                            *,
+                            profiles:user_id (id, first_name, last_name, username)
+                        )
+                    ),
                     trip_participants (profiles (id, username, first_name, last_name))
                 `)
                 .eq('id', tripId)
@@ -75,7 +79,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
             if (supabaseError) throw supabaseError;
 
             if (data) {
-                setTrip(data as Trip);
+                setTrip(data as any);
                 lastLoadedId.current = tripId;
                 setError(null);
             }
@@ -85,39 +89,46 @@ export function TripProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    }, [tripId, user, supabase, trip]);
+    }, [tripId, user, supabase]);
 
-    // 1. 🔄 Effetto Caricamento/Cambio Viaggio
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
 
-    // 2. 🏠 Effetto Refresh all'atterraggio (Triggerato dal Pathname)
     useEffect(() => {
         const isRootPage = pathname === `/dashboard/trips/${tripId}`;
         if (isRootPage && lastLoadedId.current === tripId) {
-            console.log("🏠 Bentornato nella root del viaggio. Rinfresco dati...");
             fetchAllData(true);
         }
     }, [pathname, tripId, fetchAllData]);
 
-    // 3. 📡 Realtime Subscription (Ottimizzato)
     useEffect(() => {
         if (!tripId || tripId === 'new') return;
 
         const channel = supabase.channel(`realtime_trip_${tripId}`)
             .on('postgres_changes', { event: '*', schema: 'public', filter: `trip_id=eq.${tripId}` }, () => fetchAllData(true))
-            .on('postgres_changes', { event: '*', schema: 'public', table: EntityKeys.tripsKey, filter: `id=eq.${tripId}` }, () => fetchAllData(true))
+            // Ascolta cambiamenti specifici sulla tabella spese legati a questo viaggio
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `trip_id=eq.${tripId}` }, () => fetchAllData(true))
+            // AGGIUNGI QUESTO:
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'expense_splits' }, () => {
+                // Poiché expense_splits non ha trip_id diretto, controlliamo se lo split 
+                // appartiene a una delle spese che abbiamo già in memoria o ricarichiamo per sicurezza
+                fetchAllData(true);
+            }).on('postgres_changes', { event: '*', schema: 'public', table: EntityKeys.tripsKey, filter: `id=eq.${tripId}` }, () => fetchAllData(true))
             .subscribe();
 
         return () => { supabase.removeChannel(channel); };
     }, [tripId, supabase, fetchAllData]);
+
+    console.log(trip);
+
 
     const value = useMemo(() => ({
         trip,
         stages: trip?.stages || [],
         accommodations: trip?.accommodations || [],
         transports: trip?.transports || [],
+        expenses: (trip?.expenses || []),
         participants: trip?.trip_participants?.map((p: { profiles: Partial<UserData> }) => ({ ...p.profiles })) || [],
         loading,
         error,

@@ -4,7 +4,7 @@ import { useTrip } from "@/context/tripContext";
 import { RiHotelLine } from "react-icons/ri";
 import { BiTrip } from "react-icons/bi";
 import { BsTruckFront } from "react-icons/bs";
-import { FiUsers, FiMap } from "react-icons/fi";
+import { FiUsers, FiMap, FiShoppingCart } from "react-icons/fi";
 
 import { appRoutes } from "@/utils/appRoutes";
 import { FaPlus } from "react-icons/fa";
@@ -39,6 +39,7 @@ const FirstLevelTripTemplate = ({ breadcrumb, children }: FirstLevelTripTemplate
             { label: 'Itinerario', icon: BiTrip, href: appRoutes.stages(trip?.id || '') },
             { label: 'Alloggi', icon: RiHotelLine, href: appRoutes.accommodations(trip?.id || '') },
             { label: 'Trasporti', icon: BsTruckFront, href: appRoutes.transports(trip?.id || '') },
+            { label: 'Spese', icon: FiShoppingCart, href: appRoutes.expenses(trip?.id || '') },
             { label: 'Mappa del Viaggio', icon: FiMap, href: appRoutes.mapTrip(trip?.id || '') },
             { label: 'Membri', icon: FiUsers, href: appRoutes.members(trip?.id || '') },
 

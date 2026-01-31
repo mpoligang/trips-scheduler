@@ -1,24 +1,26 @@
-CREATE POLICY "Accesso allegati per partecipanti e proprietari"
-ON storage.objects
-FOR SELECT -- Applica il controllo alla lettura/download
-TO authenticated
-USING (
-  bucket_id = 'attachments' -- Sostituisci con il nome reale del tuo bucket
-  AND (
-    EXISTS (
-      SELECT 1 FROM public.attachments a
-      JOIN public.trips t ON a.trip_id = t.id
-      LEFT JOIN public.trip_participants p ON a.trip_id = p.trip_id
-      WHERE 
-        -- Il file nello storage corrisponde al record nel DB (usando il path)
-        a.storage_path = storage.objects.name
-        AND (
-          -- L'utente è il proprietario del viaggio
-          t.owner_id = auth.uid() 
-          OR 
-          -- L'utente è un partecipante del viaggio
-          p.user_id = auth.uid()
-        )
-    )
+-- Rimuovi la vecchia policy se esistente
+drop policy if exists "Users can insert splits" on public.expense_splits;
+
+-- Crea la nuova policy specifica per l'INSERT
+create policy "Users can insert splits if they are participants"
+on public.expense_splits for insert
+with check (
+  exists (
+    select 1 from public.expenses e
+    where e.id = expense_id
+    and public.check_is_trip_participant(e.trip_id)
+  )
+);
+
+-- Assicurati che anche la SELECT sia robusta
+drop policy if exists "Users can view splits of their trips" on public.expense_splits;
+
+create policy "Users can view splits of their trips"
+on public.expense_splits for select
+using (
+  exists (
+    select 1 from public.expenses e
+    where e.id = expense_splits.expense_id
+    and public.check_is_trip_participant(e.trip_id)
   )
 );

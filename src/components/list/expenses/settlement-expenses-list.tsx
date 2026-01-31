@@ -3,56 +3,17 @@
 import { useMemo } from "react";
 import { useTrip } from "@/context/tripContext";
 import EmptyData from "@/components/cards/empty-data";
+import { calculateBalances, calculateSettlements } from "@/utils/finance-logic"; // Assicurati che il percorso sia corretto
+import { UserData } from "@/models/UserData";
 
 export default function SettlementList() {
     const { expenses, participants } = useTrip();
 
-    // --- LOGICA DI CALCOLO (Identica alla tua, non toccata) ---
     const settlements = useMemo(() => {
-        const memberBalances: Record<string, number> = {};
-        participants.forEach((p) => { if (p.id) memberBalances[p.id] = 0; });
-
-        expenses.forEach((expense) => {
-            if (memberBalances[expense.paid_by] !== undefined) {
-                memberBalances[expense.paid_by] += Number(expense.amount);
-            }
-            expense.expense_splits?.forEach((split) => {
-                if (memberBalances[split.user_id] !== undefined) {
-                    memberBalances[split.user_id] -= Number(split.amount);
-                }
-            });
-        });
-
-        const debtors = participants
-            .map(p => ({ profile: p, balance: memberBalances[p.id!] || 0 }))
-            .filter(u => u.balance < -0.01)
-            .sort((a, b) => a.balance - b.balance);
-
-        const creditors = participants
-            .map(p => ({ profile: p, balance: memberBalances[p.id!] || 0 }))
-            .filter(u => u.balance > 0.01)
-            .sort((a, b) => b.balance - a.balance);
-
-        const results: { from: any, to: any, amount: number }[] = [];
-        let dIdx = 0;
-        let cIdx = 0;
-        const tempDebtors = debtors.map(d => ({ ...d, balance: Math.abs(d.balance) }));
-        const tempCreditors = creditors.map(c => ({ ...c }));
-
-        while (dIdx < tempDebtors.length && cIdx < tempCreditors.length) {
-            const amount = Math.min(tempDebtors[dIdx].balance, tempCreditors[cIdx].balance);
-            if (amount > 0) {
-                results.push({ from: tempDebtors[dIdx].profile, to: tempCreditors[cIdx].profile, amount: amount });
-            }
-            tempDebtors[dIdx].balance -= amount;
-            tempCreditors[cIdx].balance -= amount;
-            if (tempDebtors[dIdx].balance < 0.01) dIdx++;
-            if (tempCreditors[cIdx].balance < 0.01) cIdx++;
-        }
-        return results;
+        const memberBalances = calculateBalances(participants as UserData[], expenses);
+        return calculateSettlements(memberBalances, participants as UserData[]);
     }, [expenses, participants]);
 
-    // --- NUOVA LOGICA: Raggruppamento per chi riceve ---
     const receivedSummary = useMemo(() => {
         const summary: Record<string, { profile: any, total: number, sources: string[] }> = {};
 
@@ -62,7 +23,9 @@ export default function SettlementList() {
                 summary[creditorId] = { profile: s.to, total: 0, sources: [] };
             }
             summary[creditorId].total += s.amount;
-            summary[creditorId].sources.push(`${s.from.first_name} (${new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(s.amount)})`);
+            summary[creditorId].sources.push(
+                `${s.from.first_name} (${new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(s.amount)})`
+            );
         });
 
         return Object.values(summary);
@@ -74,7 +37,7 @@ export default function SettlementList() {
 
     return (
         <>
-            {/* Sezione DEBITI (La tua originale) */}
+            {/* Sezione DEBITI (Tua grafica originale) */}
             <div className="space-y-4">
                 {settlements.map((settlement, index) => (
                     <div
@@ -101,7 +64,7 @@ export default function SettlementList() {
                 ))}
             </div>
 
-            {/* Nuova Sezione CREDITI (Speculare) */}
+            {/* Nuova Sezione CREDITI (Tua grafica originale) */}
             <div className="space-y-4 mt-4">
                 {receivedSummary.map((item, index) => (
                     <div

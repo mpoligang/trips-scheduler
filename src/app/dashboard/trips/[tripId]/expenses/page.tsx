@@ -22,6 +22,7 @@ import SettlementList from "@/components/list/expenses/settlement-expenses-list"
 
 export default function TripExpensesPage() {
 
+    const { trip } = useTrip();
     const [isOpenAddExpenseModal, setIsOpenAddExpenseModal] = useState<boolean>(false);
 
     return (
@@ -32,8 +33,12 @@ export default function TripExpensesPage() {
                     href: appRoutes.home,
                 },
                 {
+                    label: trip?.name || 'Dettagli Viaggio',
+                    href: appRoutes.tripDetails(trip?.id as string),
+                },
+                {
                     label: 'Spese',
-                    href: appRoutes.home,
+                    href: '#',
                 }
             ]}>
             <PageTitle title="Spese del Viaggio" subtitle="Gestisci e suddividi le spese del tuo viaggio" >
@@ -67,7 +72,7 @@ interface AddExpenseModalProps {
 }
 
 const AddExpenseModal = ({ isOpen, setIsOpen }: AddExpenseModalProps) => {
-    const { trip } = useTrip();
+    const { trip, refreshData } = useTrip();
     const [description, setDescription] = useState<string>('');
     const [amount, setAmount] = useState<number>(0);
     const [paidBy, setPaidBy] = useState<{ id: string; name: string } | null>(null);
@@ -113,6 +118,7 @@ const AddExpenseModal = ({ isOpen, setIsOpen }: AddExpenseModalProps) => {
 
             toast.success("Spesa aggiunta correttamente!");
             setIsOpen(false);
+            await refreshData();
             // Qui potresti voler fare un router.refresh() per aggiornare le tab
         } catch (error) {
             console.error(error);

@@ -3,27 +3,14 @@
 import { useMemo } from "react";
 import { useTrip } from "@/context/tripContext";
 import EmptyData from "@/components/cards/empty-data";
+import { calculateBalances } from "@/utils/finance-logic";
+import { UserData } from "@/models/UserData";
 
 export default function BalanceList() {
     const { expenses, participants } = useTrip();
 
     const balances = useMemo(() => {
-        const memberBalances: Record<string, number> = {};
-        participants.forEach((p) => {
-            if (p.id) memberBalances[p.id] = 0;
-        });
-
-        expenses.forEach((expense) => {
-            if (memberBalances[expense.paid_by] !== undefined) {
-                memberBalances[expense.paid_by] += Number(expense.amount);
-            }
-            expense.expense_splits?.forEach((split) => {
-                if (memberBalances[split.user_id] !== undefined) {
-                    memberBalances[split.user_id] -= Number(split.amount);
-                }
-            });
-        });
-
+        const memberBalances = calculateBalances(participants as UserData[], expenses);
         return participants.map(p => ({
             profile: p,
             netBalance: memberBalances[p.id!] || 0
@@ -47,19 +34,23 @@ export default function BalanceList() {
                         key={profile.id}
                         className="w-full flex md:flex-row flex-col md:items-center justify-between p-4 bg-gray-700/50 rounded-2xl border border-transparent hover:border-gray-600 transition-all duration-300 gap-2"
                     >
-                        <div className="flex items-center flex-1 min-w-0"> {/* min-w-0 permette il truncate ai figli */}
+                        <div className="flex items-center flex-1 min-w-0">
                             {/* Avatar: Iniziali unite senza spazio */}
-                            <div className="flex h-10 w-10 shrink-1 uppercase items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 text-white text-sm font-medium select-none tracking-tighter">
+                            <div className="flex h-10 w-10 shrink-0 uppercase items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 text-white text-sm font-medium select-none tracking-tighter">
                                 {profile.first_name?.charAt(0)}{profile.last_name?.charAt(0)}
                             </div>
 
-                            <div className="ml-4 flex-1 min-w-0"> {/* min-w-0 fondamentale qui */}
+                            <div className="ml-4 flex-1 min-w-0">
                                 <p className="font-bold text-white text-lg truncate">
                                     {profile.first_name} {profile.last_name}
                                 </p>
-                                <p className="text-gray-400 text-[14px] ">
-                                    {isNeutral ? 'In Pareggio' : isCreditor ? 'Deve ricevere' : 'Deve dare'} <span className={"whitespace-nowrap " + textClass}>
-                                        {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(netBalance).toString().replace('-', '')}
+                                <p className="text-gray-400 text-[14px]">
+                                    {isNeutral ? 'In Pareggio' : isCreditor ? 'Deve ricevere' : 'Deve dare'}{" "}
+                                    <span className={"whitespace-nowrap " + textClass}>
+                                        {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
+                                            .format(netBalance)
+                                            .toString()
+                                            .replace('-', '')}
                                     </span>
                                 </p>
                             </div>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {
     FaMapMarkedAlt, FaUserFriends, FaBed, FaPlane, FaFileAlt,
     FaCheckCircle, FaRobot, FaBriefcase,
+    FaShoppingCart,
 } from 'react-icons/fa';
 import Logo from '@/components/generics/logo';
 import { appRoutes } from '@/utils/appRoutes';
@@ -87,7 +88,7 @@ export default function LandingPage() {
                             <FeatureCard icon={<FaPlane />} title="Trasporti" desc="Voli, treni, noleggi auto. Orari e codici di prenotazione in un unico posto." />
                             <FeatureCard icon={<FaUserFriends />} title="Collaborazione" desc="Viaggi in gruppo? Invita i tuoi amici e condividete ogni tappa insieme in tempo reale." />
                             <FeatureCard icon={<FaFileAlt />} title="Documenti" desc="Carica PDF e biglietti direttamente nelle tappe. Non perderai mai più una prenotazione." />
-                            <FeatureCard icon={<FaCheckCircle />} title="Budget (Soon)" desc="Tieni traccia delle spese per evitare sorprese al rientro dal tuo viaggio." comingSoon />
+                            <FeatureCard icon={<FaShoppingCart />} title="Spese" desc="Tieni traccia delle spese e dividile equamente con i membri del viaggio." />
                         </div>
                     </div>
                 </section>

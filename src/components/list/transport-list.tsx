@@ -3,20 +3,18 @@
 import { useState } from 'react';
 import { FaPlus, FaPlane, FaTrain, FaBus, FaShip, FaCar, FaRocket } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/client';
+import toast from 'react-hot-toast';
 
 import { Transport, TransportType } from '@/models/Transport';
 import { useTrip } from '@/context/tripContext';
+import { deleteTransportAction } from '@/actions/transport-actions';
+import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
+
 import Button from '@/components/actions/button';
 import DetailItemCard from '@/components/cards/detail-item-card';
 import EmptyData from '@/components/cards/empty-data';
 import DialogComponent from '@/components/modals/confirm-modal';
-import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 import PageTitle from '../generics/page-title';
-
-import { EntityKeys } from '@/utils/entityKeys';
-
-
 
 const formatDateForGroup = (dateString: string): string => {
     if (!dateString) return 'Data non definita';
@@ -28,8 +26,7 @@ const formatDateForGroup = (dateString: string): string => {
 
 export default function TransportsList() {
     const router = useRouter();
-    const supabase = createClient();
-    const { refreshData, transports, trip, isOwner } = useTrip();
+    const { refreshData, transports = [], trip, isOwner } = useTrip();
 
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -50,40 +47,29 @@ export default function TransportsList() {
     };
 
     /**
-     * ✅ BUSINESS LOGIC: Eliminazione sicura con pulizia Storage
+     * ✅ REFACTORING: Eliminazione tramite Server Action e Toast
      */
     const handleConfirmDelete = async () => {
-        if (!deleteId) return;
+        if (!deleteId || !trip?.id) return;
+
         setIsDeleting(true);
+        const toastId = toast.loading("Eliminazione trasporto...");
+
         try {
-            // 1. Recupero dei file allegati al trasporto per pulire lo Storage
-            const { data: attachments } = await supabase
-                .from('attachments')
-                .select('storage_path')
-                .eq('transport_id', deleteId) // Puntiamo alla FK corretta
-                .not('storage_path', 'is', null);
+            const result = await deleteTransportAction({
+                id: deleteId,
+                trip_id: trip.id
+            });
 
-            if (attachments && attachments.length > 0) {
-                const paths = attachments.map(a => a.storage_path as string);
-                // Pulizia fisica dal bucket 'attachments'
-                await supabase.storage.from('attachments').remove(paths);
-            }
+            if (!result.success) throw new Error(result.error);
 
-            // 2. Eliminazione del trasporto (il CASCADE DB eliminerà i record in 'attachments')
-            const { error } = await supabase
-                .from(EntityKeys.transportsKey)
-                .delete()
-                .eq('id', deleteId);
-
-            if (error) throw error;
-
+            toast.success("Trasporto rimosso", { id: toastId });
             await refreshData(true);
-        } catch (e) {
-            console.error("Errore durante l'eliminazione del trasporto:", e);
-            alert("Errore tecnico durante l'eliminazione del trasporto.");
+            setDeleteId(null);
+        } catch (e: any) {
+            toast.error(e.message || "Errore tecnico durante l'eliminazione", { id: toastId });
         } finally {
             setIsDeleting(false);
-            setDeleteId(null);
         }
     };
 
@@ -107,7 +93,7 @@ export default function TransportsList() {
                 title="Elimina Trasporto"
                 confirmText="Elimina"
             >
-                <p>Sei sicuro di voler eliminare il trasporto <strong>{toDelete?.title}</strong>?</p>
+                <p>Sei sicuro di voler eliminare il trasporto <strong>{toDelete?.title}</strong>? L&apos;azione è irreversibile.</p>
             </DialogComponent>
 
             <PageTitle title="I tuoi Trasporti" subtitle="Gestisci i voli, treni e altri spostamenti del tuo viaggio.">
@@ -132,7 +118,6 @@ export default function TransportsList() {
                                         key={t.id}
                                         icon={getIcon(t.type)}
                                         title={t.title}
-                                        // ✅ FIXED: Utilizzo della utility mapNavigationUrl corretta
                                         directionsUrl={t.dep_address ? mapNavigationUrl(t.dep_address) : ''}
                                         detailUrl={appRoutes.transportDetails(trip?.id as string, t.id)}
                                         onDelete={() => setDeleteId(t.id)}

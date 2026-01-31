@@ -3,22 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaPlus, FaMapMarkerAlt } from 'react-icons/fa';
-import { createClient } from '@/lib/client';
-import { Stage } from '@/models/Stage';
+import toast from 'react-hot-toast';
 
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
+import { deleteStageAction } from '@/actions/stage-actions';
+import { useTrip } from '@/context/tripContext';
+
 import DialogComponent from '../modals/confirm-modal';
 import Button from '../actions/button';
 import DetailItemCard from '../cards/detail-item-card';
 import EmptyData from '../cards/empty-data';
 import PageTitle from '../generics/page-title';
-import { useTrip } from '@/context/tripContext';
-import { EntityKeys } from '@/utils/entityKeys';
 import Badge from '../generics/badge';
 
-/**
- * Formatta la data ISO (2024-05-24T...) per il raggruppamento
- */
 const formatDateForGroup = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString('it-IT', {
@@ -30,8 +27,7 @@ const formatDateForGroup = (dateString: string): string => {
 
 export default function StagesList() {
     const router = useRouter();
-    const supabase = createClient();
-    const { trip, stages, isOwner, refreshData } = useTrip();
+    const { trip, stages = [], isOwner, refreshData } = useTrip();
 
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -42,44 +38,30 @@ export default function StagesList() {
     const handleOpenDeleteModal = (id: string) => setDeleteId(id);
     const handleCloseDeleteModal = () => setDeleteId(null);
 
+    /**
+     * ✅ REFACTORING: Eliminazione tramite Server Action
+     */
     const handleConfirmDelete = async () => {
-        if (!deleteId || !selectedStage) { return; }
+        if (!deleteId || !trip?.id) return;
 
         setIsDeleting(true);
+        const toastId = toast.loading("Eliminazione tappa...");
+
         try {
-            /** * ✅ BUSINESS LOGIC: Pulizia Storage 
-             * Recuperiamo i path prima del DELETE per non perdere i riferimenti
-             */
-            const { data: attachments } = await supabase
-                .from('attachments')
-                .select('storage_path')
-                .eq('stage_id', deleteId) // Usiamo stage_id come da nuovo schema
-                .not('storage_path', 'is', null);
+            const result = await deleteStageAction({
+                id: deleteId,
+                trip_id: trip.id
+            });
 
-            if (attachments && attachments.length > 0) {
-                const paths = attachments.map(a => a.storage_path as string);
-                // Usiamo il bucket 'attachments' creato precedentemente
-                await supabase.storage.from('attachments').remove(paths);
-            }
+            if (!result.success) throw new Error(result.error);
 
-            /** * ✅ BUSINESS LOGIC: Delete con CASCADE
-             * Il database cancellerà automaticamente i record in 'attachments'
-             */
-            const { error } = await supabase
-                .from(EntityKeys.stagesKey)
-                .delete()
-                .eq('id', deleteId);
-
-            if (error) { throw error; }
-
+            toast.success("Tappa eliminata con successo", { id: toastId });
             await refreshData(true);
-
-        } catch (error) {
-            console.error("Errore durante l'eliminazione della tappa:", error);
-            alert("Errore durante l'eliminazione.");
+            handleCloseDeleteModal();
+        } catch (error: any) {
+            toast.error(error.message || "Errore durante l'eliminazione", { id: toastId });
         } finally {
             setIsDeleting(false);
-            setDeleteId(null);
         }
     };
 
@@ -87,19 +69,14 @@ export default function StagesList() {
         router.push(appRoutes.stageDetails(trip?.id as string, 'new'));
     };
 
-    /**
-     * Raggruppamento tappe per Data e poi per Destinazione
-     */
     const groupedStages = stages.reduce((acc, stage) => {
         const dateKey = stage.arrival_date ? stage.arrival_date.split('T')[0] : 'no-date';
         const destination = stage.destination || 'Non specificato';
-
         if (!acc[dateKey]) { acc[dateKey] = {}; }
         if (!acc[dateKey][destination]) { acc[dateKey][destination] = []; }
-
         acc[dateKey][destination].push(stage);
         return acc;
-    }, {} as Record<string, Record<string, Stage[]>>);
+    }, {} as Record<string, Record<string, any[]>>);
 
     const sortedDates = Object.keys(groupedStages).sort((a, b) => a.localeCompare(b));
     const hasStages = sortedDates.length > 0;
@@ -115,7 +92,7 @@ export default function StagesList() {
                 confirmText="Sì, elimina"
             >
                 <p>
-                    Stai per eliminare la tappa <strong className="font-semibold text-gray-200">{selectedStage?.name}</strong>.
+                    Stai per eliminare la tappa <strong className="font-semibold text-gray-200">{selectedStage?.name}</strong>. L&apos;azione è irreversibile.
                 </p>
             </DialogComponent>
 

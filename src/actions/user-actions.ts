@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js' // Client JS standard per l
 import { createClient as createServerClient } from '@/lib/server' // Il tuo client helper per la sessione utente
 import { redirect } from 'next/navigation'
 import { appRoutes } from '@/utils/appRoutes'
+import { EntityKeys } from '@/utils/entityKeys'
 
 export async function deleteAccountAction() {
     // 1. Verifichiamo chi sta facendo la richiesta (Sicurezza base)
@@ -33,17 +34,17 @@ export async function deleteAccountAction() {
         // Adatta la query in base alla tua tabella (es. 'attachments' o 'documents')
         // Esempio basato sul tuo codice precedente:
         const { data: attachments } = await supabaseAdmin
-            .from('attachments')
+            .from(EntityKeys.attachmentsKey)
             .select('storage_path')
             .eq('user_id', user.id) // ⚠️ Assicurati che la colonna sia corretta (user_id o trip_id collegato)
 
         if (attachments && attachments.length > 0) {
             const paths = attachments.map(a => a.storage_path).filter(Boolean) as string[]
 
-            // Cancelliamo i file dal bucket 'attachments'
+            // Cancelliamo i file dal bucket EntityKeys.attachmentsKey
             const { error: storageError } = await supabaseAdmin
                 .storage
-                .from('attachments')
+                .from(EntityKeys.attachmentsKey)
                 .remove(paths)
 
             if (storageError) {

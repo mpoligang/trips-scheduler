@@ -5,6 +5,8 @@ import { UserData } from '@/models/UserData';
 import { formatDateForPostgres } from '@/utils/dateTripUtils';
 import { EntityKeys } from '@/utils/entityKeys';
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+
 
 export async function upsertTripAction(formData: {
     id?: string;
@@ -145,3 +147,92 @@ export async function upsertTripAction(formData: {
 }
 
 
+
+
+const TripIdSchema = z.string().uuid();
+
+// --- GET: Recupero Viaggi ---
+export async function getUserTripsAction(userId: string) {
+    const supabase = await createClient();
+
+    const [ownedRes, partRes] = await Promise.all([
+        // Viaggi di cui sono proprietario
+        supabase
+            .from(EntityKeys.tripsKey)
+            .select(`*, trip_participants (user_id, profiles:profiles (first_name, last_name, username))`)
+            .eq('owner_id', userId)
+            .order('created_at', { ascending: false }),
+
+        // Viaggi a cui partecipo
+        supabase
+            .from(EntityKeys.participantsKey)
+            .select(`trips (*, trip_participants (user_id, profiles:profiles (first_name, last_name, username)))`)
+            .eq('user_id', userId)
+    ]);
+
+    if (ownedRes.error) return { success: false, error: ownedRes.error.message };
+
+    const owned = ownedRes.data || [];
+    const participated = (partRes.data as any[])
+        ?.map(row => row.trips)
+        .filter(trip => trip && trip.owner_id !== userId) || [];
+
+    return { success: true, data: { owned, participated } };
+}
+
+// --- DELETE: Elimina o Abbandona ---
+export async function deleteOrLeaveTripAction(tripId: string, userId: string, isOwner: boolean) {
+    const supabase = await createClient();
+
+    const validatedId = TripIdSchema.parse(tripId);
+    let error;
+
+    if (isOwner) {
+        // Elimina il viaggio (CASCADE si occuperà del resto)
+        const res = await supabase.from(EntityKeys.tripsKey).delete().eq('id', validatedId).eq('owner_id', userId);
+        error = res.error;
+    } else {
+        // Rimuove solo il partecipante
+        const res = await supabase.from(EntityKeys.participantsKey).delete().eq('trip_id', validatedId).eq('user_id', userId);
+        error = res.error;
+    }
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath('/dashboard');
+    return { success: true };
+}
+
+
+export async function getTripFullDataAction(tripId: string) {
+    const supabase = await createClient();
+
+    try {
+        const { data, error } = await supabase
+            .from(EntityKeys.tripsKey)
+            .select(`
+                *,
+                stages(*, attachments(*)),
+                accommodations(*, attachments(*)),
+                transports(*, attachments(*)),
+                expenses(
+                    *,
+                    profiles:paid_by (id, first_name, last_name, username),
+                    expense_splits (
+                        *,
+                        profiles:user_id (id, first_name, last_name, username)
+                    )
+                ),
+                trip_participants (profiles (id, username, first_name, last_name))
+            `)
+            .eq('id', tripId)
+            .order('position', { referencedTable: EntityKeys.stagesKey, ascending: true })
+            .single();
+
+        if (error) throw error;
+        return { success: true, data };
+    } catch (err: any) {
+        console.error("❌ Errore Server Action getTripFullData:", err.message);
+        return { success: false, error: "Impossibile caricare i dati del viaggio." };
+    }
+}

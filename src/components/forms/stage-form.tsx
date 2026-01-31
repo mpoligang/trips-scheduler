@@ -3,27 +3,29 @@
 import { useState, useEffect, FormEvent, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { FaPen, FaUndo, FaMap } from 'react-icons/fa';
-import { createClient } from '@/lib/client'; // Il tuo client Supabase
+import toast from 'react-hot-toast';
+
+import { useTrip } from '@/context/tripContext';
+import { useAuth } from '@/context/authProvider';
+import { upsertStageAction } from '@/actions/stage-actions';
+
 import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
+import { formatDateForPostgres, generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
+import { Location } from '@/models/Location';
+import { hasRealContent } from '@/utils/fileSizeUtils';
+
 import Dropdown from '../inputs/dropdown';
 import Input from '../inputs/input';
 import PageTitle from '../generics/page-title';
 import ContextMenu, { ContextMenuItem } from '../actions/context-menu';
 import SearchLocation from '../inputs/search-location';
-import { Location } from '@/models/Location';
-import { formatDateForPostgres, generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
-import { useTrip } from '@/context/tripContext'; // Il context aggiornato
-import { useAuth } from '@/context/authProvider';
 import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
-import { EntityKeys } from '@/utils/entityKeys';
-import { hasRealContent } from '@/utils/fileSizeUtils';
 import { AttachmentList } from '../cards/attachment-manager';
 
 export default function StageForm() {
     const router = useRouter();
-    const supabase = createClient();
     const { trip, stages, refreshData } = useTrip();
     const { user } = useAuth();
     const params = useParams();
@@ -33,21 +35,19 @@ export default function StageForm() {
     const isNew = stageId === 'new';
     const attachments = stages?.find(s => s.id === stageId)?.attachments || [];
 
-    // Su Supabase usiamo owner_id
     const isOwner = trip?.owner_id === user?.id;
 
     const [isReadOnly, setIsReadOnly] = useState(!isNew);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    // Stato error rimosso
 
-    // Stati del form
+    // Stati del form (Invariati)
     const [stageName, setStageName] = useState('');
     const [stageDate, setStageDate] = useState<Date | undefined>();
     const [stageLocation, setStageLocation] = useState<Location | null>(null);
     const [stageDestination, setStageDestination] = useState<{ id: string; name: string } | null>(null);
     const [additionalContents, setAdditionalContents] = useState<string>('');
 
-    // Date Options: convertiamo le stringhe di Supabase in oggetti Date per l'utility
     const dateOptions = useMemo(() => {
         if (!trip?.start_date || !trip?.end_date) { return []; }
         return generateDateOptions(new Date(trip.start_date), new Date(trip.end_date));
@@ -59,7 +59,6 @@ export default function StageForm() {
     }, [stageDate, dateOptions]);
 
     const populateForm = useCallback(() => {
-        // Cerchiamo la tappa nell'array 'stages' fornito dal context
         const stage = stages?.find(s => s.id === stageId);
         if (stage) {
             setStageName(stage.name);
@@ -73,41 +72,33 @@ export default function StageForm() {
             if (stage.destination) {
                 setStageDestination({ id: stage.destination, name: stage.destination });
             }
-        } else {
-            setStageName('');
-            setStageDate(undefined);
-            setStageLocation(null);
-            setStageDestination(null);
-            setAdditionalContents('');
         }
     }, [stages, stageId]);
 
     useEffect(() => {
-        populateForm();
-    }, [populateForm]);
+        if (!isNew) populateForm();
+    }, [populateForm, isNew]);
 
     const handleCancel = () => {
-        if (isNew) {
-            router.back();
-        } else {
-            populateForm();
-            setIsReadOnly(true);
-            setError(null);
-        }
+        if (isNew) router.back();
+        else { populateForm(); setIsReadOnly(true); }
     };
 
+    // --- SUBMIT CON SERVER ACTION ---
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        // Validazione Client-side
         if (!trip || !stageName || !stageDate || !stageLocation || !stageDestination) {
-            setError("Assicurati di aver compilato tutti i campi obbligatori.");
+            toast.error("Assicurati di aver compilato tutti i campi obbligatori.");
             return;
         }
 
         setIsSubmitting(true);
-        setError(null);
+        const toastId = toast.loading(isNew ? "Aggiungendo tappa..." : "Salvando modifiche...");
 
-        // Mappatura dati per la tabella 'stages' di Postgres
-        const stageData = {
+        const stagePayload = {
+            id: stageId, // La action gestirà il valore 'new'
             trip_id: tripId,
             name: stageName,
             arrival_date: formatDateForPostgres(stageDate),
@@ -115,42 +106,31 @@ export default function StageForm() {
             address: stageLocation.address,
             lat: stageLocation.lat,
             lng: stageLocation.lng,
-            notes: additionalContents, // 'notes' nel tuo CSV
-            // position: stages.length + 1 // Opzionale: calcolo posizione
+            notes: additionalContents,
         };
 
         try {
+            const result = await upsertStageAction(stagePayload);
+
+            if (!result.success) throw new Error(result.error);
+
+            toast.success(isNew ? "Tappa aggiunta!" : "Tappa aggiornata!", { id: toastId });
+
+            await refreshData(true);
+
             if (isNew) {
-                const { data, error: insertError } = await supabase
-                    .from(EntityKeys.stagesKey)
-                    .insert([stageData])
-                    .select()
-                    .single();
-
-                if (insertError) { throw insertError; }
-
-                // Reindirizziamo ai dettagli della nuova tappa
-                router.push(appRoutes.stageDetails(tripId, data.id));
+                // Dopo la creazione, torniamo alla lista o ai dettagli
+                router.push(appRoutes.accommodations(tripId)); // o dove preferisci
             } else {
-                const { error: updateError } = await supabase
-                    .from(EntityKeys.stagesKey)
-                    .update(stageData)
-                    .eq('id', stageId);
-
-                if (updateError) { throw updateError; }
-
                 setIsReadOnly(true);
             }
-            await refreshData(true); // Aggiorna il context globale
-        } catch (err) {
-            console.error("Errore salvataggio Supabase:", err);
-            setError("Impossibile salvare la tappa. Riprova.");
+        } catch (err: any) {
+            toast.error(err.message || "Errore durante il salvataggio", { id: toastId });
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Le destinazioni ora arrivano come array di stringhe da Supabase
     const destinationOptions = trip?.destinations?.map(d => ({ id: d, name: d })) || [];
 
     const menuItems: ContextMenuItem[] = [
@@ -161,14 +141,11 @@ export default function StageForm() {
         }
     ];
 
-    if (isOwner) {
+    if (isOwner && !isNew) {
         menuItems.unshift({
             label: isReadOnly ? 'Modifica' : 'Annulla',
             icon: isReadOnly ? <FaPen /> : <FaUndo />,
-            onClick: () => {
-                if (isReadOnly) setIsReadOnly(false);
-                else handleCancel();
-            }
+            onClick: () => isReadOnly ? setIsReadOnly(false) : handleCancel()
         });
     }
 
@@ -230,42 +207,26 @@ export default function StageForm() {
                     </div>
                 </FormSection>
 
-                {
-                    isReadOnly && hasRealContent(additionalContents) && (
-                        <FormSection title='Contenuti Aggiuntivi'>
-                            <RichTextInput
-                                value={additionalContents}
-                                onChange={setAdditionalContents}
-                                readOnly={isReadOnly}
-                            />
-                        </FormSection>
-                    )
-                }
-
-                {
-                    isReadOnly && attachments.length > 0 && (
-                        <FormSection title="Allegati">
-                            <AttachmentList
-                                attachments={attachments}
-                                isReadOnly={true}
-                            />
-                        </FormSection>
-                    )
-                }
-
-
-                {error && (
-                    <div className="bg-red-50 p-4 rounded-xl text-red-700 text-sm text-center font-medium">
-                        {error}
-                    </div>
+                {/* Mostra se non è sola lettura (modifica) OPPURE se c'è contenuto reale (lettura) */}
+                {(!isReadOnly || hasRealContent(additionalContents)) && (
+                    <FormSection title='Contenuti Aggiuntivi'>
+                        <RichTextInput
+                            value={additionalContents}
+                            onChange={setAdditionalContents}
+                            readOnly={isReadOnly}
+                        />
+                    </FormSection>
                 )}
 
+                {isReadOnly && attachments.length > 0 && (
+                    <FormSection title="Allegati">
+                        <AttachmentList attachments={attachments} isReadOnly={true} />
+                    </FormSection>
+                )}
+
+
                 {!isReadOnly && (
-                    <ActionStickyBar
-                        handleCancel={handleCancel}
-                        isSubmitting={isSubmitting}
-                        isNew={isNew}
-                    />
+                    <ActionStickyBar handleCancel={handleCancel} isSubmitting={isSubmitting} isNew={isNew} />
                 )}
             </form>
         </div>

@@ -25,7 +25,6 @@ export interface Transport {
     dep_lng: number | null;
     arr_date: string | null;
     destination: string | null;
-    position: number;
     details: TransportDetails;
     created_at?: string;
     updated_at?: string;

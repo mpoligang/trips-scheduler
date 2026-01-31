@@ -3,24 +3,24 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaPlus } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 
 import { Trip } from '@/models/Trip';
+import { useAuth } from '@/context/authProvider';
+import { getUserTripsAction, deleteOrLeaveTripAction } from '@/actions/trip-actions';
+
 import DialogComponent from '@/components/modals/confirm-modal';
 import Navbar from '@/components/navigations/navbar';
 import TripCard from '@/components/cards/trip-card';
-import { useAuth } from '@/context/authProvider';
 import Button from '@/components/actions/button';
 import PageTitle from '@/components/generics/page-title';
 import EmptyData from '@/components/cards/empty-data';
 import Loader from '@/components/generics/loader';
 import { appRoutes } from '@/utils/appRoutes';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
-import { createClient } from '@/lib/client';
 import { AuthStatusEnum } from '@/models/Auth';
-import { EntityKeys } from '@/utils/entityKeys';
 
 export default function DashboardPage() {
-    const supabase = createClient();
     const { user, userData, status, refreshUserData } = useAuth();
     const router = useRouter();
 
@@ -35,83 +35,66 @@ export default function DashboardPage() {
 
     const allTrips = useMemo(() => [...ownedTrips, ...participantTrips], [ownedTrips, participantTrips]);
 
+    // --- FETCH CON SERVER ACTION ---
     const fetchTrips = useCallback(async () => {
         if (!user) return;
         setIsLoadingTrips(true);
-        try {
-            const [ownedRes, partRes] = await Promise.all([
-                // 1. Viaggi di cui sono proprietario + i loro partecipanti
-                supabase
-                    .from(EntityKeys.tripsKey)
-                    .select(`
-            *,
-            trip_participants (
-                user_id,
-                profiles:profiles (
-                    first_name,
-                    last_name,
-                    username
-                )
-            )
-        `)
-                    .eq('owner_id', user.id)
-                    .order('created_at', { ascending: false }),
 
-                // 2. Viaggi a cui partecipo (ma non sono proprietario) + gli altri partecipanti
-                supabase
-                    .from(EntityKeys.participantsKey)
-                    .select(`
-            trips (
-                *,
-                trip_participants (
-                    user_id,
-                    profiles:profiles (
-                        first_name,
-                        last_name,
-                        username
-                    )
-                )
-            )
-        `)
-                    .eq('user_id', user.id)
-            ]);
-            if (ownedRes.error) throw ownedRes.error;
-            setOwnedTrips(ownedRes.data || []);
+        const result = await getUserTripsAction(user.id);
 
-            const participated = (partRes.data as any[])
-                ?.map(row => row.trips)
-                .filter(trip => trip && trip.owner_id !== user.id) || [];
-            setParticipantTrips(participated as Trip[]);
-        } catch (error) {
-            console.error("❌ Errore fetchTrips:", error);
-        } finally {
-            setIsLoadingTrips(false);
+        if (result.success && result.data) {
+            setOwnedTrips(result.data.owned as Trip[]);
+            setParticipantTrips(result.data.participated as Trip[]);
+        } else {
+            toast.error("Errore nel caricamento dei viaggi");
         }
-    }, [user, supabase]);
 
-    // Avviamo il fetch non appena abbiamo l'utente, non importa lo status del profilo
+        setIsLoadingTrips(false);
+    }, [user]);
+
     useEffect(() => {
-        if (user) {
-            fetchTrips();
-        }
+        if (user) fetchTrips();
     }, [user, fetchTrips]);
 
-    // --- RENDER LOGIC ---
+    // --- DELETE CON SERVER ACTION ---
+    async function handleConfirmDelete() {
+        if (!user || !selectedTrip) return;
 
-    // 1. Caricamento critico: non sappiamo ancora se l'utente esiste (nuova scheda/refresh)
-    if (status === AuthStatusEnum.INITIALIZING && !user) {
-        return <Loader />;
+        setIsDeleting(true);
+        const isOwner = selectedTrip.owner_id === user.id;
+        const toastId = toast.loading(isOwner ? "Eliminazione viaggio..." : "Abbandono viaggio...");
+
+        const result = await deleteOrLeaveTripAction(selectedTrip.id, user.id, isOwner);
+
+        if (result.success) {
+            toast.success(isOwner ? "Viaggio eliminato" : "Viaggio abbandonato", { id: toastId });
+            await fetchTrips();
+            await refreshUserData();
+        } else {
+            toast.error(result.error || "Errore durante l'operazione", { id: toastId });
+        }
+
+        setIsDeleting(false);
+        setIsDeleteModalOpen(false);
     }
 
+    function handleAddTripClick() {
+        const ownedCount = ownedTrips.length;
+        const plan = userData?.plan;
+        if (plan?.max_trips !== null && ownedCount >= (plan?.max_trips || 0)) {
+            setIsLimitModalOpen(true);
+            return;
+        }
+        router.push(appRoutes.settings('new'));
+    }
 
-    // 2. Protezione: se siamo arrivati qui e non c'è user, usciamo
+    if (status === AuthStatusEnum.INITIALIZING && !user) return <Loader />;
     if (status === AuthStatusEnum.UNAUTHENTICATED) return null;
 
     return (
         <div className="min-h-screen bg-gray-900">
             <Navbar breadcrumb={[]} />
 
-            {/* Modali */}
             <DialogComponent
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
@@ -120,7 +103,7 @@ export default function DashboardPage() {
                 title={selectedTrip?.owner_id === user?.id ? "Elimina Viaggio" : "Abbandona Viaggio"}
                 confirmText={selectedTrip?.owner_id === user?.id ? "Elimina" : "Esci"}
             >
-                <p>Stai per {selectedTrip?.owner_id === user?.id ? "eliminare" : "abbandonare"} {selectedTrip?.name}.</p>
+                <p>Stai per {selectedTrip?.owner_id === user?.id ? "eliminare" : "abbandonare"} <strong className="text-white">{selectedTrip?.name}</strong>.</p>
             </DialogComponent>
 
             <DialogComponent
@@ -136,17 +119,11 @@ export default function DashboardPage() {
 
             <main className="p-6">
                 <PageTitle title='I miei viaggi' subtitle="Gestisci le tue avventure.">
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleAddTripClick}
-                        disabled={isLoadingTrips || !userData}
-                    >
+                    <Button variant="secondary" size="sm" onClick={handleAddTripClick} disabled={isLoadingTrips || !userData}>
                         <FaPlus className="mr-2" /> Aggiungi
                     </Button>
                 </PageTitle>
 
-                {/* Grid Viaggi con caricamento locale */}
                 {isLoadingTrips ? (
                     <div className="flex justify-center py-20"><Loader /></div>
                 ) : (
@@ -161,38 +138,10 @@ export default function DashboardPage() {
                         ))}
                     </div>
                 )}
-                {allTrips.length === 0 && <EmptyData title="Aggiungi il tuo primo viaggio" subtitle="Clicca sul pulsante qui sopra per iniziare!" />}
+                {!isLoadingTrips && allTrips.length === 0 && (
+                    <EmptyData title="Aggiungi il tuo primo viaggio" subtitle="Clicca sul pulsante qui sopra per iniziare!" />
+                )}
             </main>
-
         </div>
     );
-
-    // Funzioni helper portate dentro per pulizia
-    async function handleConfirmDelete() {
-        if (!user || !selectedTrip) return;
-        setIsDeleting(true);
-        try {
-            if (selectedTrip.owner_id === user.id) {
-                await supabase.from(EntityKeys.tripsKey).delete().eq('id', selectedTrip.id);
-            } else {
-                await supabase.from(EntityKeys.participantsKey).delete().eq('trip_id', selectedTrip.id).eq('user_id', user.id);
-            }
-            await fetchTrips();
-            await refreshUserData();
-
-        } finally {
-            setIsDeleting(false);
-            setIsDeleteModalOpen(false);
-        }
-    }
-
-    function handleAddTripClick() {
-        const ownedCount = ownedTrips.length;
-        const plan = userData?.plan;
-        if (plan?.max_trips !== null && ownedCount >= (plan?.max_trips || 0)) {
-            setIsLimitModalOpen(true);
-            return;
-        }
-        router.push(appRoutes.settings('new'));
-    }
 }

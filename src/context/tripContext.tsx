@@ -3,14 +3,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/client';
-import { Trip } from '@/models/Trip';
 import { useAuth } from '@/context/authProvider';
+
+// Modelli
+import { Trip } from '@/models/Trip';
 import { Stage } from '@/models/Stage';
 import { Accommodation } from '@/models/Accommodation';
 import { Transport } from '@/models/Transport';
-import { EntityKeys } from '@/utils/entityKeys';
 import { UserData } from '@/models/UserData';
 import { Expense } from '@/models/Expenses';
+import { EntityKeys } from '@/utils/entityKeys';
+
+// Server Action
+import { getTripFullDataAction } from '@/actions/trip-actions';
 
 interface TripContextType {
     trip: Trip | null;
@@ -34,19 +39,22 @@ export function TripProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const tripId = params.tripId as string;
 
-    // Estendo localmente il tipo Trip per includere il join delle spese
-    const [trip, setTrip] = useState<(Trip) | null>(null);
+    const [trip, setTrip] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const lastLoadedId = useRef<string | null>(null);
 
+    /**
+     * ✅ FETCH DATA: Utilizza la Server Action per recuperare l'intero albero dati
+     */
     const fetchAllData = useCallback(async (force = false) => {
         if (!user || !tripId || tripId === 'new') {
             setLoading(false);
             return;
         }
 
+        // Evita ricaricamenti inutili se l'ID non è cambiato (a meno di force refresh)
         if (lastLoadedId.current === tripId && !force) {
             setLoading(false);
             return;
@@ -55,33 +63,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
         if (lastLoadedId.current !== tripId) setLoading(true);
 
         try {
-            const { data, error: supabaseError } = await supabase
-                .from(EntityKeys.tripsKey)
-                .select(`
-                    *,
-                    stages(*, attachments(*)),
-                    accommodations(*, attachments(*)),
-                    transports(*, attachments(*)),
-                    expenses(
-                        *,
-                        profiles:paid_by (id, first_name, last_name, username),
-                        expense_splits (
-                            *,
-                            profiles:user_id (id, first_name, last_name, username)
-                        )
-                    ),
-                    trip_participants (profiles (id, username, first_name, last_name))
-                `)
-                .eq('id', tripId)
-                .order('position', { referencedTable: EntityKeys.stagesKey, ascending: true })
-                .single();
+            const result = await getTripFullDataAction(tripId);
 
-            if (supabaseError) throw supabaseError;
-
-            if (data) {
-                setTrip(data as any);
+            if (result.success && result.data) {
+                setTrip(result.data);
                 lastLoadedId.current = tripId;
                 setError(null);
+            } else {
+                throw new Error(result.error);
             }
         } catch (err: any) {
             console.error("❌ Errore TripContext:", err.message);
@@ -89,12 +78,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    }, [tripId, user, supabase]);
+    }, [tripId, user]);
 
+    // Caricamento iniziale
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
 
+    // Refresh automatico quando si torna alla home del viaggio
     useEffect(() => {
         const isRootPage = pathname === `/dashboard/trips/${tripId}`;
         if (isRootPage && lastLoadedId.current === tripId) {
@@ -102,34 +93,53 @@ export function TripProvider({ children }: { children: ReactNode }) {
         }
     }, [pathname, tripId, fetchAllData]);
 
+    /**
+     * ✅ REALTIME: Ascolta i cambiamenti sul DB e chiama la Server Action per aggiornare lo stato
+     */
     useEffect(() => {
         if (!tripId || tripId === 'new') return;
 
         const channel = supabase.channel(`realtime_trip_${tripId}`)
-            .on('postgres_changes', { event: '*', schema: 'public', filter: `trip_id=eq.${tripId}` }, () => fetchAllData(true))
-            // Ascolta cambiamenti specifici sulla tabella spese legati a questo viaggio
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `trip_id=eq.${tripId}` }, () => fetchAllData(true))
-            // AGGIUNGI QUESTO:
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'expense_splits' }, () => {
-                // Poiché expense_splits non ha trip_id diretto, controlliamo se lo split 
-                // appartiene a una delle spese che abbiamo già in memoria o ricarichiamo per sicurezza
-                fetchAllData(true);
-            }).on('postgres_changes', { event: '*', schema: 'public', table: EntityKeys.tripsKey, filter: `id=eq.${tripId}` }, () => fetchAllData(true))
+            // Modifiche generiche al viaggio (Tappe, Alloggi, Trasporti hanno trip_id)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                filter: `trip_id=eq.${tripId}`
+            }, () => fetchAllData(true))
+            // Modifiche specifiche alle spese
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'expenses',
+                filter: `trip_id=eq.${tripId}`
+            }, () => fetchAllData(true))
+            // Modifiche agli split (non hanno trip_id, quindi ricarichiamo sempre)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'expense_splits'
+            }, () => fetchAllData(true))
+            // Modifica al record principale del viaggio (titolo, date, ecc)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: EntityKeys.tripsKey,
+                filter: `id=eq.${tripId}`
+            }, () => fetchAllData(true))
             .subscribe();
 
-        return () => { supabase.removeChannel(channel); };
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [tripId, supabase, fetchAllData]);
-
-    console.log(trip);
-
 
     const value = useMemo(() => ({
         trip,
         stages: trip?.stages || [],
         accommodations: trip?.accommodations || [],
         transports: trip?.transports || [],
-        expenses: (trip?.expenses || []),
-        participants: trip?.trip_participants?.map((p: { profiles: Partial<UserData> }) => ({ ...p.profiles })) || [],
+        expenses: trip?.expenses || [],
+        participants: trip?.trip_participants?.map((p: any) => ({ ...p.profiles })) || [],
         loading,
         error,
         isOwner: trip?.owner_id === user?.id,

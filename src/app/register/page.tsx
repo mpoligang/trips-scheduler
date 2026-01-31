@@ -2,13 +2,14 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { signUpAction } from '@/actions/auth-actions';
+import { signInWithGoogleAction, signUpAction } from '@/actions/auth-actions';
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import { appRoutes } from '@/utils/appRoutes';
 import Logo from '@/components/generics/logo';
 import Checkbox from '@/components/inputs/checkbox';
 import { ImSpinner8 } from 'react-icons/im';
+import { FaGoogle } from 'react-icons/fa';
 
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
@@ -84,14 +85,14 @@ export default function RegisterPage() {
                     <h2 className="text-3xl font-bold text-white text-center mb-4">Crea il tuo Account</h2>
                     <p className="text-center text-gray-400 mb-0">Inizia gratuitamente</p>
 
-                    {/* <Button className="mb-6" variant="secondary" onClick={handleGoogleRegister} disabled={isLoading}>
+                    <Button className="mt-5" variant="secondary" onClick={signInWithGoogleAction} disabled={isLoading}>
                         <FaGoogle className="text-gray-700 dark:text-gray-200" />
                         <span className="ml-2">Registrati con Google</span>
-                    </Button> */}
+                    </Button>
 
-                    <div className="flex items-center my-10">
+                    <div className="flex items-center my-5">
                         <hr className="flex-grow border-gray-600" />
-                        {/* <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">oppure</span> */}
+                        <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">oppure</span>
                         <hr className="flex-grow border-gray-600" />
                     </div>
 

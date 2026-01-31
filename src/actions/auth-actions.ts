@@ -109,3 +109,31 @@ export async function updatePasswordAction(formData: FormData) {
 
     return { success: true }
 }
+
+
+export async function signInWithGoogleAction() {
+    const supabase = await createClient();
+    const origin = (await headers()).get('origin');
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            // URL a cui Google rimanderà l'utente dopo il login
+            redirectTo: `${origin}/api/auth-callback`,
+            queryParams: {
+                access_type: 'offline',
+                prompt: 'select_account',
+            },
+        },
+    });
+
+    if (error) {
+        console.error("Errore Google Auth:", error.message);
+        throw new Error("Impossibile avviare l'autenticazione con Google");
+    }
+
+    // Reindirizziamo l'utente alla pagina di login di Google
+    if (data.url) {
+        redirect(data.url);
+    }
+}

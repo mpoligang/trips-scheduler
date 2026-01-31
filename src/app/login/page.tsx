@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { signInAction } from '@/actions/auth-actions';
+import { signInAction, signInWithGoogleAction } from '@/actions/auth-actions';
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import { appRoutes } from '@/utils/appRoutes';
 import Logo from '@/components/generics/logo';
 import { ImSpinner8 } from "react-icons/im";
+import { FaGoogle } from 'react-icons/fa';
 
 export default function LoginPage() {
 
@@ -66,14 +67,14 @@ export default function LoginPage() {
                     <h2 className="text-3xl font-bold text-white text-center mb-4">Accedi</h2>
                     <p className="text-center text-gray-300 mb-0">Inserisci le tue credenziali per accedere</p>
 
-                    {/* <Button variant="secondary" onClick={handleGoogleLogin} disabled={isLoading} className="flex items-center justify-center w-full">
+                    <Button className="mt-5" variant="secondary" onClick={signInWithGoogleAction} disabled={isLoading}>
                         <FaGoogle className="text-gray-700 dark:text-gray-200" />
                         <span className="ml-2">Accedi con Google</span>
-                    </Button> */}
+                    </Button>
 
-                    <div className="flex items-center my-10">
+                    <div className="flex items-center my-5">
                         <hr className="flex-grow border-gray-600" />
-                        {/* <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">oppure</span> */}
+                        <span className="mx-4 text-sm text-gray-500 dark:text-gray-400">oppure</span>
                         <hr className="flex-grow border-gray-600" />
                     </div>
 

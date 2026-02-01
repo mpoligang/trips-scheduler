@@ -149,7 +149,7 @@ export async function upsertTripAction(formData: {
 
 
 
-const TripIdSchema = z.string().uuid();
+const TripIdSchema = z.uuid();
 
 // --- GET: Recupero Viaggi ---
 export async function getUserTripsAction(userId: string) {

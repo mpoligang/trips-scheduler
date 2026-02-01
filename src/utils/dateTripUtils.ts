@@ -54,8 +54,10 @@ export const selectDateOption = (date: Date | undefined | null, options: DateOpt
     return options.find(opt => opt.id === searchId) || null;
 };
 
-export const formatDateForPostgres = (date: Date) => {
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
-    return localDate.toISOString().split('T')[0];
+// utils/dateTripUtils.ts
+export const formatDateForPostgres = (date: Date): string => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
 };

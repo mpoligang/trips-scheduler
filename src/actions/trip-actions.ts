@@ -11,8 +11,8 @@ import { z } from 'zod';
 export async function upsertTripAction(formData: {
     id?: string;
     name: string;
-    startDate: Date;
-    endDate: Date;
+    startDate: string;
+    endDate: string;
     destinations: string[];
     participantIds: string[];
 }) {
@@ -62,8 +62,8 @@ export async function upsertTripAction(formData: {
     // --- 2. PREPARAZIONE PAYLOAD ---
     const tripPayload = {
         name: formData.name,
-        start_date: formatDateForPostgres(formData.startDate),
-        end_date: formatDateForPostgres(formData.endDate),
+        start_date: (formData.startDate),
+        end_date: (formData.endDate),
         destinations: formData.destinations,
         owner_id: user.id,
         updated_at: new Date().toISOString()

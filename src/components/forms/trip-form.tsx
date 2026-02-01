@@ -24,6 +24,7 @@ import { sendEmailToUpgrade } from '@/utils/openMailer';
 import { UserData } from '@/models/UserData';
 import Badge from '../generics/badge';
 import toast from 'react-hot-toast';
+import { formatDateForPostgres } from '@/utils/dateTripUtils';
 
 export default function TripForm() {
     const { user, refreshUserData, userData } = useAuth();
@@ -115,8 +116,8 @@ export default function TripForm() {
             const result = await upsertTripAction({
                 id: isEditMode ? tripId : 'new',
                 name,
-                startDate: dateRange.from,
-                endDate: dateRange.to,
+                startDate: formatDateForPostgres(dateRange.from),
+                endDate: formatDateForPostgres(dateRange.to),
                 destinations,
                 participantIds: participantIds
             });

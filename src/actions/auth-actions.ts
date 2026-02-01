@@ -24,7 +24,7 @@ export async function signUpAction(formData: FormData) {
                 first_name: firstName,
                 last_name: lastName,
             },
-            emailRedirectTo: `${origin}/api/auth-callback`,
+            emailRedirectTo: `${origin}/api/google-auth-callback`,
         },
     });
 

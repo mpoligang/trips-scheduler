@@ -2,10 +2,11 @@
 
 import { Trip } from "@/models/Trip";
 import { useRouter } from "next/navigation";
-import { FaPen, FaTrash, FaEllipsisH } from "react-icons/fa";
+import { FaPen, FaTrash, FaFilePdf } from "react-icons/fa";
 import ContextMenu, { ContextMenuItem } from "../actions/context-menu";
 import { appRoutes } from "@/utils/appRoutes";
-import Badge from "../generics/badge";
+import { useState } from "react";
+import { ImSpinner8 } from "react-icons/im";
 
 interface TripCardProps {
     readonly trip: Trip;
@@ -22,6 +23,36 @@ const formatDate = (dateString: string | undefined) => {
 
 export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
     const router = useRouter();
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+    const handleDownloadPdf = async () => {
+        if (isGeneratingPdf) return;
+
+        setIsGeneratingPdf(true);
+        try {
+            const response = await fetch(`/api/generate-trip-pdf/${trip.id}`);
+
+            if (!response.ok) {
+                throw new Error("Errore durante la generazione del PDF");
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const filename = response.headers.get('Content-Disposition')?.split('filename=')[1] || 'trip.pdf';
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Errore download PDF:", error);
+        } finally {
+            setIsGeneratingPdf(false);
+        }
+    };
 
     const menuItems: ContextMenuItem[] = [
         {
@@ -30,11 +61,18 @@ export default function TripCard({ trip, onDelete, isOwner }: TripCardProps) {
             onClick: () => router.push(appRoutes.settings(trip.id as string)),
         },
         {
+            label: 'Genera PDF',
+            icon: isGeneratingPdf ? <ImSpinner8 className="text-xs animate-spin" /> : <FaFilePdf className="text-xs" />,
+            onClick: handleDownloadPdf,
+        },
+        {
             label: 'Elimina',
             icon: <FaTrash className="text-xs" />,
             onClick: onDelete,
         },
     ];
+
+
 
     return (
         <div

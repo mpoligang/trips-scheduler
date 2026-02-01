@@ -24,7 +24,7 @@ export async function signUpAction(formData: FormData) {
                 first_name: firstName,
                 last_name: lastName,
             },
-            emailRedirectTo: `${origin}/api/google-auth-callback`,
+            emailRedirectTo: `${origin}/api/auth-callback`,
         },
     });
 
@@ -119,7 +119,7 @@ export async function signInWithGoogleAction() {
         provider: 'google',
         options: {
             // URL a cui Google rimanderà l'utente dopo il login
-            redirectTo: `${origin}/api/auth-callback`,
+            redirectTo: `${origin}api/google-auth-callback`,
             queryParams: {
                 access_type: 'offline',
                 prompt: 'select_account',

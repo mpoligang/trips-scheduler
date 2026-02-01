@@ -48,6 +48,8 @@ function MapBounds({ stages, accommodations, transports }: Partial<Trip>) {
     const map = useMap();
 
     useEffect(() => {
+        if (!map) return;
+
         const coords: [number, number][] = [];
         stages?.forEach((s: Stage) => s.lat && s.lng && coords.push([s.lat, s.lng]));
         accommodations?.forEach((a: Accommodation) => a.lat && a.lng && coords.push([a.lat, a.lng]));
@@ -72,6 +74,9 @@ export default function TripMap() {
     const accommodations = trip?.accommodations || [];
     const transports = trip?.transports || [];
 
+    console.log('TripMap render - stages:', stages, 'accommodations:', accommodations, 'transports:', transports);
+
+
     // Calcoliamo la linea del percorso (unisce le tappe in ordine cronologico)
     const routePath = useMemo(() => {
         return stages
@@ -80,7 +85,10 @@ export default function TripMap() {
             .map(s => [s.lat, s.lng] as [number, number]);
     }, [stages]);
 
-    if ((!stages || stages.length === 0) && accommodations.length === 0) {
+    const allMapElementsExist = [...stages, ...accommodations, ...transports];
+
+
+    if (allMapElementsExist.length === 0) {
         return (
             <div className="h-[400px] bg-slate-800 rounded-2xl flex items-center justify-center text-slate-500 border border-slate-700">
                 Nessun dato geografico disponibile.

@@ -8,12 +8,15 @@ import { appRoutes } from '@/utils/appRoutes';
 import Logo from '@/components/generics/logo';
 import { ImSpinner8 } from "react-icons/im";
 import { FaGoogle } from 'react-icons/fa';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
 
+    const router = useRouter();
+
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
@@ -22,11 +25,10 @@ export default function LoginPage() {
         if (isLoading) { return; }
 
         if (!email || !password) {
-            setError("Compila tutti i campi richiesti.");
+            toast.error("Compila tutti i campi richiesti.");
             return;
         }
 
-        setError(null);
         setIsLoading(true);
 
         const formData = new FormData();
@@ -37,12 +39,15 @@ export default function LoginPage() {
             const result = await signInAction(formData);
 
             if (result?.error) {
-                setError(result.error);
-                setIsLoading(false); // Sblocca il caricamento se c'è errore
+                toast.error(result.error);
+                setIsLoading(false);
+            } else if (result?.success) {
+                toast.success(`Login effettuato!`);
+                router.push(appRoutes.home);
+                router.refresh();
             }
-        } catch (err) {
-            console.error("Errore durante il login:", err);
-            setError("Errore imprevisto. Riprova.");
+        } catch {
+            toast.error("Errore imprevisto. Riprova.");
             setIsLoading(false);
         } finally {
             setIsLoading(false);
@@ -90,8 +95,6 @@ export default function LoginPage() {
                                 </a>
                             </div>
                         </div>
-
-                        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
 
                         <Button type="submit" disabled={isLoading}>
                             <ImSpinner8 className={`animate-spin mr-2 ${isLoading ? 'inline-block' : 'hidden'}`} />

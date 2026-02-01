@@ -5,6 +5,7 @@ import { createClient as createServerClient } from '@/lib/server' // Il tuo clie
 import { redirect } from 'next/navigation'
 import { appRoutes } from '@/utils/appRoutes'
 import { EntityKeys } from '@/utils/entityKeys'
+import { revalidatePath } from 'next/cache'
 
 export async function deleteAccountAction() {
     // 1. Verifichiamo chi sta facendo la richiesta (Sicurezza base)
@@ -75,4 +76,36 @@ export async function deleteAccountAction() {
 
     // Il redirect deve stare fuori dal try/catch in Next.js
     redirect(appRoutes.home)
+}
+
+export async function updateProfileAction(formData: FormData) {
+    const supabase = await createServerClient();
+
+    // 1. Ottieni l'utente autenticato (sicurezza: non fidarsi mai dell'ID inviato dal client)
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+        return { error: "Utente non autorizzato." };
+    }
+
+    const firstName = formData.get('firstName') as string;
+    const lastName = formData.get('lastName') as string;
+
+    // 2. Aggiorna il profilo
+    const { error } = await supabase
+        .from('profiles')
+        .update({
+            first_name: firstName,
+            last_name: lastName,
+        })
+        .eq('id', user.id);
+
+    if (error) {
+        console.error("Errore DB:", error);
+        return { error: "Errore durante l'aggiornamento del profilo." };
+    }
+
+    revalidatePath(appRoutes.profile);
+
+    return { success: true };
 }

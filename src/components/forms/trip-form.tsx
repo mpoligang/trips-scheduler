@@ -23,6 +23,7 @@ import { FaPlus, FaTrashAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
 import { UserData } from '@/models/UserData';
 import Badge from '../generics/badge';
+import toast from 'react-hot-toast';
 
 export default function TripForm() {
     const { user, refreshUserData, userData } = useAuth();
@@ -39,7 +40,6 @@ export default function TripForm() {
     const [currentDestination, setCurrentDestination] = useState('');
     const [participantsState, setParticipants] = useState<Partial<UserData>[]>([]);
 
-    const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [limitError, setLimitError] = useState<{ title: string; message: string } | null>(null);
 
@@ -93,15 +93,12 @@ export default function TripForm() {
         e.preventDefault();
 
         if (!user || !dateRange?.from || !dateRange.to) {
-            setError("Compila tutti i campi obbligatori.");
+            toast.error("Compila tutti i campi obbligatori.");
             return;
         }
 
         setIsSubmitting(true);
-        setError(null);
-
-        console.log("Submitting trip with participants:", participantsState);
-
+        toast.dismiss();
 
         try {
             // Logica corretta estrazione ID
@@ -130,7 +127,7 @@ export default function TripForm() {
                     message: result.message || "Non puoi creare altri viaggi."
                 });
             } else if (result.error) {
-                setError(result.error);
+                toast.error(result.error);
             } else {
                 await refreshUserData();
                 if (trip?.id) {
@@ -141,7 +138,7 @@ export default function TripForm() {
             }
         } catch (err) {
             console.error("Errore submit:", err);
-            setError("Errore imprevisto. Riprova.");
+            toast.error("Errore imprevisto. Riprova.");
         } finally {
             setIsSubmitting(false);
         }
@@ -252,12 +249,6 @@ export default function TripForm() {
                         <EmptyData title="Viaggi da solo?" subtitle="Cerca un amico per aggiungerlo al gruppo." />
                     )}
                 </FormSection>
-
-                {error && (
-                    <div className="bg-red-900/20 border border-red-800 text-red-300 p-4 rounded-lg text-center text-sm">
-                        {error}
-                    </div>
-                )}
 
                 <ActionStickyBar
                     handleCancel={() => router.push(appRoutes.home)}

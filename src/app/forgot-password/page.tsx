@@ -8,12 +8,11 @@ import Input from '@/components/inputs/input';
 import { appRoutes } from '@/utils/appRoutes';
 import { ImSpinner8 } from 'react-icons/im';
 import Logo from '@/components/generics/logo';
+import toast from 'react-hot-toast';
 
 export default function ForgotPasswordPage() {
     const supabase = createClient();
     const [email, setEmail] = useState<string>('');
-    const [error, setError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     /**
@@ -23,8 +22,6 @@ export default function ForgotPasswordPage() {
         e.preventDefault();
         if (isLoading) return;
 
-        setError(null);
-        setSuccessMessage(null);
         setIsLoading(true);
 
         try {
@@ -35,15 +32,15 @@ export default function ForgotPasswordPage() {
 
             if (resetError) throw resetError;
 
-            setSuccessMessage("Email inviata! Controlla la tua casella di posta per le istruzioni.");
+            toast.success("Email inviata! Controlla la tua casella di posta per le istruzioni.");
         } catch (err: any) {
             console.error("Errore reset password:", err.message);
             // Supabase per motivi di sicurezza non dice sempre se l'email esiste o no (anti-enumeration)
             // Gestiamo un errore generico o specifico se disponibile
             if (err.message.includes("rate limit")) {
-                setError("Troppe richieste. Riprova tra qualche minuto.");
+                toast.error("Troppe richieste. Riprova tra qualche minuto.");
             } else {
-                setError("Si è verificato un errore durante l'invio. Riprova.");
+                toast.error("Si è verificato un errore durante l'invio. Riprova.");
             }
         } finally {
             setIsLoading(false);
@@ -90,11 +87,6 @@ export default function ForgotPasswordPage() {
                             onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                             required
                         />
-
-                        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                        {successMessage && <p className="text-green-500 text-sm text-center">{successMessage}</p>}
-
-
 
                         <Button type="submit" disabled={isLoading}>
                             <ImSpinner8 className={`animate-spin mr-2 ${isLoading ? 'inline-block' : 'hidden'}`} />

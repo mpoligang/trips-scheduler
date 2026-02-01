@@ -52,8 +52,7 @@ export async function signInAction(formData: FormData) {
     }
 
     // ✅ Pulisce la cache e forza il redirect lato server
-    revalidatePath('/', 'layout');
-    redirect(appRoutes.home);
+    return { success: true };
 }
 
 

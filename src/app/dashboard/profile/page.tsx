@@ -5,7 +5,7 @@ import Button from "@/components/actions/button";
 import Input from "@/components/inputs/input";
 import Navbar from "@/components/navigations/navbar";
 import { useAuth } from "@/context/authProvider";
-import { createClient } from "@/lib/client"; // ✅ Client Supabase
+import { createClient } from "@/lib/client";
 import { PathItem } from "@/models/PathItem";
 import { FaSignOutAlt, FaTrash, FaPen, FaUndo } from "react-icons/fa";
 import PageTitle from "@/components/generics/page-title";
@@ -18,7 +18,8 @@ import { GrUpdate } from "react-icons/gr";
 import { sendEmailToUpgrade } from "@/utils/openMailer";
 import DialogComponent from "@/components/modals/confirm-modal";
 import ContextMenu, { ContextMenuItem } from "@/components/actions/context-menu";
-import { deleteAccountAction } from "@/actions/user-actions";
+import { deleteAccountAction, updateProfileAction } from "@/actions/user-actions";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
     const supabase = createClient();
@@ -29,7 +30,6 @@ export default function ProfilePage() {
     const [username, setUsername] = useState<string>();
 
     const [isUpdating, setIsUpdating] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
     const [isReadOnly, setIsReadOnly] = useState<boolean>(true);
     const [isDeletingAccount, setIsDeletingAccount] = useState<boolean>(false);
     const [openDeleteAccount, setOpenDeleteAccount] = useState<boolean>(false);
@@ -48,7 +48,6 @@ export default function ProfilePage() {
     }, [userData]);
 
     const populateForm = useCallback(() => {
-        setError(null);
         setFirstName(userData?.first_name || '');
         setLastName(userData?.last_name || '');
         setUsername(userData?.username || '');
@@ -63,28 +62,34 @@ export default function ProfilePage() {
     const activePlan = userData?.plan;
 
     const handleUpdateProfile = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        if (!user || isUpdating) return;
 
-        setError(null);
+        if (e) { e.preventDefault(); }
+        if (!firstName || !lastName) {
+            toast.error("Compila tutti i campi obbligatori.");
+            return;
+        }
+
         setIsUpdating(true);
-
+        const formData = new FormData();
+        formData.append('firstName', firstName || '');
+        formData.append('lastName', lastName || '');
         try {
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({
-                    first_name: firstName,
-                    last_name: lastName,
-                })
-                .eq('id', user.id);
+            const result = await updateProfileAction(formData);
 
-            if (updateError) { throw updateError; }
+            if (result?.error) {
+                toast.error(result.error);
+                return;
+            }
 
+            toast.success("Profilo aggiornato con successo!");
+
+            // Aggiorna i dati nel context (se necessario) e torna in modalità lettura
             await refreshUserData();
             setIsReadOnly(true);
+
         } catch (err) {
-            console.error("Errore aggiornamento:", err);
-            setError("Impossibile aggiornare il profilo. Riprova.");
+            console.error("Errore:", err);
+            toast.error("Si è verificato un errore imprevisto.");
         } finally {
             setIsUpdating(false);
         }
@@ -116,7 +121,7 @@ export default function ProfilePage() {
             await handleLogout();
         } catch (error: unknown) {
             console.error("Errore eliminazione:", error);
-            setError("Errore durante la cancellazione dei dati.");
+            toast.error("Errore durante la cancellazione dei dati.");
         } finally {
             setIsDeletingAccount(false);
         }
@@ -329,8 +334,6 @@ export default function ProfilePage() {
                             </Button>
                         </div>
                     </FormSection>
-
-                    {error && <p className="text-red-500 text-sm text-center font-medium bg-red-50 p-2 rounded">{error}</p>}
 
                     {!isReadOnly && (
                         <ActionStickyBar

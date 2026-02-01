@@ -10,6 +10,7 @@ import Logo from '@/components/generics/logo';
 import Checkbox from '@/components/inputs/checkbox';
 import { ImSpinner8 } from 'react-icons/im';
 import { FaGoogle } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
@@ -17,7 +18,6 @@ export default function RegisterPage() {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
-    const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
     const router = useRouter();
@@ -28,16 +28,15 @@ export default function RegisterPage() {
         if (isLoading) return;
 
         if (password !== confirmPassword) {
-            setError("Le password non coincidono.");
+            toast.error("Le password non coincidono.");
             return;
         }
 
         if (!termsAccepted) {
-            setError("Devi accettare i termini e le condizioni.");
+            toast.error("Devi accettare i termini e le condizioni.");
             return;
         }
 
-        setError(null);
         setIsLoading(true);
 
         // Prepariamo i dati per la Server Action
@@ -51,7 +50,7 @@ export default function RegisterPage() {
             const result = await signUpAction(formData);
 
             if (result?.error) {
-                setError(result.error);
+                toast.error(result.error);
             } else if (result?.confirmEmail) {
                 router.push(appRoutes.verifyEmail);
                 return;
@@ -60,7 +59,7 @@ export default function RegisterPage() {
             }
         } catch (err) {
             console.error("Errore durante la registrazione:", err);
-            setError("Si è verificato un errore imprevisto.");
+            toast.error("Si è verificato un errore imprevisto.");
         } finally {
             setIsLoading(false);
         }
@@ -123,8 +122,6 @@ export default function RegisterPage() {
                                 <span className="text-sm text-slate-400">Accetto i termini e le condizioni</span>
                             </Checkbox>
                         </div>
-
-                        {error && <p className={`text-sm text-center mb-4 ${error.includes('riuscita') ? 'text-green-500' : 'text-red-500'}`}>{error}</p>}
 
                         <Button type="submit" disabled={isLoading}>
                             <ImSpinner8 className={`animate-spin mr-2 ${isLoading ? 'inline-block' : 'hidden'}`} />

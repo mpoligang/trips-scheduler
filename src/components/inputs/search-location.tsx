@@ -135,7 +135,7 @@ export default function SearchLocation({
                         <p className="text-gray-200 pr-4 whitespace-normal break-words">
                             {!value?.address ? '-' : value?.address}
                         </p>
-                        {value && (
+                        {value?.address && (
                             <button
                                 onClick={() => setShowMap(true)}
                                 className="text-purple-400 hover:text-purple-300 mt-1 flex-shrink-0"
@@ -191,18 +191,22 @@ export default function SearchLocation({
                                                     <FaTimes className="h-3 w-3" />
                                                 </button>
                                             )}
+                                            {
+                                                value?.address && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            e.preventDefault();
+                                                            setShowMap(true);
+                                                        }}
+                                                        className={`p-1.5 rounded-full hover:bg-gray-600 transition-colors ${showMap ? 'text-purple-400 bg-purple-900/30' : 'text-gray-500'}`}
+                                                        type="button"
+                                                    >
+                                                        <FaMap className="h-4 w-4" />
+                                                    </button>
+                                                )
+                                            }
 
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    e.preventDefault();
-                                                    setShowMap(true);
-                                                }}
-                                                className={`p-1.5 rounded-full hover:bg-gray-600 transition-colors ${showMap ? 'text-purple-400 bg-purple-900/30' : 'text-gray-500'}`}
-                                                type="button"
-                                            >
-                                                <FaMap className="h-4 w-4" />
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -238,8 +242,8 @@ export default function SearchLocation({
             <Sidebar
                 isOpen={showMap}
                 onClose={() => setShowMap(false)}
-                title={readOnly ? "Visualizza Posizione" : "Seleziona Posizione"}
-                subtitle={readOnly ? value?.address : "Clicca sulla mappa per confermare"}
+                title="Visualizza Posizione sulla Mappa"
+                subtitle={readOnly ? value?.address : "Controlla se la posizione selezionata è corretta"}
                 position="right"
                 headerActions={
                     value?.address && (

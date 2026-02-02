@@ -48,20 +48,22 @@ export default function TripExpensesPage() {
 
             <AddExpenseModal isOpen={isOpenAddExpenseModal} setIsOpen={setIsOpenAddExpenseModal} />
 
-            <Tabs tabs={[
-                {
-                    label: 'Cronologia',
-                    content: <HistoryExpensesList />,
-                },
-                {
-                    label: 'Bilancio',
-                    content: <BalanceList />,
-                },
-                {
-                    label: 'Pareggio',
-                    content: <SettlementList />,
-                },
-            ]} />
+            <Tabs tabs={
+                [
+                    {
+                        label: 'Cronologia',
+                        content: <HistoryExpensesList />,
+                    },
+                    {
+                        label: 'Bilancio',
+                        content: <BalanceList />,
+                    },
+                    {
+                        label: 'Pareggio',
+                        content: <SettlementList />,
+                    },
+                ]
+            } />
         </FirstLevelTripTemplate>
     );
 }
@@ -79,6 +81,15 @@ const AddExpenseModal = ({ isOpen, setIsOpen }: AddExpenseModalProps) => {
     const [paidForAllMembers, setPaidForAllMembers] = useState<boolean>(true);
     const [selectedMembers, setSelectedMembers] = useState<{ id: string; name: string }[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+
+
+    const resetForm = (): void => {
+        setDescription('');
+        setAmount(0);
+        setPaidBy(null);
+        setPaidForAllMembers(true);
+        setSelectedMembers([]);
+    }
 
     const partecipants = trip?.trip_participants?.map(participant => ({
         id: participant.profiles.id,
@@ -119,6 +130,7 @@ const AddExpenseModal = ({ isOpen, setIsOpen }: AddExpenseModalProps) => {
             toast.success("Spesa aggiunta correttamente!");
             setIsOpen(false);
             await refreshData();
+            resetForm();
             // Qui potresti voler fare un router.refresh() per aggiornare le tab
         } catch (error) {
             console.error(error);
@@ -131,7 +143,10 @@ const AddExpenseModal = ({ isOpen, setIsOpen }: AddExpenseModalProps) => {
     return (
         <DialogComponent
             isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
+            onClose={() => {
+                setIsOpen(false);
+                resetForm();
+            }}
             title="Aggiungi Spesa"
             isLoading={isLoading}
             onConfirm={handleSubmit}
@@ -163,7 +178,6 @@ const AddExpenseModal = ({ isOpen, setIsOpen }: AddExpenseModalProps) => {
                     onSelect={(val) => {
                         const selected = val as { id: string; name: string };
                         setPaidBy(selected);
-                        // Rimuoviamo chi paga dalla lista di chi "riceve" il debito se necessario
                         setSelectedMembers(prev => prev.filter(m => m.id !== selected.id));
                     }}
                     required
@@ -174,7 +188,7 @@ const AddExpenseModal = ({ isOpen, setIsOpen }: AddExpenseModalProps) => {
                     checked={paidForAllMembers}
                     onChange={(checked) => {
                         setPaidForAllMembers(checked);
-                        if (checked) setSelectedMembers([]); // Reset se seleziona "tutti"
+                        if (checked) { setSelectedMembers([]); }
                     }}
                 >
                     Pagato per tutti i membri

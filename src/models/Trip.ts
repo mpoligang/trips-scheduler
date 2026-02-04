@@ -3,20 +3,22 @@ import { Transport } from "./Transport";
 import { Accommodation } from "./Accommodation";
 import { UserData } from "./UserData";
 import { Expense } from "./Expenses";
+import { AISearchRequest } from "./AIStageSuggestion";
 
 export interface Trip {
     stages?: Stage[];
     accommodations?: Accommodation[];
     transports?: Transport[];
+    ai_search_requests?: AISearchRequest[];
     expenses?: Expense[];
-    id: string;                // uuid (Generato da Supabase)
-    owner_id: string;          // uuid (Riferimento all'utente proprietario)
-    name: string;              // text
-    start_date: string;        // date (Formato YYYY-MM-DD)
-    end_date: string;          // date (Formato YYYY-MM-DD)
-    destinations: string[] | null; // ARRAY di text
-    created_at?: string;       // timestamp with time zone
-    updated_at?: string;       // timestamp with time zone
+    id: string;
+    owner_id: string;
+    name: string;
+    start_date: string;
+    end_date: string;
+    destinations: string[] | null;
+    created_at?: string;
+    updated_at?: string;
     trip_participants?: {
         profiles: Partial<UserData>;
         user_id: string;

@@ -11,7 +11,6 @@ export interface Stage {
     lat?: number;             // double precision
     lng?: number;             // double precision
     notes?: string;           // text
-    position?: number;        // integer (Usato per ordinare le tappe cronologicamente o manualmente)
     created_at?: string;      // timestamp with time zone
 }
 

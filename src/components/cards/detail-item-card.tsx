@@ -8,10 +8,12 @@ import ContextMenu, { ContextMenuItem } from '../actions/context-menu';
 interface DetailItemCardProps {
     icon: ReactNode;
     title: string;
+    subtitle?: string;
     directionsUrl: string;
-    detailUrl: string;
+    detailClick: string | (() => void);
     isOwner?: boolean;
-    onDelete: () => void;
+    onDelete?: () => void;
+    additionalItems?: ContextMenuItem[];
 }
 
 /**
@@ -22,18 +24,24 @@ export default function DetailItemCard({
     icon,
     title,
     directionsUrl,
-    detailUrl,
+    detailClick,
     isOwner,
     onDelete,
+    subtitle,
+    additionalItems
 }: DetailItemCardProps) {
     const router = useRouter();
 
     const handleCardClick = () => {
-        router.push(detailUrl);
+        if (typeof detailClick === 'function') {
+            detailClick();
+            return;
+        }
+        router.push(detailClick);
     };
 
     // Definiamo le azioni per il menu a comparsa
-    const menuItems: ContextMenuItem[] = [
+    let menuItems: ContextMenuItem[] = [
         {
             label: 'Indicazioni',
             icon: <FaDirections />,
@@ -48,11 +56,13 @@ export default function DetailItemCard({
             {
                 label: 'Elimina',
                 icon: <FaTrash />,
-                onClick: onDelete,
+                onClick: onDelete ?? (() => { }),
                 className: 'text-red-400 hover:bg-red-900/20',
             }
         );
     }
+
+    menuItems = [...menuItems, ...(additionalItems || [])];
 
     return (
         <li className="list-none">
@@ -76,6 +86,13 @@ export default function DetailItemCard({
                         <p className="font-bold text-white  text-sm md:text-base">
                             {title}
                         </p>
+                        {
+                            subtitle && (
+                                <p className="text-gray-400 text-xs md:text-sm truncate">
+                                    {subtitle}
+                                </p>
+                            )
+                        }
 
                     </div>
                 </div>

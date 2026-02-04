@@ -223,7 +223,11 @@ export async function getTripFullDataAction(tripId: string) {
                         profiles:user_id (id, first_name, last_name, username)
                     )
                 ),
-                trip_participants (profiles (id, username, first_name, last_name))
+                trip_participants (profiles (id, username, first_name, last_name)),
+                ai_search_requests (
+                    *,
+                    ai_suggestions (*)
+                )
             `)
             .eq('id', tripId)
             .order('position', { referencedTable: EntityKeys.stagesKey, ascending: true })

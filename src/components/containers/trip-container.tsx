@@ -146,7 +146,7 @@ function TripLayoutContent({
                             key={item.label}
                             icon={item.icon ?? FaExclamationTriangle}
                             label={item.label}
-                            active={pathname === item.href}
+                            active={pathname === item.href || pathname.includes(item.href)}
                             collapsed={isCollapsed}
                             onClick={() => {
                                 router.push(item.href);

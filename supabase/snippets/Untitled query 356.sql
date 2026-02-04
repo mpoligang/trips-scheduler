@@ -1,13 +1,6 @@
--- 1. Permetti l'eliminazione delle spese ai partecipanti del viaggio
-create policy "Users can delete expenses of their trips"
-on public.expenses for delete
-using ( public.check_is_trip_participant(trip_id) );
+-- Rimuovi il vecchio se esiste per sicurezza
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
--- 2. Assicurati che gli split vengano cancellati automaticamente (Cascade)
--- Riesegui questo per sicurezza se non l'hai fatto prima
-alter table public.expense_splits
-drop constraint if exists expense_splits_expense_id_fkey,
-add constraint expense_splits_expense_id_fkey
-   foreign key (expense_id)
-   references expenses(id)
-   on delete cascade;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();

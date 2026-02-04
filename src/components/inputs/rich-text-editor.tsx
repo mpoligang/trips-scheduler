@@ -12,9 +12,10 @@ interface RichTextEditorProps {
     onChange?: (value: string) => void;
     className?: string;
     readOnly?: boolean;
+    label?: string;
 }
 
-const RichTextEditor = ({ value, onChange, className, readOnly = false }: RichTextEditorProps) => {
+const RichTextEditor = ({ value, onChange, className, readOnly = false, label }: RichTextEditorProps) => {
     const editor = useEditor({
         immediatelyRender: false,
         editable: !readOnly,
@@ -75,9 +76,14 @@ const RichTextEditor = ({ value, onChange, className, readOnly = false }: RichTe
 
     if (readOnly) {
         return (
-            <div className={twMerge("w-full py-2", className)}>
-                <EditorContent editor={editor} />
-            </div>
+            <>
+                {label && <label className="block text-sm font-medium text-gray-400 mb-2">
+                    {label}
+                </label>}
+                <div className={twMerge("w-full py-2", className)}>
+                    <EditorContent editor={editor} />
+                </div>
+            </>
         );
     }
 

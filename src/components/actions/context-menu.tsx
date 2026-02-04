@@ -50,7 +50,7 @@ export default function ContextMenu({ items, className }: Readonly<ContextMenuPr
                                     item.onClick();
                                 }}
                                 className={twMerge(
-                                    "group flex w-full items-center gap-2 rounded-md py-2 px-3 text-sm text-gray-200 transition-colors cursor-pointer",
+                                    "group flex w-full items-center text-left gap-2 rounded-md py-2 px-3 text-sm text-gray-200 transition-colors cursor-pointer",
                                     "data-[focus]:bg-gradient-to-br from-purple-600 to-indigo-700 data-[focus]:text-purple-100",
                                     item.className
                                 )}

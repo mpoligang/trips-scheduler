@@ -10,4 +10,6 @@ export enum EntityKeys {
     attachmentsKey = 'attachments',
     expensesKey = 'expenses',
     expenseSplitsKey = 'expense_splits',
+    aiSearchRequestsKey = 'ai_search_requests',
+    aiSuggestionsKey = 'ai_suggestions'
 };

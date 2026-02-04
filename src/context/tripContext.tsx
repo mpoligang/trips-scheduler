@@ -16,6 +16,7 @@ import { EntityKeys } from '@/utils/entityKeys';
 
 // Server Action
 import { getTripFullDataAction } from '@/actions/trip-actions';
+import { AISearchRequest } from '@/models/AIStageSuggestion';
 
 interface TripContextType {
     trip: Trip | null;
@@ -24,6 +25,7 @@ interface TripContextType {
     transports: Transport[];
     participants: Partial<UserData>[];
     expenses: Expense[];
+    ai_search_requests: AISearchRequest[];
     loading: boolean;
     error: string | null;
     isOwner: boolean;
@@ -39,14 +41,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const tripId = params.tripId as string;
 
-    const [trip, setTrip] = useState<any | null>(null);
+    const [trip, setTrip] = useState<Trip | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const lastLoadedId = useRef<string | null>(null);
 
     /**
-     * ✅ FETCH DATA: Utilizza la Server Action per recuperare l'intero albero dati
+     * ✅ FETCH DATA
      */
     const fetchAllData = useCallback(async (force = false) => {
         if (!user || !tripId || tripId === 'new') {
@@ -54,7 +56,6 @@ export function TripProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        // Evita ricaricamenti inutili se l'ID non è cambiato (a meno di force refresh)
         if (lastLoadedId.current === tripId && !force) {
             setLoading(false);
             return;
@@ -72,8 +73,8 @@ export function TripProvider({ children }: { children: ReactNode }) {
             } else {
                 throw new Error(result.error);
             }
-        } catch (err: any) {
-            console.error("❌ Errore TripContext:", err.message);
+        } catch (err: unknown) {
+            console.error("❌ Errore TripContext:", (err as Error).message);
             setError("Impossibile caricare il viaggio.");
         } finally {
             setLoading(false);
@@ -85,7 +86,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         fetchAllData();
     }, [fetchAllData]);
 
-    // Refresh automatico quando si torna alla home del viaggio
+    // Refresh automatico su navigazione
     useEffect(() => {
         const isRootPage = pathname === `/dashboard/trips/${tripId}`;
         if (isRootPage && lastLoadedId.current === tripId) {
@@ -94,32 +95,46 @@ export function TripProvider({ children }: { children: ReactNode }) {
     }, [pathname, tripId, fetchAllData]);
 
     /**
-     * ✅ REALTIME: Ascolta i cambiamenti sul DB e chiama la Server Action per aggiornare lo stato
+     * ✅ REALTIME
      */
     useEffect(() => {
         if (!tripId || tripId === 'new') return;
 
         const channel = supabase.channel(`realtime_trip_${tripId}`)
-            // Modifiche generiche al viaggio (Tappe, Alloggi, Trasporti hanno trip_id)
+            // Modifiche generiche al viaggio (incluso stages, accommodations, ecc)
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
-                filter: `trip_id=eq.${tripId}`
+                filter: `trip_id=eq.${tripId}` // Questo filtro "dovrebbe" prendere anche ai_stage_suggestions
             }, () => fetchAllData(true))
-            // Modifiche specifiche alle spese
+
+            // Listener ESPLICITO per i suggerimenti AI (per sicurezza e velocità)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'ai_stage_suggestions', // <--- Ascoltiamo la nuova tabella
+                filter: `trip_id=eq.${tripId}`
+            }, (payload) => {
+                console.log("🤖 AI Suggestions aggiornati Realtime:", payload);
+                fetchAllData(true);
+            })
+
+            // Modifiche spese
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
                 table: 'expenses',
                 filter: `trip_id=eq.${tripId}`
             }, () => fetchAllData(true))
-            // Modifiche agli split (non hanno trip_id, quindi ricarichiamo sempre)
+
+            // Modifiche split
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
                 table: 'expense_splits'
             }, () => fetchAllData(true))
-            // Modifica al record principale del viaggio (titolo, date, ecc)
+
+            // Modifica record principale
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
@@ -139,6 +154,12 @@ export function TripProvider({ children }: { children: ReactNode }) {
         accommodations: trip?.accommodations || [],
         transports: trip?.transports || [],
         expenses: trip?.expenses || [],
+
+        // Estrazione e ordinamento dei suggerimenti AI (dal più recente)
+        ai_search_requests: (trip?.ai_search_requests || []).sort((a: any, b: any) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ) as AISearchRequest[],
+
         participants: trip?.trip_participants?.map((p: any) => ({ ...p.profiles })) || [],
         loading,
         error,

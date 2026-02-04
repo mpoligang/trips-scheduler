@@ -122,7 +122,7 @@ export default function AccommodationsList() {
                                             icon={<RiHotelLine className="h-5 w-5" />}
                                             title={accommodation.name}
                                             directionsUrl={mapNavigationUrl(accommodation.address)}
-                                            detailUrl={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
+                                            detailClick={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
                                             onDelete={() => handleOpenDeleteModal(accommodation.id)}
                                             isOwner={isOwner}
                                         />

@@ -21,13 +21,14 @@ import ActionStickyBar from "../actions/action-sticky-bar";
 import Button from "../actions/button";
 
 import { Location } from "@/models/Location";
-import { TransportDetails, StopoverV2, StopoverInstanceV2, TransportType } from "@/models/Transport";
+import { TransportDetails, Stopover, StopoverInstance, TransportType } from "@/models/Transport";
 import { generateDateOptions, selectDateOption } from "@/utils/dateTripUtils";
 import { appRoutes } from "@/utils/appRoutes";
 import { hasRealContent } from '@/utils/fileSizeUtils';
 import { AttachmentList } from '../cards/attachment-manager';
 import { upsertTransportAction } from '@/actions/transport-actions';
 import { openDirectionLink } from '@/utils/open-link.utils';
+import { de } from 'date-fns/locale';
 
 export default function TransportForm() {
     const { trip, transports, isOwner, refreshData } = useTrip();
@@ -66,7 +67,7 @@ export default function TransportForm() {
     const [hasDifferentDropOff, setHasDifferentDropOff] = useState(false);
     const [dropOffLocation, setDropOffLocation] = useState<Location | null>(null);
     const [dropOffNotes, setDropOffNotes] = useState('');
-    const [stopovers, setStopovers] = useState<StopoverV2[]>([]);
+    const [stopovers, setStopovers] = useState<Stopover[]>([]);
     const [additionalContents, setAdditionalContents] = useState('');
 
     // --- Helpers (TUTTI MANTENUTI) ---
@@ -104,6 +105,8 @@ export default function TransportForm() {
             if (!pickupLocation) { toast.error("Il luogo di ritiro è obbligatorio."); return false; }
             if (!depDate) { toast.error("La data di ritiro è obbligatoria."); return false; }
             if (!depTime) { toast.error("L'ora di ritiro è obbligatoria."); return false; }
+            if (!arrivalDate) { toast.error("La data di arrivo è obbligatoria."); return false; }
+            if (!arrivalTime) { toast.error("L'ora di arrivo è obbligatoria."); return false; }
             if (!rentalCompany.trim()) { toast.error("L'agenzia di noleggio è obbligatoria."); return false; }
             if (hasDifferentDropOff && !dropOffLocation) { toast.error("Il luogo di riconsegna è obbligatorio."); return false; }
         } else if (type.id === TransportType.PrivateTransfer) {
@@ -120,12 +123,12 @@ export default function TransportForm() {
         return true;
     };
 
-    const updateStopover = (id: string, fields: Partial<StopoverV2>) => {
+    const updateStopover = (id: string, fields: Partial<Stopover>) => {
         setStopovers(stopovers.map(s => s.id === id ? { ...s, ...fields } : s));
     };
     const handleAddStopover = (e: React.MouseEvent) => {
         e.preventDefault();
-        setStopovers([...stopovers, new StopoverInstanceV2()]);
+        setStopovers([...stopovers, new StopoverInstance()]);
     };
     const handleRemoveStopover = (e: React.MouseEvent, id: string) => {
         e.preventDefault();
@@ -160,7 +163,6 @@ export default function TransportForm() {
                 setStopovers(details.stopovers || []);
                 setPickupLocation(details.pickup_location || null);
                 setHasDifferentDropOff(details.has_different_drop_off || false);
-                const drop = splitISO(details.drop_off_date);
                 setDropOffLocation(details.drop_off_location || null);
                 setDropOffNotes(details.drop_off_notes || '');
             }
@@ -279,6 +281,17 @@ export default function TransportForm() {
         }
     }, [type?.id]);
 
+    const gateOrPlatformLabel = useMemo(() => {
+        switch (type?.id) {
+            case TransportType.Flight: return "Terminal";
+            case TransportType.Train: return "Binario";
+            case TransportType.Bus:
+            case TransportType.Shuttle: return "Fermata";
+            case TransportType.Ferry: return "Molo";
+            default: return "";
+        }
+    }, [type?.id]);
+
     // --- JSX (INVARIATO, rimosso solo l'errore statico) ---
     return (
         <div className="space-y-8 pb-24">
@@ -344,7 +357,7 @@ export default function TransportForm() {
                                 />
                                 <Input
                                     id="tr-gate"
-                                    label="Gate/Binario/Molo/Piattaforma"
+                                    label={gateOrPlatformLabel}
                                     value={gateOrPlatform}
                                     onChange={(e) => setGateOrPlatform(e.target.value)}
                                     readOnly={isReadOnly}
@@ -457,14 +470,14 @@ export default function TransportForm() {
                                         />
                                         <Input
                                             id={`stopover-${stopover.id}-transport`}
-                                            label="Mezzo Ripartenza"
+                                            label={referenceNumberLabel}
                                             value={stopover.transport_number || ''}
                                             onChange={(e) => updateStopover(stopover.id, { transport_number: e.target.value })}
                                             readOnly={isReadOnly}
                                         />
                                         <Input
                                             id={`stopover-${stopover.id}-gate`}
-                                            label="Gate Ripartenza"
+                                            label={gateOrPlatformLabel}
                                             value={stopover.gate_or_platform || ''}
                                             onChange={(e) => updateStopover(stopover.id, { gate_or_platform: e.target.value })}
                                             readOnly={isReadOnly}

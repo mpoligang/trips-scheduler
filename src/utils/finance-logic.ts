@@ -5,20 +5,22 @@ import { UserData } from "@/models/UserData";
 // Calcola i saldi netti (Saldo = Pagato - Debito)
 export function calculateBalances(participants: UserData[], expenses: Expense[]) {
     const balances: Record<string, number> = {};
-    participants.forEach(p => balances[p.id] = 0);
+    for (const p of participants) {
+        balances[p.id] = 0;
+    }
 
-    expenses.forEach(exp => {
+    for (const exp of expenses) {
         // Credito per chi paga
         if (balances[exp.paid_by] !== undefined) {
             balances[exp.paid_by] += Number(exp.amount);
         }
         // Debito per chi partecipa
-        exp.expense_splits.forEach(split => {
+        for (const split of exp.expense_splits) {
             if (balances[split.user_id] !== undefined) {
                 balances[split.user_id] -= Number(split.amount);
             }
-        });
-    });
+        }
+    }
 
     return balances;
 }

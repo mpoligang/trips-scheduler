@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 import { useTrip } from '@/context/tripContext';
-import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
+import { appRoutes } from '@/utils/appRoutes';
 
 import DialogComponent from '../modals/confirm-modal';
 import Button from '../actions/button';
@@ -121,7 +121,7 @@ export default function AccommodationsList() {
                                         <DetailItemCard
                                             icon={<RiHotelLine className="h-5 w-5" />}
                                             title={accommodation.name}
-                                            directionsUrl={mapNavigationUrl(accommodation.address)}
+                                            address={accommodation.address}
                                             detailUrl={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
                                             onDelete={() => handleOpenDeleteModal(accommodation.id)}
                                             isOwner={isOwner}

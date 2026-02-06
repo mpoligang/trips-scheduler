@@ -7,10 +7,9 @@ import toast from 'react-hot-toast'; // Installalo se non lo hai: npm install re
 
 import { useTrip } from '@/context/tripContext';
 
-import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
+import { appRoutes } from '@/utils/appRoutes';
 import { formatDateForPostgres, generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
 import { Location } from '@/models/Location';
-
 
 import ContextMenu from '@/components/actions/context-menu';
 import PageTitle from '../generics/page-title';
@@ -24,6 +23,7 @@ import RichTextInput from '../inputs/rich-text-editor';
 import { hasRealContent } from '@/utils/fileSizeUtils';
 import { AttachmentList } from '../cards/attachment-manager';
 import { upsertAccommodationAction } from '@/actions/accomodation-actions';
+import { openDirectionLink } from '@/utils/open-link.utils';
 
 export default function AccommodationForm() {
     const router = useRouter();
@@ -122,8 +122,10 @@ export default function AccommodationForm() {
 
             await refreshData(true);
 
-            if (isNew) router.push(appRoutes.accommodations(tripId));
-            else setIsReadOnly(true);
+            if (isNew) {
+                router.push(appRoutes.accommodations(tripId));
+            }
+            else { setIsReadOnly(true); }
 
         } catch (err: any) {
             toast.error(err.message || "Qualcosa è andato storto", { id: toastId });
@@ -150,7 +152,11 @@ export default function AccommodationForm() {
                         {
                             label: 'Indicazioni',
                             icon: <FaMap />,
-                            onClick: () => window.open(mapNavigationUrl(location?.address || ''), '_blank')
+                            onClick: () => {
+                                if (location?.address) {
+                                    openDirectionLink(location.address);
+                                }
+                            }
                         }
                     ]} />
                 )}
@@ -223,7 +229,8 @@ export default function AccommodationForm() {
                     </div>
                 </FormSection>
 
-                {hasRealContent(notes) && isReadOnly && (
+
+                {(!isReadOnly || hasRealContent(notes)) && (
                     <FormSection title='Contenuti Aggiuntivi'>
                         <RichTextInput value={notes} onChange={setNotes} readOnly={isReadOnly} />
                     </FormSection>

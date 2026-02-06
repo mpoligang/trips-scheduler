@@ -9,7 +9,7 @@ import {
 import Logo from '@/components/generics/logo';
 import { appRoutes } from '@/utils/appRoutes';
 import SiteFooter from '@/components/templates/site-footer';
-import { sendPlanInfoRequest } from '@/utils/openMailer';
+import { sendPlanInfoRequest } from '@/utils/open-link.utils';
 
 export default function LandingPage() {
 

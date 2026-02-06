@@ -10,7 +10,6 @@ export enum TransportType {
     Ferry = 'Traghetto',
     CarRental = 'Noleggio Auto',
     PrivateTransfer = 'Noleggio con conducente',
-    Other = 'Altro'
 }
 
 export interface Transport {

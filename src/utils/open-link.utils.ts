@@ -6,19 +6,13 @@ import { appConfig } from "@/configs/app-config";
  * @param body - Il corpo del messaggio
  */
 export const openMailer = (subject: string, body: string) => {
-    // 1. Codifichiamo i testi per renderli sicuri all'interno di un URL
+    const newWindow = window.open('', '_blank');
     const encodedSubject = encodeURIComponent(subject);
-
-    // 2. Per il body, sostituiamo i ritorni a capo standard con quelli URL-safe (%0D%0A)
-    // e codifichiamo il resto dei caratteri
     const encodedBody = encodeURIComponent(body);
-
-    // 3. Costruiamo il link mailto
     const mailtoLink = `mailto:${appConfig.supportEmail}?subject=${encodedSubject}&body=${encodedBody}`;
-
-    // 4. Apriamo il client. window.open è preferibile a window.location 
-    // perché evita di interferire con il ciclo di vita della Single Page App (Next.js)
-    window.open(mailtoLink, '_blank');
+    if (newWindow) {
+        newWindow.open(mailtoLink, '_blank');
+    }
 };
 
 
@@ -57,3 +51,12 @@ Attendo vostre notizie per mettermi subito in viaggio! ✈️`;
 
     openMailer(subject, body);
 };
+
+
+export const openDirectionLink = (address: string) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+        newWindow.location.href = url;
+    }
+}

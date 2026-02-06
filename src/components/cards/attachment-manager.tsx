@@ -13,7 +13,7 @@ import PageTitle from '../generics/page-title';
 import { useTrip } from '@/context/tripContext';
 import { mbToBytes, bytesToMb } from '@/utils/fileSizeUtils';
 import { useAuth } from '@/context/authProvider';
-import { sendEmailToUpgrade } from '@/utils/openMailer';
+import { sendEmailToUpgrade } from '@/utils/open-link.utils';
 import ContextMenu from '../actions/context-menu';
 import { downloadAttachment, getFileUrl } from '@/actions/files-actions';
 import Image from 'next/image';
@@ -333,17 +333,21 @@ export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnl
         }
     };
 
-    const handleOpenImage = async (attachmentPath: string) => {
+    const handleOpenImage = async (attachment: Attachment) => {
         const newWindow = window.open('', '_blank');
+        console.log(attachment);
 
-        const url = await getFileUrl(attachmentPath);
+        if (attachment.file_type === 'link' && newWindow) {
+            newWindow.location.href = attachment.url;
+            return;
+        }
+
+        const url = await getFileUrl(attachment.storage_path);
         if (url) {
             if (newWindow) {
                 newWindow.location.href = url;
             }
         }
-
-
     };
 
     return (
@@ -351,7 +355,7 @@ export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnl
             {attachments.length > 0 ? (
                 <ul className="grid grid-cols-1 gap-3">
                     {attachments.map((att) => (
-                        <li onClick={() => handleOpenImage(att.storage_path as string)} key={att.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                        <li onClick={() => handleOpenImage(att)} key={att.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700 shadow-sm hover:shadow-md transition-shadow">
                             <a className="flex items-center gap-3 flex-grow overflow-hidden group">
                                 <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-gray-700/50">
                                     {att.file_type === 'file' ? (att.name.toLowerCase().endsWith('.pdf') ? <FaFilePdf className="text-red-500" /> : <FaImage className="text-blue-500" />) : <FaLink className="text-green-500" />}

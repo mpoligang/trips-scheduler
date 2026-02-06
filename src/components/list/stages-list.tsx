@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaPlus, FaMapMarkerAlt } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
-import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
+import { appRoutes } from '@/utils/appRoutes';
 import { deleteStageAction } from '@/actions/stage-actions';
 import { useTrip } from '@/context/tripContext';
 
@@ -121,7 +121,7 @@ export default function StagesList() {
                                                     key={stage.id}
                                                     icon={<FaMapMarkerAlt className="h-5 w-5" />}
                                                     title={stage.name}
-                                                    directionsUrl={stage.address ? mapNavigationUrl(stage.address) : ''}
+                                                    address={stage.address ?? ''}
                                                     detailUrl={appRoutes.stageDetails(trip?.id as string, stage.id)}
                                                     onDelete={() => handleOpenDeleteModal(stage.id)}
                                                     isOwner={isOwner}

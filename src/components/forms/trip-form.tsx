@@ -20,7 +20,7 @@ import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import DialogComponent from '@/components/modals/confirm-modal';
 import { FaPlus, FaTrashAlt, FaExclamationTriangle } from 'react-icons/fa';
-import { sendEmailToUpgrade } from '@/utils/openMailer';
+import { sendEmailToUpgrade } from '@/utils/open-link.utils';
 import { UserData } from '@/models/UserData';
 import Badge from '../generics/badge';
 import toast from 'react-hot-toast';

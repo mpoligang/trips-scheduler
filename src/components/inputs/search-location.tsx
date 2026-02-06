@@ -9,7 +9,7 @@ import dynamic from 'next/dynamic';
 import Button from '@/components/actions/button';
 import Sidebar from '@/components/containers/sidebar';
 import { Location } from '@/models/Location';
-import { mapNavigationUrl } from '@/utils/appRoutes';
+import { openDirectionLink } from '@/utils/open-link.utils';
 
 // Carica la mappa dinamicamente
 const MapPicker = dynamic(() => import('@/components/maps/map'), {
@@ -120,7 +120,7 @@ export default function SearchLocation({
 
     const openDirections = () => {
         if (value?.address) {
-            window.open(mapNavigationUrl(value.address), '_blank');
+            openDirectionLink(value.address);
         }
     };
 

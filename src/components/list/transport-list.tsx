@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { Transport, TransportType } from '@/models/Transport';
 import { useTrip } from '@/context/tripContext';
 import { deleteTransportAction } from '@/actions/transport-actions';
-import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
+import { appRoutes } from '@/utils/appRoutes';
 
 import Button from '@/components/actions/button';
 import DetailItemCard from '@/components/cards/detail-item-card';
@@ -118,7 +118,7 @@ export default function TransportsList() {
                                         key={t.id}
                                         icon={getIcon(t.type)}
                                         title={t.title}
-                                        directionsUrl={t.dep_address ? mapNavigationUrl(t.dep_address) : ''}
+                                        address={t.dep_address ?? ''}
                                         detailUrl={appRoutes.transportDetails(trip?.id as string, t.id)}
                                         onDelete={() => setDeleteId(t.id)}
                                         isOwner={isOwner}

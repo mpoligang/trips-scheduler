@@ -16,8 +16,9 @@ import Button from '../actions/button';
 import {
     FaDirections, FaList
 } from 'react-icons/fa';
-import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
+import { appRoutes } from '@/utils/appRoutes';
 import { useRouter } from 'next/navigation';
+import { openDirectionLink } from '@/utils/open-link.utils';
 
 // --- CONFIGURAZIONE ICONE PERSONALIZZATE ---
 const createCustomIcon = (IconComponent: any, color: string) => {
@@ -202,7 +203,7 @@ export const PopupDetail = ({ title, name, address, navigateToDetail }: PopupDet
             </div>
             <div className="flex justify-start mt-4">
                 <Button size="sm" variant="secondary" onClick={() => {
-                    window.open(mapNavigationUrl(address), '_blank');
+                    openDirectionLink(address);
                 }} >
                     <FaDirections size={10} className='mr-2' />
                     Indicazioni

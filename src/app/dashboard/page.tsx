@@ -17,7 +17,7 @@ import PageTitle from '@/components/generics/page-title';
 import EmptyData from '@/components/cards/empty-data';
 import Loader from '@/components/generics/loader';
 import { appRoutes } from '@/utils/appRoutes';
-import { sendEmailToUpgrade } from '@/utils/openMailer';
+import { sendEmailToUpgrade } from '@/utils/open-link.utils';
 import { AuthStatusEnum } from '@/models/Auth';
 
 export default function DashboardPage() {

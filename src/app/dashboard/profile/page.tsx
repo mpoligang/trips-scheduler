@@ -15,7 +15,7 @@ import FormSection from "@/components/generics/form-section";
 import { bytesToMb } from "@/utils/fileSizeUtils";
 import ProgressBar from "@/components/generics/progress-bar";
 import { GrUpdate } from "react-icons/gr";
-import { sendEmailToUpgrade } from "@/utils/openMailer";
+import { sendEmailToUpgrade } from "@/utils/open-link.utils";
 import DialogComponent from "@/components/modals/confirm-modal";
 import ContextMenu, { ContextMenuItem } from "@/components/actions/context-menu";
 import { deleteAccountAction, updateProfileAction } from "@/actions/user-actions";

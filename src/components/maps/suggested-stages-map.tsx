@@ -8,11 +8,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { Target, Sparkles } from 'lucide-react'; // Icone specifiche per Reference e AI
 import Button from '../actions/button';
 import { FaDirections } from 'react-icons/fa';
-import { mapNavigationUrl } from '@/utils/appRoutes';
 import { AIStageSuggestion, ReferenceEntity } from '@/models/AIStageSuggestion'; // Il tuo model
 import FormSection from '../generics/form-section';
 import Input from '../inputs/input';
 import RichTextEditor from '../inputs/rich-text-editor';
+import { openDirectionLink } from '@/utils/open-link.utils';
 
 // --- 1. CONFIGURAZIONE ICONE ---
 const createCustomIcon = (IconComponent: React.ElementType, color: string, glow: boolean = false) => {
@@ -112,7 +112,7 @@ const SuggestionPopup = ({ name, address, notes, isReference = false }: { name: 
                 <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => window.open(mapNavigationUrl(address), '_blank')}
+                    onClick={() => openDirectionLink(address)}
                 >
                     <FaDirections className="mr-1" /> Vai
                 </Button>

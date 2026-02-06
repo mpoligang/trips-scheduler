@@ -1,39 +1,59 @@
--- Nota: In PostgreSQL, se cambi le colonne restituite, 
--- è necessario eliminare e ricreare la funzione per evitare conflitti di firma.
-DROP FUNCTION IF EXISTS get_my_private_profile();
+-- 1. Creazione della tabella Recommended
+CREATE TABLE public.recommended (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  trip_id uuid NOT NULL,
+  created_by uuid NOT NULL DEFAULT auth.uid(),
+  title text NOT NULL,
+  address text NULL,
+  lat double precision NULL,
+  lng double precision NULL,
+  destination text NULL,
+  category text NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  
+  CONSTRAINT recommended_pkey PRIMARY KEY (id),
+  CONSTRAINT recommended_trip_id_fkey FOREIGN KEY (trip_id) REFERENCES trips (id) ON DELETE CASCADE,
+  CONSTRAINT recommended_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users (id)
+) TABLESPACE pg_default;
 
-CREATE OR REPLACE FUNCTION get_my_private_profile()
-RETURNS TABLE (
-  id uuid,
-  first_name text,
-  last_name text,
-  username text,
-  email text,
-  plan text,
-  expiration_plan_date timestamp with time zone,
-  total_trips_created integer,
-  total_storage_used_in_bytes bigint,
-  ai_api_key text, -- Nuovo campo aggiunto
-  ai_model text    -- Nuovo campo aggiunto
-) 
-LANGUAGE plpgsql
-SECURITY DEFINER -- Esegue con i permessi del creatore per accedere ai dati sensibili
-AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    p.id,
-    p.first_name,
-    p.last_name,
-    p.username,
-    p.email, 
-    p.plan, 
-    p.expiration_plan_date,
-    p.total_trips_created,
-    p.total_storage_used_in_bytes,
-    p.ai_api_key, -- Recupera la chiave API
-    p.ai_model    -- Recupera il modello preferito
-  FROM public.profiles p
-  WHERE p.id = auth.uid(); -- Filtra rigorosamente: restituisce solo i dati dell'utente loggato
-END;
-$$;
+-- 2. Abilitazione della Row Level Security
+ALTER TABLE public.recommended ENABLE ROW LEVEL SECURITY;
+
+-- 3. POLICY: Lettura (SELECT)
+-- Chiunque sia proprietario del viaggio O partecipante può leggere
+CREATE POLICY "I partecipanti e l'owner possono visualizzare i consigliati" 
+ON public.recommended
+FOR SELECT
+USING (
+  check_is_trip_owner(trip_id) OR check_is_trip_participant(trip_id)
+);
+
+-- 4. POLICY: Inserimento (INSERT)
+-- Solo l'owner del viaggio può aggiungere luoghi consigliati
+CREATE POLICY "Solo l'owner può aggiungere luoghi consigliati" 
+ON public.recommended
+FOR INSERT
+WITH CHECK (
+  check_is_trip_owner(trip_id)
+);
+
+-- 5. POLICY: Modifica (UPDATE)
+-- Solo l'owner del viaggio può modificare
+CREATE POLICY "Solo l'owner può modificare i luoghi consigliati" 
+ON public.recommended
+FOR UPDATE
+USING (
+  check_is_trip_owner(trip_id)
+);
+
+-- 6. POLICY: Eliminazione (DELETE)
+-- Solo l'owner del viaggio può eliminare
+CREATE POLICY "Solo l'owner può eliminare i luoghi consigliati" 
+ON public.recommended
+FOR DELETE
+USING (
+  check_is_trip_owner(trip_id)
+);
+
+-- Indici per ottimizzare le ricerche
+CREATE INDEX IF NOT EXISTS idx_recommended_trip_id ON public.recommended(trip_id);

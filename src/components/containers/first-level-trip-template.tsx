@@ -8,6 +8,8 @@ import { FiMap, FiShoppingCart } from "react-icons/fi";
 import { appRoutes } from "@/utils/appRoutes";
 import { FaPlus } from "react-icons/fa";
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
+import { MdOutlineTipsAndUpdates } from "react-icons/md";
+
 import { useParams } from "next/navigation";
 
 
@@ -38,6 +40,7 @@ const FirstLevelTripTemplate = ({ breadcrumb, children }: FirstLevelTripTemplate
             { label: 'Itinerario', icon: BiTrip, href: appRoutes.stages(trip?.id || '') },
             { label: 'Alloggi', icon: RiHotelLine, href: appRoutes.accommodations(trip?.id || '') },
             { label: 'Trasporti', icon: BsTruckFront, href: appRoutes.transports(trip?.id || '') },
+            { label: 'Consigliati', icon: MdOutlineTipsAndUpdates, href: appRoutes.recommended(trip?.id || '') },
             { label: 'Spese', icon: FiShoppingCart, href: appRoutes.expenses(trip?.id || '') },
             { label: 'Mappa del Viaggio', icon: FiMap, href: appRoutes.mapTrip(trip?.id || '') },
         );

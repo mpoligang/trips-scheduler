@@ -31,7 +31,7 @@ const SecondLevelTripTemplate = ({ breadcrumb, children, detailId, sectionPath, 
     }
 
     if (withAI) {
-        menuItems.push({ label: 'Informazioni AI', icon: PiBrain, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/ai` });
+        menuItems.push({ label: 'Informazioni AI', icon: PiBrain, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/ai/new` });
     }
 
 

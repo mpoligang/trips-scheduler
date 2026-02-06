@@ -13,7 +13,7 @@ interface DetailItemCardProps {
     readonly subtitle?: string;
     readonly address: string;
     readonly isOwner?: boolean;
-    readonly onDelete: () => void;
+    readonly onDelete?: () => void;
     readonly additionalItems?: ContextMenuItem[];
 }
 

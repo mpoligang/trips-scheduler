@@ -56,6 +56,7 @@ function getTargetStageCount(range: string): number {
 
 export async function generateAIStages(
     ai_api_key: string,
+    ai_model: string,
     data: GenerateAIStagesInput,
     reference: ReferenceEntity
 ) {
@@ -193,6 +194,7 @@ export async function generateAIStages(
 
 export async function generateAndSaveAIStages(
     ai_api_key: string,
+    ai_model: string,
     data: GenerateAIStagesInput,
     reference: ReferenceEntity,
     tripId: string
@@ -200,7 +202,7 @@ export async function generateAndSaveAIStages(
     try {
         const supabase = await createClient();
 
-        const generatedStages = await generateAIStages(ai_api_key, data, reference);
+        const generatedStages = await generateAIStages(ai_api_key, ai_model, data, reference);
 
         if (!generatedStages || generatedStages.length === 0) {
             return { success: false, error: AI_ERRORS.NO_RESULTS };

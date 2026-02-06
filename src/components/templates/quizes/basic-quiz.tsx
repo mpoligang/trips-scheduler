@@ -7,13 +7,16 @@ import PageTitle from "@/components/generics/page-title";
 import Checkbox from "@/components/inputs/checkbox";
 import { RadioButton } from "@/components/inputs/radio-button";
 import { generateAndSaveAIStages } from "@/actions/ai-actions";
-import MultiSelect from "@/components/inputs/multiselect";
 import { ReferenceEntity } from "@/models/AIStageSuggestion";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { appRoutes } from "@/utils/appRoutes";
 import { useAuth } from "@/context/authProvider";
 import DialogComponent from "@/components/modals/confirm-modal";
+import Dropdown from "@/components/inputs/dropdown";
+import { AIModels } from "@/utils/ai-utils";
+import { useTrip } from "@/context/tripContext";
+import { KeyLabelPair, quizCategories } from "@/utils/quiz.utils";
 
 interface AISuggestionsQuizProps {
     address: string;
@@ -25,20 +28,16 @@ interface AISuggestionsQuizProps {
     type: string;
 }
 
-interface KeyLabelPair {
-    key: string;
-    label: string;
-    items?: KeyLabelPair[];
-}
 
 export default function AISuggestionsQuiz(props: Readonly<AISuggestionsQuizProps>) {
     const router = useRouter();
     const { userData } = useAuth();
+    const { refreshData } = useTrip();
     const [distance, setDistance] = useState<string>("1km");
     const [stageCount, setStageCount] = useState<string>("1-5");
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [errorDialogOpen, setErrorDialogOpen] = useState<boolean>(false);
-    const [selectedCategories, setSelectedCategories] = useState<KeyLabelPair[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<KeyLabelPair>({ key: '', label: '' });
     const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
     const handleInterestChange = (value: string) => {
@@ -49,11 +48,9 @@ export default function AISuggestionsQuiz(props: Readonly<AISuggestionsQuizProps
         );
     };
 
-    const handleCategoryChange = (newCategories: KeyLabelPair[]) => {
-        setSelectedCategories(newCategories);
-        const validSubKeys = newCategories.flatMap(cat =>
-            cat.items?.map(sub => sub.key) || []
-        );
+    const handleCategoryChange = (newCategories: KeyLabelPair) => {
+        setSelectedCategory(newCategories);
+        const validSubKeys = newCategories.items?.map(sub => sub.key) || [];
         setSelectedInterests(prev => prev.filter(key => validSubKeys.includes(key)));
     };
 
@@ -85,15 +82,15 @@ export default function AISuggestionsQuiz(props: Readonly<AISuggestionsQuizProps
 
             const result = await generateAndSaveAIStages(
                 userData?.ai_api_key as string,
+                userData?.ai_model as string || AIModels.GEMINI_FLASH_LITE,
                 requestData,
                 reference,
                 props.tripId
             );
 
-            console.log("Itinerario generato:", result.success);
-
             if (result.success) {
                 toast.success("Itinerario generato con successo!");
+                await refreshData(true);
                 router.replace(`${appRoutes.home}/trips/${props.tripId}/${props.type}/${props.id}/ai/${result.request_id}`);
             } else {
                 toast.error(result.error || "C'è stato un problema nel generare l'itinerario. Riprova.");
@@ -106,62 +103,7 @@ export default function AISuggestionsQuiz(props: Readonly<AISuggestionsQuizProps
         }
     };
 
-    // DATI STATICI (Definiti fuori o dentro component)
-    const categories: KeyLabelPair[] = [
-        {
-            key: 'culture', label: 'Cultura e Storia',
-            items: [
-                { key: 'museums', label: 'Musei' },
-                { key: 'monuments', label: 'Monumenti' },
-                { key: 'historical_squares', label: 'Piazze Storiche' },
-                { key: 'historical_streets', label: 'Vie Storiche' },
-                { key: 'temples_and_churches', label: 'Templi e Chiese' },
-                { key: 'archaeological_sites', label: 'Siti Archeologici' },
-                { key: 'aquariums', label: 'Acquari' },
-            ]
-        },
-        {
-            key: 'food', label: 'Gastronomia',
-            items: [
-                { key: 'typical_restaurants', label: 'Ristoranti Tipici' },
-                { key: 'street_food', label: 'Street Food' },
-                { key: 'vegan_food', label: 'Gastronomia Vegana/Vegetariana' },
-                { key: 'local_markets', label: 'Mercati Locali' },
-                { key: 'supermarkets', label: 'Supermercati o Negozi Alimentari' },
-                { key: 'aperitif_bars', label: 'Locali per aperitivi e degustazioni' },
-            ]
-        },
-        {
-            key: 'leisure', label: 'Svago e Relax',
-            items: [
-                { key: 'parks', label: 'Parchi' },
-                { key: 'pools', label: 'Piscine' },
-                { key: 'spas', label: 'Terme e Spa' },
-                { key: 'shopping_areas', label: 'Aree Shopping' },
-            ]
-        },
-        {
-            key: 'nature', label: 'Natura e Panorami',
-            items: [
-                { key: 'viewpoints', label: 'Punti Panoramici' },
-                { key: 'hiking_trails', label: 'Sentieri Escursionistici' },
-                { key: 'botanical_gardens', label: 'Giardini Botanici' },
-                { key: 'beaches', label: 'Spiagge' },
-                { key: 'mountains', label: 'Montagne' },
-                { key: 'lakes', label: 'Laghi' },
-                { key: 'rivers', label: 'Fiumi' },
-            ]
-        },
-        {
-            key: 'nightlife', label: 'Nightlife',
-            items: [
-                { key: 'night_clubs', label: 'Locali Notturni' },
-                { key: 'bars', label: 'Bar' },
-                { key: 'pubs', label: 'Pub' },
-                { key: 'discos', label: 'Discoteche' },
-            ]
-        },
-    ];
+
 
     return (
         <>
@@ -228,33 +170,31 @@ export default function AISuggestionsQuiz(props: Readonly<AISuggestionsQuizProps
                     <div className="flex flex-col space-y-4">
 
                         {/* 2. FIX: Usa handleCategoryChange invece del setter diretto */}
-                        <MultiSelect<KeyLabelPair>
-                            label="Seleziona categorie di interesse"
-                            items={categories}
+                        <Dropdown<KeyLabelPair>
+                            label="Seleziona la categoria di interesse"
+                            items={quizCategories}
                             optionLabel="label"
                             optionValue="key"
-                            selected={selectedCategories}
-                            onSelect={handleCategoryChange}
+                            selected={selectedCategory}
+                            onSelect={(category) => handleCategoryChange(category as KeyLabelPair)}
                         />
 
-                        {selectedCategories.length > 0 && selectedCategories.map((category) => (
-                            <FormSection key={category.key} title={category.label}>
-                                <div className="flex flex-col space-y-4">
-                                    {(category.items || []).map((subcategory) => (
-                                        <div key={subcategory.key} className="flex flex-col space-y-2">
-                                            {/* 1. FIX: handleInterestChange ora gestisce il toggle correttamente */}
-                                            <Checkbox
-                                                id={`${category.key}-${subcategory.key}`}
-                                                checked={selectedInterests.includes(subcategory.key)}
-                                                onChange={() => handleInterestChange(subcategory.key)}
-                                            >
-                                                <span className="text-white">{subcategory.label}</span>
-                                            </Checkbox>
-                                        </div>
-                                    ))}
-                                </div>
-                            </FormSection>
-                        ))}
+                        <FormSection key={selectedCategory.key} title={selectedCategory.label}>
+                            <div className="flex flex-col space-y-4">
+                                {(selectedCategory.items || []).map((subcategory) => (
+                                    <div key={subcategory.key} className="flex flex-col space-y-2">
+                                        {/* 1. FIX: handleInterestChange ora gestisce il toggle correttamente */}
+                                        <Checkbox
+                                            id={`${selectedCategory.key}-${subcategory.key}`}
+                                            checked={selectedInterests.includes(subcategory.key)}
+                                            onChange={() => handleInterestChange(subcategory.key)}
+                                        >
+                                            <span className="text-white">{subcategory.label}</span>
+                                        </Checkbox>
+                                    </div>
+                                ))}
+                            </div>
+                        </FormSection>
 
                     </div>
                 </FormSection>

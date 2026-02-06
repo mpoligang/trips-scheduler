@@ -306,7 +306,7 @@ export default function ProfilePage() {
                         </div>
                     </FormSection>
 
-                    <FormSection title="Attivazione AI">
+                    <FormSection title="Intelligenza Artificiale">
                         <p className="text-gray-400 mb-4">
                             Vogliamo darti il massimo, ma per ora non riusciamo a coprire i costi dell&apos;IA per tutti. Niente paura, però! Esiste un modo per averla gratis: ti guideremo passo dopo passo nella creazione di un codice personale (chiamato API Key) fornito direttamente da Google.
                             Una volta ottenuto, potrai inserirlo qui sotto per sbloccare tutte le funzionalità AI senza costi aggiuntivi!

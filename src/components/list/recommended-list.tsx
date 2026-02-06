@@ -15,7 +15,6 @@ import EmptyData from '../cards/empty-data';
 import PageTitle from '../generics/page-title';
 import Badge from '../generics/badge';
 import { deleteRecommendedAction } from '@/actions/recommended-actions';
-import { get } from 'http';
 import { getIconByCategoryId } from '@/utils/recommended.utils';
 
 export default function RecommendedList() {
@@ -120,7 +119,8 @@ export default function RecommendedList() {
                                         icon={getCustomIcon(getIconByCategoryId(item.category))}
                                         title={item.title}
                                         address={item.address ?? ''}
-                                        detailUrl={appRoutes.recommendedDetails(trip?.id as string, item.id)}
+                                        subtitle={item.address}
+                                        detailClick={appRoutes.recommendedDetails(trip?.id as string, item.id)}
                                         onDelete={() => handleOpenDeleteModal(item.id)}
                                         isOwner={isOwner}
                                     />

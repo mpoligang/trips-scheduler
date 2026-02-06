@@ -77,7 +77,7 @@ export default function Sidebar(props: Readonly<SidebarProps>) {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 relative w-full h-full overflow-hidden">
+                <div className="flex-1 relative w-full h-full overflow-y-auto ">
                     {children}
                 </div>
             </dialog>

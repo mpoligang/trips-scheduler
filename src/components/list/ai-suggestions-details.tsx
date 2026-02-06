@@ -7,17 +7,22 @@ import RichTextEditor from "@/components/inputs/rich-text-editor";
 import Tabs from "@/components/navigations/tabs";
 import { AISearchRequest, AIStageSuggestion, ReferenceEntity } from "@/models/AIStageSuggestion";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FiMapPin } from "react-icons/fi";
 import LoaderIcon from "@/components/loading/loader-icon";
 import Button from "@/components/actions/button";
 import { FaDirections, FaTrash } from "react-icons/fa";
 import DialogComponent from "../modals/confirm-modal";
-// import { deleteAISuggestions } from "@/actions/ai-actions";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { appRoutes } from "@/utils/appRoutes";
 import { useTrip } from "@/context/tripContext";
+import { openDirectionLink } from "@/utils/open-link.utils";
+import { deleteAISuggestions } from "@/actions/ai-actions";
+import Dropdown from "../inputs/dropdown";
+import { formatDateForPostgres, generateDateOptions, selectDateOption } from "@/utils/dateTripUtils";
+import { upsertStageAction } from "@/actions/stage-actions";
+import { add } from "date-fns";
 
 
 const AISuggestionsMap = dynamic(
@@ -40,23 +45,23 @@ export default function AISuggestionsDetails({ search_results, reference }:
 
     const handleDelete = async () => {
         setIsDeleting(true);
-        // try {
-        //     const response = await deleteAISuggestions(search_results.id);
-        //     if (response.success) {
-        //         toast.success("Suggerimenti eliminati con successo!");
-        //         await refreshData();
-        //         router.push(appRoutes.aiInfo(trip?.id as string, reference.type, reference.id, 'new'));
+        try {
+            const response = await deleteAISuggestions(search_results.id);
+            if (response.success) {
+                toast.success("Suggerimenti eliminati con successo!");
+                await refreshData();
+                router.push(appRoutes.aiInfo(trip?.id as string, reference.type, reference.id, 'new'));
 
-        //     } else {
-        //         toast.error("Errore durante l'eliminazione dei suggerimenti.");
-        //     }
-        // } catch (error) {
-        //     console.error("Errore durante l'eliminazione:", error);
-        //     toast.error("Errore durante l'eliminazione dei suggerimenti.");
-        // } finally {
-        //     setIsDeleting(false);
-        //     setIsDeleteOpen(false);
-        // }
+            } else {
+                toast.error("Errore durante l'eliminazione dei suggerimenti.");
+            }
+        } catch (error) {
+            console.error("Errore durante l'eliminazione:", error);
+            toast.error("Errore durante l'eliminazione dei suggerimenti.");
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteOpen(false);
+        }
     }
 
 
@@ -87,7 +92,7 @@ export default function AISuggestionsDetails({ search_results, reference }:
             <Tabs tabs={[
                 {
                     label: 'Tappe Suggerite',
-                    content: <SuggestedStagesList suggestions={search_results.ai_suggestions} />,
+                    content: <SuggestedStagesList suggestions={search_results.ai_suggestions} reference={reference} />,
                 },
                 {
                     label: 'Mappa',
@@ -107,20 +112,11 @@ const MapPicker = dynamic(() => import('@/components/maps/map'), {
     ssr: false,
     loading: () => <LoaderIcon />,
 });
-export const SuggestedStagesList = ({ suggestions }: { suggestions: AIStageSuggestion[] }) => {
+export const SuggestedStagesList = ({ suggestions, reference }: { suggestions: AIStageSuggestion[], reference: ReferenceEntity }) => {
 
     const [selectedSuggestion, setSelectedSuggestion] = useState<AIStageSuggestion | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-
-    const additionalItems = [
-        {
-            label: 'Aggiungi alle tue tappe',
-            icon: <FiMapPin />,
-            onClick: () => {
-            },
-        },
-    ];
-
+    const [isOpenAddToStage, setIsOpenAddToStage] = useState<boolean>(false);
 
     return (
         <ul >
@@ -153,7 +149,8 @@ export const SuggestedStagesList = ({ suggestions }: { suggestions: AIStageSugge
                         </FormSection>
 
                         <FormSection title="Mappa" className="p-5 relative">
-                            <Button variant="secondary" size="sm" className="absolute top-4 right-4 z-10" onClick={() => setSidebarOpen(false)}>
+                            <Button variant="secondary" size="sm" className="absolute top-4 right-4 z-10"
+                                onClick={() => openDirectionLink(selectedSuggestion.address)}>
                                 <FaDirections className="mr-2" />
                                 Indicazioni
                             </Button>
@@ -172,11 +169,20 @@ export const SuggestedStagesList = ({ suggestions }: { suggestions: AIStageSugge
                 <div className="mb-4" key={suggestion.id}>
 
                     <DetailItemCard
-                        additionalItems={additionalItems}
+                        additionalItems={[
+                            {
+                                label: 'Aggiungi alle tue tappe',
+                                icon: <FiMapPin />,
+                                onClick: () => {
+                                    setSelectedSuggestion(suggestion);
+                                    setIsOpenAddToStage(true);
+                                },
+                            },
+                        ]}
                         icon={<FiMapPin />}
                         title={suggestion.name}
                         subtitle={suggestion.address}
-                        directionsUrl={''}
+                        address={suggestion.address}
                         detailClick={() => {
                             setSelectedSuggestion(suggestion);
                             setSidebarOpen(true);
@@ -186,6 +192,105 @@ export const SuggestedStagesList = ({ suggestions }: { suggestions: AIStageSugge
 
                 </div>
             ))}
+            <AddToStageDialog
+                reference={reference}
+                suggestion={selectedSuggestion as AIStageSuggestion}
+                open={isOpenAddToStage}
+                setIsOpen={setIsOpenAddToStage}
+            />
         </ul>
     );
 };
+
+
+export const AddToStageDialog = ({ reference, suggestion, open, setIsOpen }: { reference: ReferenceEntity, suggestion: AIStageSuggestion, open: boolean, setIsOpen: (open: boolean) => void }) => {
+
+    const { trip, refreshData } = useTrip();
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const dateOptions = useMemo(() => {
+        if (!trip?.start_date || !trip?.end_date) return [];
+        return generateDateOptions(new Date(trip.start_date), new Date(trip.end_date));
+    }, [trip?.start_date, trip?.end_date]);
+
+    const selectedStartDateOption = useMemo(() =>
+        startDate ? selectDateOption(startDate, dateOptions) : null
+        , [startDate, dateOptions]);
+
+    const handleSubmit = async () => {
+
+        const stagePayload = {
+            id: 'new',
+            trip_id: trip?.id as string,
+            name: suggestion.name,
+            arrival_date: formatDateForPostgres(startDate as Date),
+            destination: reference.destination,
+            address: suggestion.address,
+            lat: suggestion.lat,
+            lng: suggestion.lng,
+            notes: suggestion.notes || '',
+        };
+
+        try {
+            const result = await upsertStageAction(stagePayload);
+
+            if (!result.success) throw new Error(result.error);
+
+            toast.success("Tappa aggiunta con successo!");
+
+            await refreshData(true);
+
+        } catch (err: any) {
+            toast.error(err.message || "Errore durante il salvataggio");
+        } finally {
+            setIsSubmitting(false);
+        }
+        setIsOpen(false);
+    }
+
+    return (
+        <DialogComponent
+            isOpen={open}
+            onClose={() => setIsOpen(false)}
+            isLoading={isSubmitting}
+            title="Aggiungi Tappa"
+            onConfirm={handleSubmit}
+        >
+            {
+                suggestion && (
+                    <form className="space-y-4">
+                        <Input
+                            id="name"
+                            label="Nome"
+                            value={suggestion.name}
+                            readOnly
+                        />
+                        <Input
+                            id="destination"
+                            label="Destinazione di riferimento"
+                            value={reference.destination}
+                            readOnly
+                        />
+                        <Input
+                            id="location"
+                            label="Posizione"
+                            value={suggestion.address}
+                            readOnly
+                        />
+                        <Dropdown
+                            label="Quando vuoi visitare questa tappa?"
+                            items={dateOptions}
+                            selected={selectedStartDateOption}
+                            onSelect={(val) => setStartDate(val?.date)}
+                            optionLabel="name"
+                            optionValue='id'
+                            required
+                        />
+
+                    </form>
+                )
+            }
+
+        </DialogComponent>
+    );
+};  

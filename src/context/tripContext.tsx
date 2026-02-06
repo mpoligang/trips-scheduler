@@ -17,12 +17,14 @@ import { EntityKeys } from '@/utils/entityKeys';
 // Server Action
 import { getTripFullDataAction } from '@/actions/trip-actions';
 import { AISearchRequest } from '@/models/AIStageSuggestion';
+import { Recommended } from '@/models/Recommended';
 
 interface TripContextType {
     trip: Trip | null;
     stages: Stage[];
     accommodations: Accommodation[];
     transports: Transport[];
+    recommended: Recommended[];
     participants: Partial<UserData>[];
     expenses: Expense[];
     ai_search_requests: AISearchRequest[];
@@ -161,6 +163,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         ) as AISearchRequest[],
 
         participants: trip?.trip_participants?.map((p: any) => ({ ...p.profiles })) || [],
+        recommended: trip?.recommended || [],
         loading,
         error,
         isOwner: trip?.owner_id === user?.id,

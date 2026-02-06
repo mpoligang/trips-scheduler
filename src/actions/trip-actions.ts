@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/server';
 import { UserData } from '@/models/UserData';
-import { formatDateForPostgres } from '@/utils/dateTripUtils';
 import { EntityKeys } from '@/utils/entityKeys';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -215,6 +214,7 @@ export async function getTripFullDataAction(tripId: string) {
                 stages(*, attachments(*)),
                 accommodations(*, attachments(*)),
                 transports(*, attachments(*)),
+                recommended(*),
                 expenses(
                     *,
                     profiles:paid_by (id, first_name, last_name, username),

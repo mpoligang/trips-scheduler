@@ -11,5 +11,6 @@ export enum EntityKeys {
     expensesKey = 'expenses',
     expenseSplitsKey = 'expense_splits',
     aiSearchRequestsKey = 'ai_search_requests',
-    aiSuggestionsKey = 'ai_suggestions'
+    aiSuggestionsKey = 'ai_suggestions',
+    recommendedKey = 'recommended'
 };

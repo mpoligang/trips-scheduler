@@ -24,10 +24,12 @@ export const appRoutes = {
     transports: (tripId: string) => `${tripDetails(tripId)}/transports`,
     expenses: (tripId: string) => `${tripDetails(tripId)}/expenses`,
     aiInfo: (tripId: string, reference_name: string, reference_id: string, ai_id: string) => `${tripDetails(tripId)}/${reference_name}/${reference_id}/ai/${ai_id}`,
+    recommended: (tripId: string) => `${tripDetails(tripId)}/recommended`,
     stages: (tripId: string) => `${tripDetails(tripId)}/stages`,
     settings: (tripId: string) => `${tripDetails(tripId)}/settings`,
     members: (tripId: string) => `${tripDetails(tripId)}/members`,
     accommodationDetails: (tripId: string, accommodationId: string = 'new') => `${tripDetails(tripId)}/accommodations/${accommodationId}/details`,
+    recommendedDetails: (tripId: string, recommendedId: string = 'new') => `${tripDetails(tripId)}/recommended/${recommendedId}/details`,
     stageDetails: (tripId: string, stageId: string = 'new') => `${tripDetails(tripId)}/stages/${stageId}/details`,
     transportDetails: (tripId: string, transportId: string = 'new') => `${tripDetails(tripId)}/transports/${transportId}/details`,
 };

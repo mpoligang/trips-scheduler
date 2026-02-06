@@ -12,22 +12,29 @@ interface SecondLevelTripTemplateProps {
     readonly detailId?: string;
     readonly sectionPath?: string;
     readonly children: React.ReactNode;
+    readonly withAttachments?: boolean;
+    readonly withAI?: boolean;
     readonly backToItem?: Partial<PathItem>;
 }
 
 
-const SecondLevelTripTemplate = ({ breadcrumb, children, detailId, sectionPath, backToItem }: SecondLevelTripTemplateProps) => {
+const SecondLevelTripTemplate = ({ breadcrumb, children, detailId, sectionPath, backToItem, withAI = true, withAttachments = true }: SecondLevelTripTemplateProps) => {
 
     const { trip } = useTrip();
 
     const menuItems: PathItem[] = [
         { label: 'Dettaglio', icon: BiDetail, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/details` },
-        { label: 'Allegati', icon: ImAttachment, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/attachments` },
     ];
 
-    if (detailId !== 'new') {
-        menuItems.push({ label: 'Informazioni AI', icon: PiBrain, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/ai/new` });
+    if (withAttachments) {
+        menuItems.push({ label: 'Allegati', icon: ImAttachment, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/attachments` });
     }
+
+    if (withAI) {
+        menuItems.push({ label: 'Informazioni AI', icon: PiBrain, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/ai` });
+    }
+
+
 
     return (
         <GenericLayout menuItems={menuItems} breadcrumb={breadcrumb} backToItem={backToItem}>

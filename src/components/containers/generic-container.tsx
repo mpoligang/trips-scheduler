@@ -105,7 +105,7 @@ function GenericLayoutContent({
 
             {/* --- SIDEBAR --- */}
             <aside className={`
-        fixed inset-y-0 left-0 z-[19] bg-gray-800 border-r border-gray-700
+        fixed inset-y-0 left-0 z-[22] bg-gray-800 border-r border-gray-700
         transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col shadow-2xl lg:shadow-none
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${isCollapsed ? 'lg:w-20' : 'lg:w-72 w-80'}

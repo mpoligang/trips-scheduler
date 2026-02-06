@@ -4,10 +4,12 @@ import { Accommodation } from "./Accommodation";
 import { UserData } from "./UserData";
 import { Expense } from "./Expenses";
 import { AISearchRequest } from "./AIStageSuggestion";
+import { Recommended } from "./Recommended";
 
 export interface Trip {
     stages?: Stage[];
     accommodations?: Accommodation[];
+    recommended?: Recommended[];
     transports?: Transport[];
     ai_search_requests?: AISearchRequest[];
     expenses?: Expense[];

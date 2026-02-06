@@ -40,15 +40,13 @@ export interface TransportDetails {
     dep_location?: Location | null;
     arr_location?: Location | null; // Aggiunto per simmetria
     trip_duration?: string;
-    stopovers?: StopoverV2[];
+    stopovers?: Stopover[];
 
     // Campi specifici Noleggio (Rental)
     rental_company?: string;
     car_model?: string;
     pickup_location?: Location | null;
-    pickup_date?: string;           // ISO string se differente da dep_date
     drop_off_location?: Location | null;
-    drop_off_date?: string;         // ISO string se differente da arr_date
     has_different_drop_off?: boolean;
     drop_off_notes?: string;
 
@@ -58,7 +56,7 @@ export interface TransportDetails {
     vehicle_description?: string;
 }
 
-export interface StopoverV2 {
+export interface Stopover {
     id: string;
     stopover_place: string;
     arrival_time: string;
@@ -69,7 +67,7 @@ export interface StopoverV2 {
 }
 
 
-export class StopoverInstanceV2 implements StopoverV2 {
+export class StopoverInstance implements Stopover {
     public id: string = uuidv4();
     public stopover_place: string = ''
     public arrival_time: string = ''

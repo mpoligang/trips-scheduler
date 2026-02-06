@@ -15,6 +15,7 @@ import DetailItemCard from '../cards/detail-item-card';
 import EmptyData from '../cards/empty-data';
 import PageTitle from '../generics/page-title';
 import Badge from '../generics/badge';
+import FormSection from '../generics/form-section';
 
 const formatDateForGroup = (dateString: string): string => {
     const date = new Date(dateString);
@@ -108,29 +109,28 @@ export default function StagesList() {
                 <div className="space-y-6">
                     {sortedDates.map(date => (
                         <div key={date}>
-                            <h4 className="font-semibold text-lg text-gray-300 mb-3 pb-2 capitalize">
-                                {date === 'no-date' ? 'Senza Data' : formatDateForGroup(date)}
-                            </h4>
-                            <div className="space-y-4 mt-3">
-                                {Object.keys(groupedStages[date]).sort().map(destination => (
-                                    <div className='w-auto' key={destination}>
-                                        <Badge text={destination} className='mb-4' />
-                                        <ul className="space-y-4 pl-4 border-l-2 border-gray-600">
-                                            {groupedStages[date][destination].map((stage) => (
-                                                <DetailItemCard
-                                                    key={stage.id}
-                                                    icon={<FaMapMarkerAlt className="h-5 w-5" />}
-                                                    title={stage.name}
-                                                    detailClick={appRoutes.stageDetails(trip?.id as string, stage.id)}
-                                                    address={stage.address ?? ''}
-                                                    onDelete={() => handleOpenDeleteModal(stage.id)}
-                                                    isOwner={isOwner}
-                                                />
-                                            ))}
-                                        </ul>
-                                    </div>
-                                ))}
-                            </div>
+                            <FormSection title={formatDateForGroup(date)} className='capitalize'>
+                                <div className="space-y-4 mt-3">
+                                    {Object.keys(groupedStages[date]).sort().map(destination => (
+                                        <div className='w-auto' key={destination}>
+                                            <Badge text={destination} className='mb-4' />
+                                            <ul className="space-y-4 pl-4 border-l-2 border-gray-600">
+                                                {groupedStages[date][destination].map((stage) => (
+                                                    <DetailItemCard
+                                                        key={stage.id}
+                                                        icon={<FaMapMarkerAlt className="h-5 w-5" />}
+                                                        title={stage.name}
+                                                        address={stage.address ?? ''}
+                                                        detailClick={appRoutes.stageDetails(trip?.id as string, stage.id)}
+                                                        onDelete={() => handleOpenDeleteModal(stage.id)}
+                                                        isOwner={isOwner}
+                                                    />
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    ))}
+                                </div>
+                            </FormSection>
                         </div>
                     ))}
                 </div>

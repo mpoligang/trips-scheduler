@@ -15,6 +15,7 @@ import DetailItemCard from '@/components/cards/detail-item-card';
 import EmptyData from '@/components/cards/empty-data';
 import DialogComponent from '@/components/modals/confirm-modal';
 import PageTitle from '../generics/page-title';
+import FormSection from '../generics/form-section';
 
 const formatDateForGroup = (dateString: string): string => {
     if (!dateString) return 'Data non definita';
@@ -108,23 +109,21 @@ export default function TransportsList() {
                 <div className="space-y-6">
                     {sortedDates.map(date => (
                         <div key={date}>
-                            <h4 className="font-semibold text-lg text-gray-300 mb-3 pb-2 capitalize">
-                                {date === 'Altro' ? date : formatDateForGroup(date)}
-                            </h4>
-
-                            <ul className="space-y-4">
-                                {groupedTransports[date].map(t => (
-                                    <DetailItemCard
-                                        key={t.id}
-                                        icon={getIcon(t.type)}
-                                        title={t.title}
-                                        detailClick={appRoutes.transportDetails(trip?.id as string, t.id)}
-                                        address={t.dep_address ?? ''}
-                                        onDelete={() => setDeleteId(t.id)}
-                                        isOwner={isOwner}
-                                    />
-                                ))}
-                            </ul>
+                            <FormSection title={formatDateForGroup(date)} className='capitalize'>
+                                <ul className="space-y-4">
+                                    {groupedTransports[date].map(t => (
+                                        <DetailItemCard
+                                            key={t.id}
+                                            icon={getIcon(t.type)}
+                                            title={t.title}
+                                            address={t.dep_address ?? ''}
+                                            detailClick={appRoutes.transportDetails(trip?.id as string, t.id)}
+                                            onDelete={() => setDeleteId(t.id)}
+                                            isOwner={isOwner}
+                                        />
+                                    ))}
+                                </ul>
+                            </FormSection>
                         </div>
                     ))}
                 </div>

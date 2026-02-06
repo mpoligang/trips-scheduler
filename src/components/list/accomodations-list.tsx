@@ -16,6 +16,7 @@ import PageTitle from '../generics/page-title';
 import { RiHotelLine } from 'react-icons/ri';
 import Badge from '../generics/badge';
 import { deleteAccommodationAction } from '@/actions/accomodation-actions';
+import FormSection from '../generics/form-section';
 
 const formatStayPeriod = (start: string | undefined, end: string | undefined) => {
     if (!start || !end) { return ''; }
@@ -115,17 +116,17 @@ export default function AccommodationsList() {
                             <div className="space-y-4 pl-4 border-l-2 border-gray-700">
                                 {groupedAccommodations[destination].map((accommodation) => (
                                     <div key={accommodation.id} className="flex flex-col gap-1">
-                                        <h4 className="font-semibold text-lg text-gray-300 mb-3 border-b border-gray-700 pb-2 capitalize">
-                                            {formatStayPeriod(accommodation.start_date, accommodation.end_date)}
-                                        </h4>
-                                        <DetailItemCard
-                                            icon={<RiHotelLine className="h-5 w-5" />}
-                                            title={accommodation.name}
-                                            detailClick={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
-                                            address={accommodation.address}
-                                            onDelete={() => handleOpenDeleteModal(accommodation.id)}
-                                            isOwner={isOwner}
-                                        />
+
+                                        <FormSection title={formatStayPeriod(accommodation.start_date, accommodation.end_date)} className='capitalize'>
+                                            <DetailItemCard
+                                                icon={<RiHotelLine className="h-5 w-5" />}
+                                                title={accommodation.name}
+                                                address={accommodation.address}
+                                                detailClick={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
+                                                onDelete={() => handleOpenDeleteModal(accommodation.id)}
+                                                isOwner={isOwner}
+                                            />
+                                        </FormSection>
                                     </div>
                                 ))}
                             </div>

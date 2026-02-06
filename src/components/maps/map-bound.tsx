@@ -20,7 +20,7 @@ import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
 import { useRouter } from 'next/navigation';
 
 // --- CONFIGURAZIONE ICONE PERSONALIZZATE ---
-const createCustomIcon = (IconComponent: any, color: string) => {
+const createCustomIcon = (IconComponent: React.JSXElementConstructor<any>, color: string) => {
     const iconMarkup = renderToStaticMarkup(
         <div style={{ color: color, backgroundColor: 'white', padding: '5px', borderRadius: '50%', border: `2px solid ${color}`, display: 'flex', width: '30px', height: '30px', alignItems: 'center', justifyContent: 'center' }}>
             <IconComponent size={20} />
@@ -73,9 +73,6 @@ export default function TripMap() {
     const stages = useMemo(() => trip?.stages || [], [trip?.stages]);
     const accommodations = trip?.accommodations || [];
     const transports = trip?.transports || [];
-
-    console.log('TripMap render - stages:', stages, 'accommodations:', accommodations, 'transports:', transports);
-
 
     // Calcoliamo la linea del percorso (unisce le tappe in ordine cronologico)
     const routePath = useMemo(() => {

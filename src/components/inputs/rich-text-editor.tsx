@@ -40,7 +40,7 @@ const RichTextEditor = ({ value, onChange, className, readOnly = false, label }:
         editorProps: {
             attributes: {
                 class: twMerge(
-                    'focus:outline-none min-h-[100px] max-w-full text-gray-200',
+                    'focus:outline-none min-h-0 max-w-full text-gray-200',
                     '[&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:pl-1',
                     readOnly ? 'p-0' : 'p-4'
                 ),
@@ -77,7 +77,7 @@ const RichTextEditor = ({ value, onChange, className, readOnly = false, label }:
     if (readOnly) {
         return (
             <>
-                {label && <label className="block text-sm font-medium text-gray-400 mb-2">
+                {label && <label className="block text-sm font-medium text-gray-400 mb-1">
                     {label}
                 </label>}
                 <div className={twMerge("w-full py-2", className)}>

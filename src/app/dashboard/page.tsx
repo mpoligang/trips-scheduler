@@ -15,7 +15,7 @@ import TripCard from '@/components/cards/trip-card';
 import Button from '@/components/actions/button';
 import PageTitle from '@/components/generics/page-title';
 import EmptyData from '@/components/cards/empty-data';
-import Loader from '@/components/generics/loader';
+import Loader from '@/components/loading/loader';
 import { appRoutes } from '@/utils/appRoutes';
 import { sendEmailToUpgrade } from '@/utils/openMailer';
 import { AuthStatusEnum } from '@/models/Auth';

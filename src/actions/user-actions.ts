@@ -90,6 +90,8 @@ export async function updateProfileAction(formData: FormData) {
 
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
+    const aiApiKey = formData.get('aiApiKey') as string;
+    const aiModel = formData.get('aiModel') as string;
 
     // 2. Aggiorna il profilo
     const { error } = await supabase
@@ -97,6 +99,8 @@ export async function updateProfileAction(formData: FormData) {
         .update({
             first_name: firstName,
             last_name: lastName,
+            ai_api_key: aiApiKey,
+            ai_model: aiModel,
         })
         .eq('id', user.id);
 

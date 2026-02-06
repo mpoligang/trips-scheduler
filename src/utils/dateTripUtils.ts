@@ -61,3 +61,28 @@ export const formatDateForPostgres = (date: Date): string => {
     const dd = String(date.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 };
+
+/**
+ * Formatta una data nel formato dd/mm/yyyy HH:mm
+ * @param date - La data da formattare (oggetto Date o stringa ISO)
+ * @returns Stringa formattata o stringa vuota se la data non è valida
+ */
+export const formatDate = (date: Date | string | number): string => {
+    const d = new Date(date);
+
+    // Controllo se la data è valida
+    if (isNaN(d.getTime())) {
+        console.warn("formatDate: Fornita una data non valida");
+        return "";
+    }
+
+    return new Intl.DateTimeFormat("it-IT", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false, // Forza il formato 24 ore
+    }).format(d).replace(',', '');
+    // Nota: Intl a volte inserisce una virgola tra data e ora a seconda dell'ambiente
+};

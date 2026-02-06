@@ -49,7 +49,7 @@ export function AuthProvider({ children, initialUser }: { children: ReactNode, i
   const forceLogout = useCallback(() => {
     const isPublic = publicRoutes.some(route => pathname.startsWith(route))
 
-    if (typeof window !== 'undefined' && window.location.pathname.includes('reset-password')) {
+    if (typeof globalThis !== 'undefined' && globalThis.location.pathname.includes('reset-password')) {
       console.log("🛑 BYPASS: Sono in reset-password, non pulisco nulla!");
       return;
     }
@@ -66,8 +66,8 @@ export function AuthProvider({ children, initialUser }: { children: ReactNode, i
     setUserData(null)
     setStatus(AuthStatusEnum.UNAUTHENTICATED)
 
-    if (typeof window !== 'undefined') {
-      window.location.href = appRoutes.login
+    if (typeof globalThis !== 'undefined') {
+      globalThis.location.href = appRoutes.login
     }
   }, [pathname, publicRoutes])
   const fetchUserData = useCallback(async (userId: string) => {
@@ -83,7 +83,8 @@ export function AuthProvider({ children, initialUser }: { children: ReactNode, i
         .rpc('get_my_private_profile')
         .maybeSingle();
 
-      if (profileError) throw profileError;
+
+      if (profileError) { throw profileError; }
 
       if (profileData) {
         // 2. Recuperiamo i dettagli del piano
@@ -101,9 +102,6 @@ export function AuthProvider({ children, initialUser }: { children: ReactNode, i
             .single();
           planDetails = planData;
         }
-
-
-
 
         // 3. Uniamo i dati per matchare la tua interfaccia UserData
         setUserData({

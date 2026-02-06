@@ -29,7 +29,7 @@ const SidebarItem = ({ icon: Icon, label, active, collapsed, onClick }: SidebarI
             </div>
 
             {!collapsed && (
-                <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-300 ${textStyle}`}>
+                <span className={`font-medium whitespace-nowrap truncate overflow-hidden transition-all duration-300 ${textStyle}`}>
                     {label}
                 </span>
             )}

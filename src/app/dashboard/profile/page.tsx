@@ -7,7 +7,7 @@ import Navbar from "@/components/navigations/navbar";
 import { useAuth } from "@/context/authProvider";
 import { createClient } from "@/lib/client";
 import { PathItem } from "@/models/PathItem";
-import { FaSignOutAlt, FaTrash, FaPen, FaUndo } from "react-icons/fa";
+import { FaSignOutAlt, FaTrash, FaPen, FaUndo, FaKey } from "react-icons/fa";
 import PageTitle from "@/components/generics/page-title";
 import { appRoutes } from "@/utils/appRoutes";
 import ActionStickyBar from "@/components/actions/action-sticky-bar";
@@ -20,6 +20,10 @@ import DialogComponent from "@/components/modals/confirm-modal";
 import ContextMenu, { ContextMenuItem } from "@/components/actions/context-menu";
 import { deleteAccountAction, updateProfileAction } from "@/actions/user-actions";
 import toast from "react-hot-toast";
+import Dropdown from "@/components/inputs/dropdown";
+import HowToObtainAIApiKeyModal from "@/components/modals/how-obtain-ai-api-key";
+import { AIModels, AIModelsOptions } from "@/utils/ai-utils";
+import { set } from "zod";
 
 export default function ProfilePage() {
     const supabase = createClient();
@@ -28,11 +32,13 @@ export default function ProfilePage() {
     const [firstName, setFirstName] = useState<string>();
     const [lastName, setLastName] = useState<string>();
     const [username, setUsername] = useState<string>();
-
+    const [aiModel, setAiModel] = useState<{ value: string, label: string }>({ value: '', label: '' });
+    const [aiApiKey, setAiApiKey] = useState<string>('');
     const [isUpdating, setIsUpdating] = useState<boolean>(false);
     const [isReadOnly, setIsReadOnly] = useState<boolean>(true);
     const [isDeletingAccount, setIsDeletingAccount] = useState<boolean>(false);
     const [openDeleteAccount, setOpenDeleteAccount] = useState<boolean>(false);
+    const [openHowToObtainAIModal, setOpenHowToObtainAIModal] = useState<boolean>(false);
 
     const breadcrumbPaths: PathItem[] = [
         { label: 'I miei viaggi', href: appRoutes.home },
@@ -41,9 +47,14 @@ export default function ProfilePage() {
 
     useEffect(() => {
         if (userData) {
+            console.log(userData);
+
             setFirstName(userData.first_name || '');
             setLastName(userData.last_name || '');
             setUsername(userData.username || '');
+            setAiApiKey(userData.ai_api_key || '');
+            setAiModel(AIModelsOptions.find(model => model.value === (userData.ai_model || AIModels.GEMINI_FLASH)) ||
+                { value: AIModels.GEMINI_FLASH, label: 'Gemini Flash' });
         }
     }, [userData]);
 
@@ -51,6 +62,9 @@ export default function ProfilePage() {
         setFirstName(userData?.first_name || '');
         setLastName(userData?.last_name || '');
         setUsername(userData?.username || '');
+        setAiApiKey(userData?.ai_api_key || '');
+        setAiModel(AIModelsOptions.find(model => model.value === (userData?.ai_model || AIModels.GEMINI_FLASH)) ||
+            { value: AIModels.GEMINI_FLASH, label: 'Gemini Flash' });
     }, [userData]);
 
     const handleCancel = () => {
@@ -73,6 +87,9 @@ export default function ProfilePage() {
         const formData = new FormData();
         formData.append('firstName', firstName || '');
         formData.append('lastName', lastName || '');
+        formData.append('aiApiKey', aiApiKey || '');
+        formData.append('aiModel', aiModel.value || AIModels.GEMINI_FLASH);
+
         try {
             const result = await updateProfileAction(formData);
 
@@ -82,8 +99,6 @@ export default function ProfilePage() {
             }
 
             toast.success("Profilo aggiornato con successo!");
-
-            // Aggiorna i dati nel context (se necessario) e torna in modalità lettura
             await refreshUserData();
             setIsReadOnly(true);
 
@@ -98,7 +113,7 @@ export default function ProfilePage() {
     const handleLogout = async () => {
         try {
             await supabase.auth.signOut();
-            window.location.href = appRoutes.login;
+            globalThis.location.href = appRoutes.login;
         } catch (error) {
             console.error("Errore logout:", error);
         }
@@ -140,7 +155,7 @@ export default function ProfilePage() {
         {
             label: 'Logout',
             icon: <FaSignOutAlt />,
-            onClick: handleLogout
+            onClick: () => { handleLogout(); }
         },
         {
             label: 'Elimina Account',
@@ -282,7 +297,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="w-full">
                             <ProgressBar
-                                value={parseFloat(bytesToMb(userData?.total_storage_used_in_bytes ?? 0).toFixed(2))}
+                                value={Number.parseFloat(bytesToMb(userData?.total_storage_used_in_bytes ?? 0).toFixed(2))}
                                 total={activePlan?.storage_limit_bytes ? bytesToMb(activePlan.storage_limit_bytes) : 10}
                                 label="Memoria Disponibile"
                                 showValue={true}
@@ -290,6 +305,57 @@ export default function ProfilePage() {
                             />
                         </div>
                     </FormSection>
+
+                    <FormSection title="Attivazione AI">
+                        <p className="text-gray-400 mb-4">
+                            Vogliamo darti il massimo, ma per ora non riusciamo a coprire i costi dell&apos;IA per tutti. Niente paura, però! Esiste un modo per averla gratis: ti guideremo passo dopo passo nella creazione di un codice personale (chiamato API Key) fornito direttamente da Google.
+                            Una volta ottenuto, potrai inserirlo qui sotto per sbloccare tutte le funzionalità AI senza costi aggiuntivi!
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-6 items-end">
+
+                            <Input
+                                id="aiActivated"
+                                label="API key"
+                                type="text"
+                                value={isReadOnly ? '*****************' : aiApiKey}
+                                readOnly={isReadOnly}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setAiApiKey(e.target.value)}
+                            />
+
+                            <Dropdown<{ value: string, label: string }>
+                                label="Modello AI"
+                                optionLabel="label"
+                                optionValue="value"
+                                selected={aiModel}
+                                readOnly={isReadOnly}
+                                items={AIModelsOptions}
+                                onSelect={(item: { value: string, label: string } | null) => {
+                                    if (item) { setAiModel(item); }
+                                }}
+                            />
+
+                        </div>
+                        <div className="flex justify-end">
+
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className=" w-60 h-10"
+                                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                                    setOpenHowToObtainAIModal(true);
+                                    e.preventDefault();
+                                }}
+                            >
+                                <FaKey className="mr-2" />
+                                Come Ottenere l&apos;API Key
+                            </Button>
+                        </div>
+                    </FormSection>
+
+                    <HowToObtainAIApiKeyModal
+                        isOpen={openHowToObtainAIModal}
+                        setIsOpen={setOpenHowToObtainAIModal}
+                    />
 
                     <FormSection title="Azioni Account">
                         <p className="text-sm text-gray-400">
@@ -344,6 +410,6 @@ export default function ProfilePage() {
                     )}
                 </form>
             </main>
-        </div>
+        </div >
     );
 }

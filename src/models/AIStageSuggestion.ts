@@ -1,4 +1,3 @@
-import { EntityKeys } from "@/utils/entityKeys";
 
 
 export interface AISearchRequest {
@@ -9,7 +8,7 @@ export interface AISearchRequest {
     transport_id?: string | null;
     search_params: [{ [key: string]: any }];
     created_at: string;
-    ai_suggestions?: AIStageSuggestion[];
+    ai_suggestions: AIStageSuggestion[];
 }
 
 export interface AIStageSuggestion {
@@ -25,6 +24,7 @@ export interface AIStageSuggestion {
 }
 
 export interface ReferenceEntity {
+    name?: string;
     id: string;
     type: string;
     destination: string;

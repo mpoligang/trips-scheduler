@@ -1,74 +1,39 @@
--- 1. TABELLA GENITORE: La richiesta di ricerca
-create table public.ai_search_requests (
-  id uuid not null default gen_random_uuid (),
-  created_at timestamp with time zone not null default now(),
-  
-  -- Contesto del Viaggio
-  trip_id uuid not null references trips(id) on delete cascade,
-  
-  -- POLIMORFISMO: Da dove è partita la ricerca? (Sposti qui il vincolo)
-  stage_id uuid references stages(id) on delete cascade,
-  accommodation_id uuid references accommodations(id) on delete cascade,
-  transport_id uuid references transports(id) on delete cascade,
-  
-  -- Metadati della ricerca (Cosa ha chiesto l'utente?)
-  search_params jsonb, -- es: { "radius": "1km", "interests": ["vegan", "museums"] }
-  
-  constraint ai_requests_pkey primary key (id),
-  
-  -- Check Constraint: La ricerca deve partire da UNA sola entità
-  constraint ai_requests_anchor_check check (
-    (
-      (
-        (
-          ((stage_id is not null))::integer + ((accommodation_id is not null))::integer
-        ) + ((transport_id is not null))::integer
-      ) = 1
-    )
-  )
-);
+-- Nota: In PostgreSQL, se cambi le colonne restituite, 
+-- è necessario eliminare e ricreare la funzione per evitare conflitti di firma.
+DROP FUNCTION IF EXISTS get_my_private_profile();
 
--- 2. TABELLA FIGLIA: I risultati suggeriti
-create table public.ai_suggestions (
-  id uuid not null default gen_random_uuid (),
-  
-  -- Collegamento alla Richiesta Genitore
-  request_id uuid not null references ai_search_requests(id) on delete cascade,
-  
-  -- Denormalizzazione utile per RLS veloce (opzionale ma consigliata)
-  trip_id uuid not null references trips(id) on delete cascade,
-  
-  -- Dati del Luogo
-  name text not null,
-  address text,
-  lat double precision not null,
-  lng double precision not null,
-  notes text, -- HTML
-  
-  -- Metadati specifici del risultato
-  category_tags text[],
-  
-  created_at timestamp with time zone null default now(),
-  constraint ai_suggestions_pkey primary key (id)
-);
-
--- INDICI
-create index idx_ai_requests_trip_id on public.ai_search_requests(trip_id);
-create index idx_ai_requests_stage_id on public.ai_search_requests(stage_id);
-create index idx_ai_suggestions_request_id on public.ai_suggestions(request_id);
-
--- Abilita RLS
-ALTER TABLE public.ai_search_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.ai_suggestions ENABLE ROW LEVEL SECURITY;
-
--- Policy per le RICHIESTE (Genitore)
-CREATE POLICY "Participants can manage requests"
-ON public.ai_search_requests
-USING (public.check_is_trip_participant(trip_id))
-WITH CHECK (public.check_is_trip_participant(trip_id));
-
--- Policy per i SUGGERIMENTI (Figli)
-CREATE POLICY "Participants can manage suggestions"
-ON public.ai_suggestions
-USING (public.check_is_trip_participant(trip_id))
-WITH CHECK (public.check_is_trip_participant(trip_id));
+CREATE OR REPLACE FUNCTION get_my_private_profile()
+RETURNS TABLE (
+  id uuid,
+  first_name text,
+  last_name text,
+  username text,
+  email text,
+  plan text,
+  expiration_plan_date timestamp with time zone,
+  total_trips_created integer,
+  total_storage_used_in_bytes bigint,
+  ai_api_key text, -- Nuovo campo aggiunto
+  ai_model text    -- Nuovo campo aggiunto
+) 
+LANGUAGE plpgsql
+SECURITY DEFINER -- Esegue con i permessi del creatore per accedere ai dati sensibili
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    p.id,
+    p.first_name,
+    p.last_name,
+    p.username,
+    p.email, 
+    p.plan, 
+    p.expiration_plan_date,
+    p.total_trips_created,
+    p.total_storage_used_in_bytes,
+    p.ai_api_key, -- Recupera la chiave API
+    p.ai_model    -- Recupera il modello preferito
+  FROM public.profiles p
+  WHERE p.id = auth.uid(); -- Filtra rigorosamente: restituisce solo i dati dell'utente loggato
+END;
+$$;

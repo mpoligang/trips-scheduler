@@ -1,5 +1,5 @@
 import { PathItem } from "@/models/PathItem";
-import TripLayout from "./trip-container"
+import GenericLayout from "./generic-container"
 import { useTrip } from "@/context/tripContext";
 import { BiDetail } from "react-icons/bi";
 import { ImAttachment } from "react-icons/im";
@@ -12,7 +12,6 @@ interface SecondLevelTripTemplateProps {
     readonly detailId?: string;
     readonly sectionPath?: string;
     readonly children: React.ReactNode;
-    readonly withAttachments?: boolean;
     readonly backToItem?: Partial<PathItem>;
 }
 
@@ -24,13 +23,16 @@ const SecondLevelTripTemplate = ({ breadcrumb, children, detailId, sectionPath, 
     const menuItems: PathItem[] = [
         { label: 'Dettaglio', icon: BiDetail, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/details` },
         { label: 'Allegati', icon: ImAttachment, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/attachments` },
-        { label: 'Informazioni AI', icon: PiBrain, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/ai` },
     ];
 
+    if (detailId !== 'new') {
+        menuItems.push({ label: 'Informazioni AI', icon: PiBrain, href: `/dashboard/trips/${trip?.id}/${sectionPath || ''}/${detailId || ''}/ai/new` });
+    }
+
     return (
-        <TripLayout menuItems={menuItems} breadcrumb={breadcrumb} backToItem={backToItem}>
+        <GenericLayout menuItems={menuItems} breadcrumb={breadcrumb} backToItem={backToItem}>
             {children}
-        </TripLayout>
+        </GenericLayout>
     );
 };
 

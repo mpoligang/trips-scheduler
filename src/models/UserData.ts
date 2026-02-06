@@ -9,6 +9,9 @@ export interface UserData {
     expiration_plan_date: string | null;
     total_storage_used_in_bytes: number | null;
     total_trips_created: number | null;
+    ai_api_key: string | null;
+    ai_model: string | null;
+    created_at: string;
     updated_at: string | null;
 }
 

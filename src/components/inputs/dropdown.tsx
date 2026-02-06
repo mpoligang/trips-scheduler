@@ -48,7 +48,7 @@ export default function Dropdown<T extends Record<string, any>>({
 
     // Altrimenti, mostra il dropdown normale
     return (
-        <Listbox as="div" value={selected} onChange={onSelect} className={twMerge("w-full relative", className)}>
+        <Listbox as="div" value={selected} onChange={onSelect} className={twMerge("w-full relative min-h-[40px]", className)}>
             {({ open }) => (
                 <>
                     <label className="block text-sm font-medium text-gray-300 mb-2">

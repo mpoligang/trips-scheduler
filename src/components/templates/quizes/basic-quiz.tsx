@@ -12,6 +12,8 @@ import { ReferenceEntity } from "@/models/AIStageSuggestion";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { appRoutes } from "@/utils/appRoutes";
+import { useAuth } from "@/context/authProvider";
+import DialogComponent from "@/components/modals/confirm-modal";
 
 interface AISuggestionsQuizProps {
     address: string;
@@ -29,12 +31,13 @@ interface KeyLabelPair {
     items?: KeyLabelPair[];
 }
 
-export default function AISuggestionsQuiz(props: AISuggestionsQuizProps) {
+export default function AISuggestionsQuiz(props: Readonly<AISuggestionsQuizProps>) {
     const router = useRouter();
+    const { userData } = useAuth();
     const [distance, setDistance] = useState<string>("1km");
     const [stageCount, setStageCount] = useState<string>("1-5");
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
+    const [errorDialogOpen, setErrorDialogOpen] = useState<boolean>(false);
     const [selectedCategories, setSelectedCategories] = useState<KeyLabelPair[]>([]);
     const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
@@ -80,13 +83,20 @@ export default function AISuggestionsQuiz(props: AISuggestionsQuizProps) {
                 type: props.type,
             };
 
-            const result = await generateAndSaveAIStages(requestData, reference, props.tripId);
+            const result = await generateAndSaveAIStages(
+                userData?.ai_api_key as string,
+                requestData,
+                reference,
+                props.tripId
+            );
 
-            console.log("Itinerario generato:", result.data);
+            console.log("Itinerario generato:", result.success);
 
             if (result.success) {
                 toast.success("Itinerario generato con successo!");
                 router.replace(`${appRoutes.home}/trips/${props.tripId}/${props.type}/${props.id}/ai/${result.request_id}`);
+            } else {
+                toast.error(result.error || "C'è stato un problema nel generare l'itinerario. Riprova.");
             }
         } catch (error) {
             console.error("Errore durante la generazione:", error);
@@ -156,8 +166,8 @@ export default function AISuggestionsQuiz(props: AISuggestionsQuizProps) {
     return (
         <>
             <PageTitle
-                title="Genera informazioni AI"
-                subtitle="Personalizza la tua esperienza: l'intelligenza artificiale ti darà dei suggerimenti su misura per te."
+                title="Completa il quiz"
+                subtitle={`L'intelligenza artificiale ti suggerirà tappe e attività da fare nei dintorni di ${props?.address}, in base alle tue preferenze!`}
             />
 
             <form onSubmit={handleSubmit} className="space-y-8 pb-24">
@@ -248,6 +258,18 @@ export default function AISuggestionsQuiz(props: AISuggestionsQuizProps) {
 
                     </div>
                 </FormSection>
+
+                <DialogComponent
+                    isOpen={errorDialogOpen}
+                    onClose={() => setErrorDialogOpen(false)}
+                    title="Conferma"
+                    isLoading={false}
+                    showCancelButton={false}
+                    confirmText="Chiudi"
+                    onConfirm={() => setErrorDialogOpen(false)}
+                >
+                    <p>Si è verificato un errore durante la generazione dell&apos;itinerario. Riprova.</p>
+                </DialogComponent>
 
                 <ActionStickyBar
                     handleCancel={() => { }}

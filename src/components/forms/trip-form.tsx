@@ -13,7 +13,7 @@ import DateRangePicker from '@/components/inputs/date-range-picker';
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
 import PageTitle from '@/components/generics/page-title';
-import Loader from '@/components/generics/loader';
+import Loader from '@/components/loading/loader';
 import UserSearch from '@/components/inputs/user-search';
 import EmptyData from '@/components/cards/empty-data';
 import ActionStickyBar from '../actions/action-sticky-bar';

@@ -13,34 +13,33 @@ export default function AIInfoPage() {
     const id = params.id as string;
     const ai_id = params.ai_id as string;
     const isNew = ai_id === 'new';
-    const reference = trip?.stages?.find((stage) => stage.id === id);
+    const reference = trip?.transports?.find((data) => data.id === id);
     const search_results = trip?.ai_search_requests?.find((req) => req.id === ai_id) as AISearchRequest;
     const referencePoint: ReferenceEntity = {
         id: reference?.id as string,
-        address: reference?.address as string,
-        lat: reference?.lat as number,
-        lng: reference?.lng as number,
+        address: reference?.dep_address as string,
+        lat: reference?.dep_lat as number,
+        lng: reference?.dep_lng as number,
         destination: reference?.destination as string,
-        type: EntityKeys.stagesKey,
-        name: reference?.name as string
+        type: EntityKeys.transportsKey,
+        name: reference?.title as string
     }
 
     return (
-        <AIContainerTemplate detailId={id} sectionPath={EntityKeys.stagesKey}>
-            {
-                isNew ? (
-                    <AISuggestionsQuiz
-                        address={reference?.address as string}
-                        lat={reference?.lat as number}
-                        lng={reference?.lng as number}
-                        tripId={trip?.id as string}
-                        id={reference?.id as string}
-                        destination={reference?.destination as string}
-                        type={EntityKeys.stagesKey}
-                    />
-                ) : (
-                    <AISuggestionsDetails search_results={search_results} reference={referencePoint} />
-                )
+        <AIContainerTemplate detailId={id} sectionPath={EntityKeys.transportsKey}>
+            {isNew ? (
+                <AISuggestionsQuiz
+                    address={reference?.dep_address as string}
+                    lat={reference?.dep_lat as number}
+                    lng={reference?.dep_lng as number}
+                    tripId={trip?.id as string}
+                    id={reference?.id as string}
+                    destination={reference?.destination as string}
+                    type={EntityKeys.transportsKey}
+                />
+            ) : (
+                <AISuggestionsDetails search_results={search_results} reference={referencePoint} />
+            )
             }
 
         </AIContainerTemplate>

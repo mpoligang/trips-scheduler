@@ -23,7 +23,7 @@ export const appRoutes = {
     accommodations: (tripId: string) => `${tripDetails(tripId)}/accommodations`,
     transports: (tripId: string) => `${tripDetails(tripId)}/transports`,
     expenses: (tripId: string) => `${tripDetails(tripId)}/expenses`,
-
+    aiInfo: (tripId: string, reference_name: string, reference_id: string, ai_id: string) => `${tripDetails(tripId)}/${reference_name}/${reference_id}/ai/${ai_id}`,
     stages: (tripId: string) => `${tripDetails(tripId)}/stages`,
     settings: (tripId: string) => `${tripDetails(tripId)}/settings`,
     members: (tripId: string) => `${tripDetails(tripId)}/members`,

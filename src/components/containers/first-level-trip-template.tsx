@@ -1,5 +1,5 @@
 import { PathItem } from "@/models/PathItem";
-import TripLayout from "./trip-container"
+import GenericLayout from "./generic-container"
 import { useTrip } from "@/context/tripContext";
 import { RiHotelLine } from "react-icons/ri";
 import { BiTrip } from "react-icons/bi";
@@ -52,10 +52,10 @@ const FirstLevelTripTemplate = ({ breadcrumb, children }: FirstLevelTripTemplate
 
 
     return (
-        <TripLayout menuItems={menuItems} breadcrumb={breadcrumb}
+        <GenericLayout menuItems={menuItems} breadcrumb={breadcrumb}
             backToItem={{ label: 'Torna alla Dashboard', href: appRoutes.home }}>
             {children}
-        </TripLayout>
+        </GenericLayout>
     );
 };
 

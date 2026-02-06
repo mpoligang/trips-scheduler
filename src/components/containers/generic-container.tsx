@@ -6,14 +6,14 @@ import { appRoutes } from "@/utils/appRoutes";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 import { FaExclamationTriangle, FaChevronRight, FaChevronLeft, FaTimes, FaBars, FaArrowLeft } from "react-icons/fa";
-import Loader from "../generics/loader";
+import Loader from "../loading/loader";
 import Logo from "../generics/logo";
 import Navbar from "../navigations/navbar";
 import SidebarItem from "../navigations/sidebar-item";
 import DialogComponent from "../modals/confirm-modal";
 import useWindowSize from "@/utils/windowSize";
 
-interface TripLayoutProps {
+interface GenericLayoutProps {
     readonly children: ReactNode;
     readonly backPath?: string;
     readonly breadcrumb: PathItem[];
@@ -22,12 +22,12 @@ interface TripLayoutProps {
 
 }
 
-export default function TripLayout({ children, backPath, breadcrumb, menuItems, backToItem, }: TripLayoutProps) {
+export default function GenericLayout({ children, backPath, breadcrumb, menuItems, backToItem, }: GenericLayoutProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     return (
-        <TripLayoutContent
+        <GenericLayoutContent
             isCollapsed={isCollapsed}
             setIsCollapsed={setIsCollapsed}
             isMobileOpen={isMobileOpen}
@@ -38,11 +38,11 @@ export default function TripLayout({ children, backPath, breadcrumb, menuItems, 
             backToItem={backToItem}
         >
             {children}
-        </TripLayoutContent>
+        </GenericLayoutContent>
     );
 }
 
-interface TripLayoutContentProps {
+interface GenericLayoutContentProps {
     readonly children: ReactNode;
     readonly isCollapsed: boolean;
     readonly setIsCollapsed: (collapsed: boolean) => void;
@@ -54,7 +54,7 @@ interface TripLayoutContentProps {
     readonly backToItem?: Partial<PathItem>;
 }
 
-function TripLayoutContent({
+function GenericLayoutContent({
     children,
     isCollapsed,
     setIsCollapsed,
@@ -64,7 +64,7 @@ function TripLayoutContent({
     breadcrumb,
     menuItems = [],
     backToItem
-}: TripLayoutContentProps) {
+}: GenericLayoutContentProps) {
     const { trip, loading, error } = useTrip();
     const router = useRouter();
     const pathname = usePathname();
@@ -139,11 +139,11 @@ function TripLayoutContent({
 
                 {/* Navigation Links */}
                 <nav className="flex-2 px-4 py-8 space-y-3 overflow-y-auto no-scrollbar text-left">
-                    {menuItems.map((item) => (
+                    {menuItems.map((item, index) => (
 
 
                         <SidebarItem
-                            key={item.label}
+                            key={item.label + '_' + index}
                             icon={item.icon ?? FaExclamationTriangle}
                             label={item.label}
                             active={pathname === item.href || pathname.includes(item.href)}

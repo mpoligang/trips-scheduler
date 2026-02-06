@@ -10,4 +10,5 @@ export enum EntityKeys {
     attachmentsKey = 'attachments',
     expensesKey = 'expenses',
     expenseSplitsKey = 'expense_splits',
+    recommendedKey = 'recommended'
 };

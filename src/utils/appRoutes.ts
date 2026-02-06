@@ -32,5 +32,4 @@ export const appRoutes = {
     transportDetails: (tripId: string, transportId: string = 'new') => `${tripDetails(tripId)}/transports/${transportId}/details`,
 };
 
-export const mapNavigationUrl = (address: string) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
 

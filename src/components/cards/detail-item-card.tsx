@@ -4,16 +4,17 @@ import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaTrash, FaDirections } from "react-icons/fa";
 import ContextMenu, { ContextMenuItem } from '../actions/context-menu';
+import { openDirectionLink } from '@/utils/open-link.utils';
 
 interface DetailItemCardProps {
-    icon: ReactNode;
-    title: string;
-    subtitle?: string;
-    directionsUrl: string;
-    detailClick: string | (() => void);
-    isOwner?: boolean;
-    onDelete?: () => void;
-    additionalItems?: ContextMenuItem[];
+    readonly detailClick: string | (() => void);
+    readonly icon: ReactNode;
+    readonly title: string;
+    readonly subtitle?: string;
+    readonly address: string;
+    readonly isOwner?: boolean;
+    readonly onDelete: () => void;
+    readonly additionalItems?: ContextMenuItem[];
 }
 
 /**
@@ -23,8 +24,8 @@ interface DetailItemCardProps {
 export default function DetailItemCard({
     icon,
     title,
-    directionsUrl,
     detailClick,
+    address,
     isOwner,
     onDelete,
     subtitle,
@@ -45,7 +46,7 @@ export default function DetailItemCard({
         {
             label: 'Indicazioni',
             icon: <FaDirections />,
-            onClick: () => window.open(directionsUrl, '_blank'),
+            onClick: () => openDirectionLink(address),
         },
 
     ];

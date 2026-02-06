@@ -23,11 +23,11 @@ import Button from "../actions/button";
 import { Location } from "@/models/Location";
 import { TransportDetails, StopoverV2, StopoverInstanceV2, TransportType } from "@/models/Transport";
 import { generateDateOptions, selectDateOption } from "@/utils/dateTripUtils";
-import { appRoutes, mapNavigationUrl } from "@/utils/appRoutes";
+import { appRoutes } from "@/utils/appRoutes";
 import { hasRealContent } from '@/utils/fileSizeUtils';
 import { AttachmentList } from '../cards/attachment-manager';
 import { upsertTransportAction } from '@/actions/transport-actions';
-import { id } from 'date-fns/locale';
+import { openDirectionLink } from '@/utils/open-link.utils';
 
 export default function TransportForm() {
     const { trip, transports, isOwner, refreshData } = useTrip();
@@ -63,12 +63,8 @@ export default function TransportForm() {
     const [rentalCompany, setRentalCompany] = useState('');
     const [carModel, setCarModel] = useState('');
     const [pickupLocation, setPickupLocation] = useState<Location | null>(null);
-    const [pickupDate, setPickupDate] = useState<Date | undefined>();
-    const [pickupTime, setPickupTime] = useState('');
     const [hasDifferentDropOff, setHasDifferentDropOff] = useState(false);
     const [dropOffLocation, setDropOffLocation] = useState<Location | null>(null);
-    const [dropOffDate, setDropOffDate] = useState<Date | undefined>();
-    const [dropOffTime, setDropOffTime] = useState('');
     const [dropOffNotes, setDropOffNotes] = useState('');
     const [stopovers, setStopovers] = useState<StopoverV2[]>([]);
     const [additionalContents, setAdditionalContents] = useState('');
@@ -91,7 +87,7 @@ export default function TransportForm() {
     const splitISO = (iso: string | null | undefined) => {
         if (!iso) return { d: undefined, t: '' };
         const dateObj = new Date(iso);
-        if (isNaN(dateObj.getTime())) return { d: undefined, t: '' };
+        if (Number.isNaN(dateObj.getTime())) return { d: undefined, t: '' };
         return {
             d: dateObj,
             t: iso.includes('T') || iso.includes(' ')
@@ -106,8 +102,8 @@ export default function TransportForm() {
 
         if (type.id === TransportType.CarRental) {
             if (!pickupLocation) { toast.error("Il luogo di ritiro è obbligatorio."); return false; }
-            if (!pickupDate) { toast.error("La data di ritiro è obbligatoria."); return false; }
-            if (!pickupTime) { toast.error("L'ora di ritiro è obbligatoria."); return false; }
+            if (!depDate) { toast.error("La data di ritiro è obbligatoria."); return false; }
+            if (!depTime) { toast.error("L'ora di ritiro è obbligatoria."); return false; }
             if (!rentalCompany.trim()) { toast.error("L'agenzia di noleggio è obbligatoria."); return false; }
             if (hasDifferentDropOff && !dropOffLocation) { toast.error("Il luogo di riconsegna è obbligatorio."); return false; }
         } else if (type.id === TransportType.PrivateTransfer) {
@@ -149,27 +145,24 @@ export default function TransportForm() {
             const arr = splitISO(transport.arr_date);
             setArrivalDate(arr.d); setArrivalTime(arr.t);
 
-            const d = transport.details as TransportDetails;
-            if (d) {
-                setCarrier(d.carrier || '');
-                setReferenceNumber(d.reference_number || '');
-                setGateOrPlatform(d.gate_or_platform || '');
-                setBookingReference(d.booking_reference || '');
-                setTripDuration(d.trip_duration || '');
-                setDriverName(d.driver_name || '');
-                setDriverPhoneNumber(d.driver_phone_number || '');
-                setVehicleDescription(d.vehicle_description || '');
-                setRentalCompany(d.rental_company || '');
-                setCarModel(d.car_model || '');
-                setStopovers(d.stopovers || []);
-                const pickup = splitISO(d.pickup_date);
-                setPickupDate(pickup.d); setPickupTime(pickup.t);
-                setPickupLocation(d.pickup_location || null);
-                setHasDifferentDropOff(d.has_different_drop_off || false);
-                const drop = splitISO(d.drop_off_date);
-                setDropOffDate(drop.d); setDropOffTime(drop.t);
-                setDropOffLocation(d.drop_off_location || null);
-                setDropOffNotes(d.drop_off_notes || '');
+            const details = transport.details;
+            if (details) {
+                setCarrier(details.carrier || '');
+                setReferenceNumber(details.reference_number || '');
+                setGateOrPlatform(details.gate_or_platform || '');
+                setBookingReference(details.booking_reference || '');
+                setTripDuration(details.trip_duration || '');
+                setDriverName(details.driver_name || '');
+                setDriverPhoneNumber(details.driver_phone_number || '');
+                setVehicleDescription(details.vehicle_description || '');
+                setRentalCompany(details.rental_company || '');
+                setCarModel(details.car_model || '');
+                setStopovers(details.stopovers || []);
+                setPickupLocation(details.pickup_location || null);
+                setHasDifferentDropOff(details.has_different_drop_off || false);
+                const drop = splitISO(details.drop_off_date);
+                setDropOffLocation(details.drop_off_location || null);
+                setDropOffNotes(details.drop_off_notes || '');
             }
         }
     }, [transports, transportId]);
@@ -200,10 +193,8 @@ export default function TransportForm() {
                 rental_company: rentalCompany,
                 car_model: carModel,
                 pickup_location: pickupLocation,
-                pickup_date: combineToISO(pickupDate, pickupTime) || undefined,
                 has_different_drop_off: hasDifferentDropOff,
                 drop_off_location: dropOffLocation,
-                drop_off_date: combineToISO(dropOffDate, dropOffTime) || undefined,
                 drop_off_notes: dropOffNotes,
             };
         } else if (type?.id === TransportType.PrivateTransfer) {
@@ -218,7 +209,7 @@ export default function TransportForm() {
             id: isNew ? 'new' : transportId as string,
             trip_id: tripId,
             title,
-            type: type?.id || TransportType.Other,
+            type: type?.id || TransportType.Flight,
             notes: additionalContents,
             destination,
             dep_date: combineToISO(depDate, depTime),
@@ -235,10 +226,13 @@ export default function TransportForm() {
 
             toast.success("Trasporto salvato!", { id: toastId });
             await refreshData(true);
-            if (isNew) router.push(appRoutes.transports(tripId));
-            else setIsReadOnly(true);
-        } catch (err: any) {
-            toast.error(err.message || "Impossibile salvare", { id: toastId });
+            if (isNew) {
+                router.push(appRoutes.transports(tripId));
+            } else {
+                setIsReadOnly(true);
+            }
+        } catch (err: unknown) {
+            toast.error((err as Error).message || "Impossibile salvare", { id: toastId });
         } finally {
             setIsSubmitting(false);
         }
@@ -258,7 +252,11 @@ export default function TransportForm() {
         {
             label: 'Indicazioni Partenza',
             icon: <FaMap />,
-            onClick: () => { if (depLocation?.address) window.open(mapNavigationUrl(depLocation.address), '_blank'); }
+            onClick: () => {
+                if (depLocation?.address) {
+                    openDirectionLink(depLocation.address);
+                }
+            }
         }
     ];
 
@@ -269,6 +267,17 @@ export default function TransportForm() {
             onClick: () => isReadOnly ? setIsReadOnly(false) : handleCancel()
         });
     }
+
+    const referenceNumberLabel = useMemo(() => {
+        switch (type?.id) {
+            case TransportType.Flight: return "Numero Volo";
+            case TransportType.Train: return "Numero Treno";
+            case TransportType.Bus:
+            case TransportType.Shuttle: return "Numero Bus/Shuttle";
+            case TransportType.Ferry: return "Numero Traghetto";
+            default: return "Numero Mezzo";
+        }
+    }, [type?.id]);
 
     // --- JSX (INVARIATO, rimosso solo l'errore statico) ---
     return (
@@ -292,7 +301,7 @@ export default function TransportForm() {
                             required
                         />
                         <Dropdown
-                            label="Tipo di Mezzo"
+                            label="Categoria"
                             items={transportOptions}
                             selected={type}
                             onSelect={setType}
@@ -304,31 +313,108 @@ export default function TransportForm() {
                     </div>
                 </FormSection>
 
+
+
                 {isPublicTransportType && (
                     <>
                         <FormSection title="Dettagli Biglietto e Viaggio">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <Input id="tr-carrier" label="Compagnia" value={carrier} onChange={(e) => setCarrier(e.target.value)} readOnly={isReadOnly} />
-                                <Input id="tr-ref" label="Numero Mezzo" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} readOnly={isReadOnly} />
+                                <Input
+                                    id="tr-carrier"
+                                    label="Compagnia"
+                                    value={carrier}
+                                    onChange={(e) => setCarrier(e.target.value)}
+                                    readOnly={isReadOnly}
+                                />
+                                <Input
+                                    id="tr-ref"
+                                    label={referenceNumberLabel}
+                                    value={referenceNumber}
+                                    onChange={(e) => setReferenceNumber(e.target.value)}
+                                    readOnly={isReadOnly}
+                                />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <Input id="tr-booking" label="Codice Prenotazione" value={bookingReference} onChange={(e) => setBookingReference(e.target.value)} readOnly={isReadOnly} />
-                                <Input id="tr-gate" label="Gate/Binario/Molo/Piattaforma" value={gateOrPlatform} onChange={(e) => setGateOrPlatform(e.target.value)} readOnly={isReadOnly} />
+                                <Input
+                                    id="tr-booking"
+                                    label="Codice Prenotazione"
+                                    value={bookingReference}
+                                    onChange={(e) => setBookingReference(e.target.value)}
+                                    readOnly={isReadOnly}
+                                />
+                                <Input
+                                    id="tr-gate"
+                                    label="Gate/Binario/Molo/Piattaforma"
+                                    value={gateOrPlatform}
+                                    onChange={(e) => setGateOrPlatform(e.target.value)}
+                                    readOnly={isReadOnly}
+                                />
                             </div>
                             <div className="space-y-6">
-                                <SearchLocation id="tr-loc-dep" label="Luogo di Partenza" value={depLocation} onSelect={setDepLocation} readOnly={isReadOnly} required={!isReadOnly} />
+                                <SearchLocation
+                                    id="tr-loc-dep"
+                                    label="Luogo di Partenza"
+                                    value={depLocation}
+                                    onSelect={setDepLocation}
+                                    readOnly={isReadOnly}
+                                    required={!isReadOnly}
+                                />
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <Dropdown label="Data Partenza" items={dateOptions} selected={depDate ? selectDateOption(depDate, dateOptions) : null} onSelect={(val) => setDepDate(val?.date)} readOnly={isReadOnly} required optionValue="id" optionLabel="name" />
-                                    <TimeInput id="tr-time-dep" label="Ora Partenza" value={depTime} onChange={setDepTime} readOnly={isReadOnly} required />
+                                    <Dropdown
+                                        label="Data Partenza"
+                                        items={dateOptions}
+                                        selected={depDate ? selectDateOption(depDate, dateOptions) : null}
+                                        onSelect={(val) => setDepDate(val?.date)}
+                                        readOnly={isReadOnly}
+                                        required
+                                        optionValue="id"
+                                        optionLabel="name"
+                                    />
+                                    <TimeInput
+                                        id="tr-time-dep"
+                                        label="Ora Partenza"
+                                        value={depTime}
+                                        onChange={setDepTime}
+                                        readOnly={isReadOnly}
+                                        required />
                                 </div>
-                                <Input id="tr-destination" label="Destinazione" value={destination} onChange={(e) => setDestination(e.target.value)} readOnly={isReadOnly} placeholder="Città o Stazione d'arrivo" />
+                                <Input
+                                    id="tr-destination"
+                                    label="Destinazione"
+                                    value={destination}
+                                    onChange={(e) => setDestination(e.target.value)}
+                                    readOnly={isReadOnly}
+                                    placeholder="Città o Stazione d'arrivo"
+                                />
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <Dropdown label="Data Arrivo" items={dateOptions} selected={arrivalDate ? selectDateOption(arrivalDate, dateOptions) : null} onSelect={(val) => setArrivalDate(val?.date)} readOnly={isReadOnly} required optionValue="id" optionLabel="name" />
-                                    <TimeInput id="tr-time-arr" label="Ora Arrivo" value={arrivalTime} onChange={setArrivalTime} readOnly={isReadOnly} required />
+                                    <Dropdown
+                                        label="Data Arrivo"
+                                        items={dateOptions}
+                                        selected={arrivalDate ? selectDateOption(arrivalDate, dateOptions) : null}
+                                        onSelect={(val) => setArrivalDate(val?.date)}
+                                        readOnly={isReadOnly}
+                                        required
+                                        optionValue="id"
+                                        optionLabel="name"
+                                    />
+                                    <TimeInput
+                                        id="tr-time-arr"
+                                        label="Ora Arrivo"
+                                        value={arrivalTime}
+                                        onChange={setArrivalTime}
+                                        readOnly={isReadOnly}
+                                        required
+                                    />
                                 </div>
                             </div>
                             <div className="mt-6 md:w-1/2">
-                                <DurationInput id="tr-duration" label="Durata Complessiva" value={tripDuration} onChange={setTripDuration} readOnly={isReadOnly} />
+                                <DurationInput
+                                    id="tr-duration"
+                                    label="Durata Complessiva"
+                                    value={tripDuration}
+                                    onChange={setTripDuration}
+                                    readOnly={isReadOnly}
+                                />
                             </div>
                         </FormSection>
 
@@ -341,12 +427,48 @@ export default function TransportForm() {
                                 )}
                                 {stopovers.map((stopover, index) => (
                                     <div key={stopover.id || index} className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 ${index < stopovers.length - 1 ? 'border-b' : ''} border-gray-700 pb-6 relative`}>
-                                        <Input id={`stopover-${stopover.id}-place`} label="Luogo di Scalo" value={stopover.stopover_place} onChange={(e) => updateStopover(stopover.id, { stopover_place: e.target.value })} readOnly={isReadOnly} />
-                                        <TimeInput id={`stopover-${stopover.id}-arrival`} label="Ora Arrivo" value={stopover.arrival_time} onChange={(e) => updateStopover(stopover.id, { arrival_time: e })} readOnly={isReadOnly} />
-                                        <TimeInput id={`stopover-${stopover.id}-departure`} label="Ora Partenza" value={stopover.departure_time} onChange={(e) => updateStopover(stopover.id, { departure_time: e })} readOnly={isReadOnly} />
-                                        <DurationInput id={`stopover-${stopover.id}-duration`} label="Durata Scalo" value={stopover.duration} onChange={(e) => updateStopover(stopover.id, { duration: e })} readOnly={isReadOnly} />
-                                        <Input id={`stopover-${stopover.id}-transport`} label="Mezzo Ripartenza" value={stopover.transport_number || ''} onChange={(e) => updateStopover(stopover.id, { transport_number: e.target.value })} readOnly={isReadOnly} />
-                                        <Input id={`stopover-${stopover.id}-gate`} label="Gate Ripartenza" value={stopover.gate_or_platform || ''} onChange={(e) => updateStopover(stopover.id, { gate_or_platform: e.target.value })} readOnly={isReadOnly} />
+                                        <Input
+                                            id={`stopover-${stopover.id}-place`}
+                                            label="Luogo di Scalo"
+                                            value={stopover.stopover_place}
+                                            onChange={(e) => updateStopover(stopover.id, { stopover_place: e.target.value })}
+                                            readOnly={isReadOnly}
+                                        />
+                                        <TimeInput
+                                            id={`stopover-${stopover.id}-arrival`}
+                                            label="Ora Arrivo"
+                                            value={stopover.arrival_time}
+                                            onChange={(e) => updateStopover(stopover.id, { arrival_time: e })}
+                                            readOnly={isReadOnly}
+                                        />
+                                        <TimeInput
+                                            id={`stopover-${stopover.id}-departure`}
+                                            label="Ora Partenza"
+                                            value={stopover.departure_time}
+                                            onChange={(e) => updateStopover(stopover.id, { departure_time: e })}
+                                            readOnly={isReadOnly}
+                                        />
+                                        <DurationInput
+                                            id={`stopover-${stopover.id}-duration`}
+                                            label="Durata Scalo"
+                                            value={stopover.duration}
+                                            onChange={(e) => updateStopover(stopover.id, { duration: e })}
+                                            readOnly={isReadOnly}
+                                        />
+                                        <Input
+                                            id={`stopover-${stopover.id}-transport`}
+                                            label="Mezzo Ripartenza"
+                                            value={stopover.transport_number || ''}
+                                            onChange={(e) => updateStopover(stopover.id, { transport_number: e.target.value })}
+                                            readOnly={isReadOnly}
+                                        />
+                                        <Input
+                                            id={`stopover-${stopover.id}-gate`}
+                                            label="Gate Ripartenza"
+                                            value={stopover.gate_or_platform || ''}
+                                            onChange={(e) => updateStopover(stopover.id, { gate_or_platform: e.target.value })}
+                                            readOnly={isReadOnly}
+                                        />
                                         {!isReadOnly && (
                                             <div className="md:col-span-3 flex justify-end">
                                                 <Button size="sm" variant="secondary" onClick={(e) => handleRemoveStopover(e, stopover.id)}>
@@ -364,48 +486,157 @@ export default function TransportForm() {
                 {type?.id === TransportType.CarRental && (
                     <FormSection title="Dettagli Noleggio Auto">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <Input id="rn-company" label="Compagnia" value={rentalCompany} onChange={(e) => setRentalCompany(e.target.value)} readOnly={isReadOnly} required />
-                            <Input id="rn-model" label="Modello Auto" value={carModel} onChange={(e) => setCarModel(e.target.value)} readOnly={isReadOnly} />
+                            <Input
+                                id="rn-company"
+                                label="Compagnia"
+                                value={rentalCompany}
+                                onChange={(e) => setRentalCompany(e.target.value)}
+                                readOnly={isReadOnly}
+                                required />
+                            <Input
+                                id="rn-model"
+                                label="Modello/Targa"
+                                value={carModel}
+                                onChange={(e) => setCarModel(e.target.value)}
+                                readOnly={isReadOnly} />
                         </div>
                         <div className="space-y-6">
-                            <SearchLocation label="Luogo di Ritiro" value={pickupLocation} onSelect={setPickupLocation} readOnly={isReadOnly} required />
+                            <SearchLocation
+                                label="Luogo di Ritiro"
+                                value={pickupLocation}
+                                onSelect={setPickupLocation}
+                                readOnly={isReadOnly}
+                                required
+                            />
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Dropdown label="Data Ritiro" items={dateOptions} selected={pickupDate ? selectDateOption(pickupDate, dateOptions) : null} onSelect={(val) => setPickupDate(val?.date)} readOnly={isReadOnly} required optionValue="id" optionLabel="name" />
-                                <TimeInput label="Ora Ritiro" value={pickupTime} onChange={setPickupTime} readOnly={isReadOnly} required />
+                                <Dropdown
+                                    label="Data Ritiro"
+                                    items={dateOptions}
+                                    selected={depDate ? selectDateOption(depDate, dateOptions) : null}
+                                    onSelect={(val) => setDepDate(val?.date)}
+                                    readOnly={isReadOnly}
+                                    required
+                                    optionValue="id"
+                                    optionLabel="name"
+                                />
+                                <TimeInput
+                                    label="Ora Ritiro"
+                                    value={depTime}
+                                    onChange={setDepTime}
+                                    readOnly={isReadOnly}
+                                    required
+                                />
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Dropdown label="Data Consegna" items={dateOptions} selected={dropOffDate ? selectDateOption(dropOffDate, dateOptions) : null} onSelect={(val) => setDropOffDate(val?.date)} readOnly={isReadOnly} required optionValue="id" optionLabel="name" />
-                                <TimeInput label="Ora Consegna" value={dropOffTime} onChange={setDropOffTime} readOnly={isReadOnly} required />
+                                <Dropdown
+                                    label="Data Consegna"
+                                    items={dateOptions}
+                                    selected={selectDateOption(arrivalDate, dateOptions)}
+                                    onSelect={(val) => setArrivalDate(val?.date)}
+                                    readOnly={isReadOnly}
+                                    required
+                                    optionValue="id"
+                                    optionLabel="name"
+                                />
+                                <TimeInput
+                                    label="Ora Consegna"
+                                    value={arrivalTime}
+                                    onChange={setArrivalTime}
+                                    readOnly={isReadOnly}
+                                    required
+                                />
                             </div>
-                            <Checkbox id="diff-drop" checked={hasDifferentDropOff} onChange={(c) => !isReadOnly && setHasDifferentDropOff(c)}>
+                            <Checkbox
+                                id="diff-drop"
+                                checked={hasDifferentDropOff}
+                                onChange={(c) => !isReadOnly && setHasDifferentDropOff(c)}
+                            >
                                 <span className="font-medium">Riconsegna in luogo diverso</span>
                             </Checkbox>
-                            {hasDifferentDropOff && <SearchLocation label="Luogo di Riconsegna" value={dropOffLocation} onSelect={setDropOffLocation} readOnly={isReadOnly} required={hasDifferentDropOff} />}
-                            <Textarea id="drop-notes" label="Note Riconsegna" value={dropOffNotes} onChange={(e) => setDropOffNotes(e.target.value)} readOnly={isReadOnly} />
+                            {hasDifferentDropOff && (
+                                <SearchLocation
+                                    label="Luogo di Riconsegna"
+                                    value={dropOffLocation}
+                                    onSelect={setDropOffLocation}
+                                    readOnly={isReadOnly}
+                                    required={hasDifferentDropOff}
+                                />
+                            )}
+                            <Textarea
+                                id="drop-notes"
+                                label="Note Riconsegna"
+                                value={dropOffNotes}
+                                onChange={(e) => setDropOffNotes(e.target.value)}
+                                readOnly={isReadOnly}
+                            />
                         </div>
                     </FormSection>
                 )}
 
                 {type?.id === TransportType.PrivateTransfer && (
                     <FormSection title="Dettagli Trasferimento Privato">
-                        <SearchLocation label="Luogo di Partenza" value={depLocation} onSelect={setDepLocation} readOnly={isReadOnly} required />
+                        <SearchLocation
+                            label="Luogo di Partenza"
+                            value={depLocation}
+                            onSelect={setDepLocation}
+                            readOnly={isReadOnly}
+                            required
+                        />
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
-                            <Dropdown label="Data Partenza" items={dateOptions} selected={depDate ? selectDateOption(depDate, dateOptions) : null} onSelect={(val) => setDepDate(val?.date)} readOnly={isReadOnly} required optionValue="id" optionLabel="name" />
-                            <TimeInput label="Ora Partenza" value={depTime} onChange={setDepTime} readOnly={isReadOnly} required />
+                            <Dropdown
+                                label="Data Partenza"
+                                items={dateOptions}
+                                selected={depDate ? selectDateOption(depDate, dateOptions) : null}
+                                onSelect={(val) => setDepDate(val?.date)}
+                                readOnly={isReadOnly}
+                                required
+                                optionValue="id"
+                                optionLabel="name"
+                            />
+                            <TimeInput
+                                label="Ora Partenza"
+                                value={depTime}
+                                onChange={setDepTime}
+                                readOnly={isReadOnly}
+                                required
+                            />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input id='driver-name' label="Nome Autista" value={driverName} onChange={(e) => setDriverName(e.target.value)} readOnly={isReadOnly} />
-                            <Input id='driver-phone' label="Telefono" value={driverPhoneNumber} onChange={(e) => setDriverPhoneNumber(e.target.value)} readOnly={isReadOnly} />
+                            <Input
+                                id='driver-name'
+                                label="Nome Autista"
+                                value={driverName}
+                                onChange={(e) => setDriverName(e.target.value)}
+                                readOnly={isReadOnly}
+                            />
+                            <Input
+                                id='driver-phone'
+                                label="Telefono"
+                                value={driverPhoneNumber}
+                                onChange={(e) => setDriverPhoneNumber(e.target.value)}
+                                readOnly={isReadOnly}
+                            />
                         </div>
                         <div className="mt-6">
-                            <Input id='vehicle-description' label="Veicolo" value={vehicleDescription} onChange={(e) => setVehicleDescription(e.target.value)} readOnly={isReadOnly} placeholder="Modello/Targa" />
+                            <Input
+                                id='vehicle-description'
+                                label="Veicolo"
+                                value={vehicleDescription}
+                                onChange={(e) => setVehicleDescription(e.target.value)}
+                                readOnly={isReadOnly}
+                                placeholder="Modello/Targa"
+                            />
                         </div>
                     </FormSection>
                 )}
 
                 {(!isReadOnly || hasRealContent(additionalContents)) && (
                     <FormSection title="Contenuti Aggiuntivi">
-                        <RichTextInput value={additionalContents} onChange={setAdditionalContents} readOnly={isReadOnly} />
+                        <RichTextInput
+                            value={additionalContents}
+                            onChange={setAdditionalContents}
+                            readOnly={isReadOnly}
+                        />
                     </FormSection>
                 )}
 
@@ -431,5 +662,4 @@ const transportOptions = [
     { id: TransportType.Ferry, name: TransportType.Ferry },
     { id: TransportType.CarRental, name: TransportType.CarRental },
     { id: TransportType.PrivateTransfer, name: TransportType.PrivateTransfer },
-    { id: TransportType.Other, name: TransportType.Other },
 ];

@@ -9,7 +9,7 @@ import { useTrip } from '@/context/tripContext';
 import { useAuth } from '@/context/authProvider';
 import { upsertStageAction } from '@/actions/stage-actions';
 
-import { appRoutes, mapNavigationUrl } from '@/utils/appRoutes';
+import { appRoutes } from '@/utils/appRoutes';
 import { formatDateForPostgres, generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
 import { Location } from '@/models/Location';
 import { hasRealContent } from '@/utils/fileSizeUtils';
@@ -23,6 +23,7 @@ import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
 import { AttachmentList } from '../cards/attachment-manager';
+import { openDirectionLink } from '@/utils/open-link.utils';
 
 export default function StageForm() {
     const router = useRouter();
@@ -119,8 +120,7 @@ export default function StageForm() {
             await refreshData(true);
 
             if (isNew) {
-                // Dopo la creazione, torniamo alla lista o ai dettagli
-                router.push(appRoutes.accommodations(tripId)); // o dove preferisci
+                router.push(appRoutes.stages(tripId));
             } else {
                 setIsReadOnly(true);
             }
@@ -137,7 +137,11 @@ export default function StageForm() {
         {
             label: 'Indicazioni',
             icon: <FaMap />,
-            onClick: () => { if (stageLocation?.address) window.open(mapNavigationUrl(stageLocation.address), '_blank'); }
+            onClick: () => {
+                if (stageLocation?.address) {
+                    openDirectionLink(stageLocation.address);
+                }
+            }
         }
     ];
 

@@ -84,7 +84,7 @@ export default function AccommodationsList() {
         return acc;
     }, {} as Record<string, any[]>);
 
-    const sortedDestinations = Object.keys(groupedAccommodations).sort();
+    const sortedDestinations = Object.keys(groupedAccommodations).sort((a, b) => a.localeCompare(b));
     const hasAccommodations = sortedDestinations.length > 0;
 
     return (

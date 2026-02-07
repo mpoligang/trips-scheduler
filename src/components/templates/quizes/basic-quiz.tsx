@@ -14,9 +14,10 @@ import { appRoutes } from "@/utils/appRoutes";
 import { useAuth } from "@/context/authProvider";
 import DialogComponent from "@/components/modals/confirm-modal";
 import Dropdown from "@/components/inputs/dropdown";
-import { AIModels } from "@/utils/ai-utils";
+import { AI_ERRORS, AIModels } from "@/utils/ai.utils";
 import { useTrip } from "@/context/tripContext";
 import { KeyLabelPair, quizCategories } from "@/utils/quiz.utils";
+import AILoadingScreen from "@/components/loading/ai-loading-screen";
 
 interface AISuggestionsQuizProps {
     address: string;
@@ -93,11 +94,24 @@ export default function AISuggestionsQuiz(props: Readonly<AISuggestionsQuizProps
                 await refreshData(true);
                 router.replace(`${appRoutes.home}/trips/${props.tripId}/${props.type}/${props.id}/ai/${result.request_id}`);
             } else {
-                toast.error(result.error || "C'è stato un problema nel generare l'itinerario. Riprova.");
+
+                switch (result.error) {
+                    case AI_ERRORS.NO_RESULTS:
+                        toast.error("Non sono stati trovati risultati che corrispondano ai tuoi interessi. Prova a modificare le tue preferenze.");
+                        break;
+                    case AI_ERRORS.INVALID_API_KEY:
+                        toast.error("La tua chiave API non è valida. Inserisci una chiave valida nelle impostazioni del profilo.");
+                        break;
+                    case AI_ERRORS.API_RATE_LIMIT:
+                        toast.error("Hai raggiunto il limite di richieste per oggi. Riprova domani o contatta il supporto oppure prova a cambiare modello AI nelle impostazioni del profilo.");
+                        break;
+                    default:
+                        toast.error("C'è stato un problema nel generare l'itinerario. Riprova.");
+                }
             }
         } catch (error) {
             console.error("Errore durante la generazione:", error);
-            alert("C'è stato un problema nel generare l'itinerario. Riprova.");
+            toast.error("C'è stato un problema nel generare l'itinerario. Riprova.");
         } finally {
             setIsSubmitting(false);
         }
@@ -107,116 +121,123 @@ export default function AISuggestionsQuiz(props: Readonly<AISuggestionsQuizProps
 
     return (
         <>
-            <PageTitle
-                title="Completa il quiz"
-                subtitle={`L'intelligenza artificiale ti suggerirà tappe e attività da fare nei dintorni di ${props?.address}, in base alle tue preferenze!`}
-            />
-
-            <form onSubmit={handleSubmit} className="space-y-8 pb-24">
-
-                {/* DISTANZA - RadioButton */}
-                <FormSection title="Quanto vuoi allontanarti dalla tappa?">
-                    <div className="flex flex-col space-y-1">
-                        <RadioButton
-                            id="dist-1" name="distance" value="1km"
-                            checked={distance === "1km"} onChange={setDistance}
-                        >
-                            <span className="text-white"> Entro 1 km</span>  <span className="block text-xs opacity-70">(5-10 min a piedi)</span>
-                        </RadioButton>
-                        <RadioButton
-                            id="dist-5" name="distance" value="5km"
-                            checked={distance === "5km"} onChange={setDistance}
-                        >
-                            <span className="text-white"> Entro 5 km</span> <span className="block text-xs opacity-70">(15-30 min in bici)</span>
-                        </RadioButton>
-                        <RadioButton
-                            id="dist-15" name="distance" value="15km"
-                            checked={distance === "15km"} onChange={setDistance}
-                        >
-                            <span className="text-white"> Entro 15 km</span> <span className="block text-xs opacity-70">(30-60 min in auto o mezzi)</span>
-                        </RadioButton>
-                    </div>
-                </FormSection>
-
-
-                {/* NUMERO TAPPE - RadioButton */}
-                {/* FIX: name="stageCount" (prima era "distance" duplicato) */}
-                <FormSection title="Quante tappe vuoi visualizzare?">
-                    <div className="flex flex-col space-y-1">
-                        <RadioButton
-                            id="tappe-1-5" name="stageCount" value="1-5"
-                            checked={stageCount === "1-5"} onChange={setStageCount}
-                        >
-                            <span className="text-white">da 1 a 5 tappe</span>
-                        </RadioButton>
-                        <RadioButton
-                            id="tappe-5-10" name="stageCount" value="5-10"
-                            checked={stageCount === "5-10"} onChange={setStageCount}
-                        >
-                            <span className="text-white">da 5 a 10 tappe</span>
-                        </RadioButton>
-                        <RadioButton
-                            id="tappe-10-15" name="stageCount" value="10-15"
-                            checked={stageCount === "10-15"} onChange={setStageCount}
-                        >
-                            <span className="text-white">da 10 a 15 tappe</span>
-                        </RadioButton>
-                    </div>
-                </FormSection>
-
-
-                {/* CATEGORIE - MultiSelect + Checkbox */}
-                <FormSection title="Cosa vuoi che l'AI trovi per te?" className="border-none">
-                    <div className="flex flex-col space-y-4">
-
-                        {/* 2. FIX: Usa handleCategoryChange invece del setter diretto */}
-                        <Dropdown<KeyLabelPair>
-                            label="Seleziona la categoria di interesse"
-                            items={quizCategories}
-                            optionLabel="label"
-                            optionValue="key"
-                            selected={selectedCategory}
-                            onSelect={(category) => handleCategoryChange(category as KeyLabelPair)}
+            {
+                isSubmitting ? (<AILoadingScreen />) : (
+                    <>
+                        <PageTitle
+                            title="Completa il quiz"
+                            subtitle={`L'intelligenza artificiale ti suggerirà tappe e attività da fare nei dintorni di ${props?.address}, in base alle tue preferenze!`}
                         />
 
-                        <FormSection key={selectedCategory.key} title={selectedCategory.label}>
-                            <div className="flex flex-col space-y-4">
-                                {(selectedCategory.items || []).map((subcategory) => (
-                                    <div key={subcategory.key} className="flex flex-col space-y-2">
-                                        {/* 1. FIX: handleInterestChange ora gestisce il toggle correttamente */}
-                                        <Checkbox
-                                            id={`${selectedCategory.key}-${subcategory.key}`}
-                                            checked={selectedInterests.includes(subcategory.key)}
-                                            onChange={() => handleInterestChange(subcategory.key)}
-                                        >
-                                            <span className="text-white">{subcategory.label}</span>
-                                        </Checkbox>
-                                    </div>
-                                ))}
-                            </div>
-                        </FormSection>
+                        <form onSubmit={handleSubmit} className="space-y-8 pb-24">
 
-                    </div>
-                </FormSection>
+                            {/* DISTANZA - RadioButton */}
+                            <FormSection title="Quanto vuoi allontanarti dalla tappa?">
+                                <div className="flex flex-col space-y-1">
+                                    <RadioButton
+                                        id="dist-1" name="distance" value="1km"
+                                        checked={distance === "1km"} onChange={setDistance}
+                                    >
+                                        <span className="text-white"> Entro 1 km</span>  <span className="block text-xs opacity-70">(5-10 min a piedi)</span>
+                                    </RadioButton>
+                                    <RadioButton
+                                        id="dist-5" name="distance" value="5km"
+                                        checked={distance === "5km"} onChange={setDistance}
+                                    >
+                                        <span className="text-white"> Entro 5 km</span> <span className="block text-xs opacity-70">(15-30 min in bici)</span>
+                                    </RadioButton>
+                                    <RadioButton
+                                        id="dist-15" name="distance" value="15km"
+                                        checked={distance === "15km"} onChange={setDistance}
+                                    >
+                                        <span className="text-white"> Entro 15 km</span> <span className="block text-xs opacity-70">(30-60 min in auto o mezzi)</span>
+                                    </RadioButton>
+                                </div>
+                            </FormSection>
 
-                <DialogComponent
-                    isOpen={errorDialogOpen}
-                    onClose={() => setErrorDialogOpen(false)}
-                    title="Conferma"
-                    isLoading={false}
-                    showCancelButton={false}
-                    confirmText="Chiudi"
-                    onConfirm={() => setErrorDialogOpen(false)}
-                >
-                    <p>Si è verificato un errore durante la generazione dell&apos;itinerario. Riprova.</p>
-                </DialogComponent>
 
-                <ActionStickyBar
-                    handleCancel={() => { }}
-                    showCancel={false}
-                    isSubmitting={isSubmitting}
-                />
-            </form>
+                            {/* NUMERO TAPPE - RadioButton */}
+                            {/* FIX: name="stageCount" (prima era "distance" duplicato) */}
+                            <FormSection title="Quante tappe vuoi visualizzare?">
+                                <div className="flex flex-col space-y-1">
+                                    <RadioButton
+                                        id="tappe-1-5" name="stageCount" value="1-5"
+                                        checked={stageCount === "1-5"} onChange={setStageCount}
+                                    >
+                                        <span className="text-white">da 1 a 5 tappe</span>
+                                    </RadioButton>
+                                    <RadioButton
+                                        id="tappe-5-10" name="stageCount" value="5-10"
+                                        checked={stageCount === "5-10"} onChange={setStageCount}
+                                    >
+                                        <span className="text-white">da 5 a 10 tappe</span>
+                                    </RadioButton>
+                                    <RadioButton
+                                        id="tappe-10-15" name="stageCount" value="10-15"
+                                        checked={stageCount === "10-15"} onChange={setStageCount}
+                                    >
+                                        <span className="text-white">da 10 a 15 tappe</span>
+                                    </RadioButton>
+                                </div>
+                            </FormSection>
+
+
+                            {/* CATEGORIE - MultiSelect + Checkbox */}
+                            <FormSection title="Cosa vuoi che l'AI trovi per te?" className="border-none">
+                                <div className="flex flex-col space-y-4">
+
+                                    {/* 2. FIX: Usa handleCategoryChange invece del setter diretto */}
+                                    <Dropdown<KeyLabelPair>
+                                        label="Seleziona la categoria di interesse"
+                                        items={quizCategories}
+                                        optionLabel="label"
+                                        optionValue="key"
+                                        selected={selectedCategory}
+                                        onSelect={(category) => handleCategoryChange(category as KeyLabelPair)}
+                                    />
+
+                                    <FormSection key={selectedCategory.key} title={selectedCategory.label}>
+                                        <div className="flex flex-col space-y-4">
+                                            {(selectedCategory.items || []).map((subcategory) => (
+                                                <div key={subcategory.key} className="flex flex-col space-y-2">
+                                                    {/* 1. FIX: handleInterestChange ora gestisce il toggle correttamente */}
+                                                    <Checkbox
+                                                        id={`${selectedCategory.key}-${subcategory.key}`}
+                                                        checked={selectedInterests.includes(subcategory.key)}
+                                                        onChange={() => handleInterestChange(subcategory.key)}
+                                                    >
+                                                        <span className="text-white">{subcategory.label}</span>
+                                                    </Checkbox>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </FormSection>
+
+                                </div>
+                            </FormSection>
+
+                            <DialogComponent
+                                isOpen={errorDialogOpen}
+                                onClose={() => setErrorDialogOpen(false)}
+                                title="Conferma"
+                                isLoading={false}
+                                showCancelButton={false}
+                                confirmText="Chiudi"
+                                onConfirm={() => setErrorDialogOpen(false)}
+                            >
+                                <p>Si è verificato un errore durante la generazione dell&apos;itinerario. Riprova.</p>
+                            </DialogComponent>
+
+                            <ActionStickyBar
+                                handleCancel={() => { }}
+                                showCancel={false}
+                                isSubmitting={isSubmitting}
+                            />
+                        </form>
+                    </>
+                )
+            }
+
         </>
     );
 }

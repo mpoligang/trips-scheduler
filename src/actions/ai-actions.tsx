@@ -3,47 +3,11 @@
 import { createClient } from "@/lib/server";
 import { GenerateAIStagesInput, ReferenceEntity } from "@/models/AIStageSuggestion";
 import { Stage } from "@/models/Stage";
-import { AI_ERRORS } from "@/utils/ai-utils";
+import { AI_ERRORS, generateSuggestionsPrompt, generateSuggestionsSchema, INTEREST_MAP } from "@/utils/ai.utils";
 import { EntityKeys } from "@/utils/entityKeys";
-import { GoogleGenerativeAI, Schema, SchemaType } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { v4 as uuidv4 } from "uuid";
 
-// Inizializzazione Google AI
-
-
-
-
-const INTEREST_MAP: Record<string, string> = {
-    // ... (La tua mappa rimane invariata)
-    museums: "Musei e Gallerie d'arte ufficiali",
-    monuments: "Monumenti storici e landmarks",
-    historical_squares: "Piazze principali",
-    historical_streets: "Vie storiche pedonali",
-    temples_and_churches: "Chiese, Cattedrali e Luoghi di culto visitabili",
-    archaeological_sites: "Aree archeologiche",
-    aquariums: "Acquari",
-    typical_restaurants: "Ristoranti storici o tipici (no fast food)",
-    street_food: "Chioschi, Fast Food e street food rinomati",
-    vegan_food: "Locali con opzioni vegane",
-    local_markets: "Mercati rionali",
-    supermarkets: "Gastronomie di alta qualità",
-    aperitif_bars: "Locali per aperitivo",
-    parks: "Parchi pubblici",
-    pools: "Piscine",
-    spas: "Centri Termali",
-    shopping_areas: "Vie dello shopping",
-    viewpoints: "Punti panoramici (Belvedere)",
-    hiking_trails: "Sentieri segnati",
-    botanical_gardens: "Orti botanici",
-    beaches: "Spiagge accessibili",
-    mountains: "Rifugi o sentieri montani",
-    lakes: "Punti di accesso al lago",
-    rivers: "Lungofiume",
-    night_clubs: "Discoteca",
-    bars: "Cocktail bar",
-    pubs: "Pub",
-    discos: "Club notturni",
-};
 
 function getTargetStageCount(range: string): number {
     switch (range) {
@@ -63,81 +27,24 @@ export async function generateAIStages(
 
     const genAI = new GoogleGenerativeAI(ai_api_key);
 
-    // 1. SCHEMA: Rilassiamo leggermente le coordinate (che sono il punto debole)
-    // ma manteniamo la struttura rigida.
-    const stageSchema: Schema = {
-        description: "Lista di POI turistici verificati tramite Google Search",
-        type: SchemaType.OBJECT,
-        properties: {
-            stages: {
-                type: SchemaType.ARRAY,
-                items: {
-                    type: SchemaType.OBJECT,
-                    properties: {
-                        name: { type: SchemaType.STRING, description: "Nome esatto come appare su Google Maps" },
-                        address: { type: SchemaType.STRING, description: "Indirizzo completo reale" },
-                        // IMPORTANTE: Chiediamo stringhe per le coordinate se l'IA ha dubbi, ma qui forziamo numeri
-                        // affidandoci al tool di ricerca.
-                        lat: { type: SchemaType.NUMBER, description: "Latitudine verificata" },
-                        lng: { type: SchemaType.NUMBER, description: "Longitudine verificata" },
-                        content: {
-                            type: SchemaType.OBJECT,
-                            properties: {
-                                description: { type: SchemaType.STRING, description: "Descrizione sintetica (max 20 parole)" },
-                                practical_info: { type: SchemaType.STRING, description: "Orari e Prezzi reali verificati" },
-                                web_site: { type: SchemaType.STRING, description: "URL verificato o vuoto se non esiste" }
-                            },
-                            required: ["description", "practical_info", "web_site"]
-                        }
-                    },
-                    required: ["name", "address", "lat", "lng", "content"],
-                },
-            },
-        },
-        required: ["stages"],
-    };
-
-    // 2. CONFIGURAZIONE DEL MODELLO
-    // CAMBIO CRITICO: Usiamo 'gemini-1.5-pro' (più intelligente) e attiviamo i TOOLS.
     const model = genAI.getGenerativeModel({
-        model: "gemini-flash-latest",
-
+        model: ai_model,
         generationConfig: {
             temperature: 0.1, // Creatività al minimo assoluto
             topP: 0.95,
             topK: 40,
             responseMimeType: "application/json",
-            responseSchema: stageSchema,
+            responseSchema: generateSuggestionsSchema(),
         },
     });
 
-    // 3. Prompt "Chain-of-Verification"
-    // Obblighiamo l'IA a fare una ricerca prima di rispondere.
+
     const targetCount = getTargetStageCount(data.stageRange);
     const interestsDescription = data.selectedInterests
-        .map(key => INTEREST_MAP[key] || key.replaceAll(/_/g, ' '))
+        .map(key => INTEREST_MAP[key] || key.replaceAll('_', ' '))
         .join(", ");
 
-    const userPrompt = `
-        TASK: Agisci come un ricercatore turistico che deve verificare ogni dato.
-        
-        INPUT:
-        - Destinazione: ${reference.destination}
-        - Punto centrale: ${reference.address} (Lat: ${reference.lat}, Lng: ${reference.lng})
-        - Raggio: ${data.distance} metri
-        - Interessi: ${interestsDescription}
-        - Quantità richiesta: ${targetCount} luoghi
-        
-        ISTRUZIONI OPERATIVE CRITICHE:
-        1. USA IL TOOL "GOOGLE SEARCH" per ogni singolo luogo candidato.
-        2. CERCA "indirizzo esatto [Nome Luogo]" per ottenere l'indirizzo reale.
-        3. CERCA "sito ufficiale [Nome Luogo]" per il sito web.
-        4. Se un luogo risulta "chiuso definitivamente" o le coordinate sono incerte, SCARTALO e cercane un altro.
-        5. NON stimare le coordinate matematicamente. Estrapolale dalla ricerca o usa quelle note del landmark principale.
-        
-        OUTPUT:
-        Restituisci solo luoghi esistenti al 100%. Se trovi meno luoghi di ${targetCount} ma sicuri, restituisci solo quelli. Meglio pochi ma veri, che tanti inventati.
-    `;
+    const userPrompt = generateSuggestionsPrompt(reference, interestsDescription, data.distance, targetCount);
 
     try {
         const result = await model.generateContent(userPrompt);
@@ -155,7 +62,6 @@ export async function generateAIStages(
 
         const rawStages = parsedData.stages || [];
 
-        // 5. Costruzione Oggetto Finale
         const validatedStages = rawStages.map((item: any) => {
             const htmlNotes = `
                 <b>Cos'è:</b> ${item.content.description}<br>
@@ -167,7 +73,7 @@ export async function generateAIStages(
                 id: uuidv4(),
                 name: item.name,
                 address: item.address,
-                lat: item.lat, // Ora dovrebbero essere molto più precise grazie al Pro model
+                lat: item.lat,
                 lng: item.lng,
                 notes: htmlNotes,
             };

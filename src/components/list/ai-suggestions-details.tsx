@@ -22,7 +22,7 @@ import { deleteAISuggestions } from "@/actions/ai-actions";
 import Dropdown from "../inputs/dropdown";
 import { formatDateForPostgres, generateDateOptions, selectDateOption } from "@/utils/dateTripUtils";
 import { upsertStageAction } from "@/actions/stage-actions";
-import { add } from "date-fns";
+import { INTEREST_MAP } from "@/utils/ai.utils";
 
 
 const AISuggestionsMap = dynamic(
@@ -45,19 +45,26 @@ export default function AISuggestionsDetails({ search_results, reference }:
 
     const handleDelete = async () => {
         setIsDeleting(true);
+
         try {
             const response = await deleteAISuggestions(search_results.id);
             if (response.success) {
                 toast.success("Suggerimenti eliminati con successo!");
-                await refreshData();
-                router.push(appRoutes.aiInfo(trip?.id as string, reference.type, reference.id, 'new'));
+
+                // 1. Forza il refresh dei dati e attendi il completamento
+
+                // 2. Naviga solo DOPO che i dati sono stati rinfrescati
+                router.replace(appRoutes.aiInfo(trip?.id as string, reference.type, reference.id, 'new'));
+                refreshData(true);
+                // globalThis.location.reload(); // Ricarica la pagina per assicurarsi che lo stato sia aggiornato
+
 
             } else {
-                toast.error("Errore durante l'eliminazione dei suggerimenti.");
+                toast.error("Errore durante l'eliminazione.");
             }
         } catch (error) {
-            console.error("Errore durante l'eliminazione:", error);
-            toast.error("Errore durante l'eliminazione dei suggerimenti.");
+            console.error("Errore:", error);
+            toast.error("Errore durante l'eliminazione.");
         } finally {
             setIsDeleting(false);
             setIsDeleteOpen(false);
@@ -65,10 +72,16 @@ export default function AISuggestionsDetails({ search_results, reference }:
     }
 
 
+    const interestsDescription = search_results.search_params.selectedInterests
+        .map((key: string) => INTEREST_MAP[key] || key.replaceAll('_', ' '))
+        .join(", ");
+
+
+    const description = `Questi sono i suggerimenti generati dall'AI basati su ${reference.address} a una distanza di ${search_results.search_params['distance']}.
+    Gli interessi che hai selezionato sono: ${interestsDescription}`;
+
+
     return (
-
-
-
         <>
             <DialogComponent
                 isOpen={isDeleteOpen}
@@ -82,7 +95,7 @@ export default function AISuggestionsDetails({ search_results, reference }:
                 <p>Sei sicuro di voler eliminare questa lista di suggerimenti? L&apos;azione è irreversibile.</p>
             </DialogComponent>
 
-            <PageTitle title="Dettagli Suggerimenti AI" subtitle={`Numero di suggerimenti generati: ${search_results.ai_suggestions.length}`}>
+            <PageTitle title="Dettagli Suggerimenti AI" subtitle={description}>
                 <Button variant="secondary" size="sm" onClick={() => setIsDeleteOpen(true)}>
                     <FaTrash className="mr-2" />
                     Elimina
@@ -219,17 +232,26 @@ export const AddToStageDialog = ({ reference, suggestion, open, setIsOpen }: { r
 
     const handleSubmit = async () => {
 
+
+        if (!startDate) {
+            toast.error("Per favore, seleziona una data per la tappa.");
+            return;
+        }
+
         const stagePayload = {
             id: 'new',
             trip_id: trip?.id as string,
             name: suggestion.name,
-            arrival_date: formatDateForPostgres(startDate as Date),
+            arrival_date: formatDateForPostgres(startDate),
             destination: reference.destination,
             address: suggestion.address,
             lat: suggestion.lat,
             lng: suggestion.lng,
             notes: suggestion.notes || '',
         };
+
+
+        setIsSubmitting(true);
 
         try {
             const result = await upsertStageAction(stagePayload);
@@ -240,8 +262,12 @@ export const AddToStageDialog = ({ reference, suggestion, open, setIsOpen }: { r
 
             await refreshData(true);
 
-        } catch (err: any) {
-            toast.error(err.message || "Errore durante il salvataggio");
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                toast.error(err.message || "Errore durante il salvataggio");
+            } else {
+                toast.error("Errore sconosciuto durante il salvataggio");
+            }
         } finally {
             setIsSubmitting(false);
         }

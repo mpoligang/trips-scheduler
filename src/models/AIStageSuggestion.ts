@@ -6,7 +6,7 @@ export interface AISearchRequest {
     stage_id?: string | null;
     accommodation_id?: string | null;
     transport_id?: string | null;
-    search_params: [{ [key: string]: any }];
+    search_params: { [key: string]: any };
     created_at: string;
     ai_suggestions: AIStageSuggestion[];
 }

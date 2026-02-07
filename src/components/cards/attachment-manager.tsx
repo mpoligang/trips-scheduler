@@ -17,6 +17,7 @@ import { sendEmailToUpgrade } from '@/utils/open-link.utils';
 import ContextMenu from '../actions/context-menu';
 import { downloadAttachment, getFileUrl } from '@/actions/files-actions';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 
 // --- MODALE AGGIUNTA ALLEGATO ---
 interface AddModalProps {
@@ -232,7 +233,7 @@ export default function AttachmentsManager({
             setIsModalOpen(false);
         } catch (error) {
             console.error("Errore aggiunta allegato:", error);
-            alert("Errore durante il caricamento. Riprova.");
+            toast.error("Errore durante il caricamento. Riprova.");
         } finally {
             setIsProcessing(false);
         }

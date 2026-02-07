@@ -129,13 +129,21 @@ export function TripProvider({ children }: { children: ReactNode }) {
                 filter: `trip_id=eq.${tripId}`
             }, () => fetchAllData(true))
 
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'ai_search_requests',
+                filter: `trip_id=eq.${tripId}`
+            }, () => {
+                fetchAllData(true);
+            })
+
             // Modifiche split
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
                 table: 'expense_splits'
             }, () => fetchAllData(true))
-
             // Modifica record principale
             .on('postgres_changes', {
                 event: '*',
@@ -160,7 +168,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         // Estrazione e ordinamento dei suggerimenti AI (dal più recente)
         ai_search_requests: (trip?.ai_search_requests || []).sort((a: any, b: any) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        ) as AISearchRequest[],
+        ),
 
         participants: trip?.trip_participants?.map((p: any) => ({ ...p.profiles })) || [],
         recommended: trip?.recommended || [],

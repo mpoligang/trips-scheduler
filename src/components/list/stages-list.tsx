@@ -120,7 +120,8 @@ export default function StagesList() {
                                                         key={stage.id}
                                                         icon={<FaMapMarkerAlt className="h-5 w-5" />}
                                                         title={stage.name}
-                                                        address={stage.address ?? ''}
+                                                        latitude={stage.latitude ?? 0}
+                                                        longitude={stage.longitude ?? 0}
                                                         detailUrl={appRoutes.stageDetails(trip?.id as string, stage.id)}
                                                         onDelete={() => handleOpenDeleteModal(stage.id)}
                                                         isOwner={isOwner}

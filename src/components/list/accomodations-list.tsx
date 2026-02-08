@@ -121,7 +121,8 @@ export default function AccommodationsList() {
                                             <DetailItemCard
                                                 icon={<RiHotelLine className="h-5 w-5" />}
                                                 title={accommodation.name}
-                                                address={accommodation.address}
+                                                latitude={accommodation.latitude ?? 0}
+                                                longitude={accommodation.longitude ?? 0}
                                                 detailUrl={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
                                                 onDelete={() => handleOpenDeleteModal(accommodation.id)}
                                                 isOwner={isOwner}

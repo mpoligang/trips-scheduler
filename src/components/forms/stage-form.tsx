@@ -23,7 +23,7 @@ import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
 import { AttachmentList } from '../cards/attachment-manager';
-import { openDirectionLink } from '@/utils/open-link.utils';
+import { openDirectionLink, openLatLngLink } from '@/utils/open-link.utils';
 
 export default function StageForm() {
     const router = useRouter();
@@ -138,8 +138,8 @@ export default function StageForm() {
             label: 'Indicazioni',
             icon: <FaMap />,
             onClick: () => {
-                if (stageLocation?.address) {
-                    openDirectionLink(stageLocation.address);
+                if (stageLocation?.lat && stageLocation?.lng) {
+                    openLatLngLink(stageLocation.lat, stageLocation.lng);
                 }
             }
         }

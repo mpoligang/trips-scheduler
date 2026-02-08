@@ -60,3 +60,15 @@ export const openDirectionLink = (address: string) => {
         newWindow.location.href = url;
     }
 }
+
+export const openLatLngLink = (lat: number, lng: number) => {
+    // Il formato corretto è: https://www.google.com/maps/search/?api=1&query=lat,lng
+    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+
+    if (!newWindow) {
+        // Opzionale: fallback se il popup blocker blocca l'apertura
+        globalThis.location.href = url;
+    }
+}

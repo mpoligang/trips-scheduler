@@ -27,7 +27,7 @@ import { appRoutes } from "@/utils/appRoutes";
 import { hasRealContent } from '@/utils/fileSizeUtils';
 import { AttachmentList } from '../cards/attachment-manager';
 import { upsertTransportAction } from '@/actions/transport-actions';
-import { openDirectionLink } from '@/utils/open-link.utils';
+import { openDirectionLink, openLatLngLink } from '@/utils/open-link.utils';
 import { de } from 'date-fns/locale';
 
 export default function TransportForm() {
@@ -255,8 +255,8 @@ export default function TransportForm() {
             label: 'Indicazioni Partenza',
             icon: <FaMap />,
             onClick: () => {
-                if (depLocation?.address) {
-                    openDirectionLink(depLocation.address);
+                if (depLocation?.lat && depLocation?.lng) {
+                    openLatLngLink(depLocation.lat, depLocation.lng);
                 }
             }
         }

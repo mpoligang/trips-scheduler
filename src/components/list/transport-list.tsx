@@ -116,7 +116,8 @@ export default function TransportsList() {
                                             key={t.id}
                                             icon={getIcon(t.type)}
                                             title={t.title}
-                                            address={t.dep_address ?? ''}
+                                            latitude={t.dep_lat ?? 0}
+                                            longitude={t.dep_lng ?? 0}
                                             detailUrl={appRoutes.transportDetails(trip?.id as string, t.id)}
                                             onDelete={() => setDeleteId(t.id)}
                                             isOwner={isOwner}

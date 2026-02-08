@@ -84,7 +84,7 @@ export default function AccommodationsList() {
         return acc;
     }, {} as Record<string, any[]>);
 
-    const sortedDestinations = Object.keys(groupedAccommodations).sort();
+    const sortedDestinations = Object.keys(groupedAccommodations).sort((a, b) => a.localeCompare(b));
     const hasAccommodations = sortedDestinations.length > 0;
 
     return (
@@ -121,8 +121,9 @@ export default function AccommodationsList() {
                                             <DetailItemCard
                                                 icon={<RiHotelLine className="h-5 w-5" />}
                                                 title={accommodation.name}
-                                                address={accommodation.address}
                                                 detailClick={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
+                                                latitude={accommodation.latitude ?? 0}
+                                                longitude={accommodation.longitude ?? 0}
                                                 onDelete={() => handleOpenDeleteModal(accommodation.id)}
                                                 isOwner={isOwner}
                                             />

@@ -31,9 +31,6 @@ export default function RecommendedList() {
     const handleOpenDeleteModal = (id: string) => setDeleteId(id);
     const handleCloseDeleteModal = () => setDeleteId(null);
 
-    /**
-     * ✅ Eliminazione luogo consigliato
-     */
     const handleConfirmDelete = async () => {
         if (!deleteId || !trip?.id) return;
 
@@ -59,7 +56,6 @@ export default function RecommendedList() {
     };
 
     const handleAdd = () => {
-        // Rotta ipotetica per i dettagli del luogo consigliato
         router.push(appRoutes.recommendedDetails(trip?.id as string, 'new'));
     };
 
@@ -69,7 +65,7 @@ export default function RecommendedList() {
 
     // Raggruppamento per Destinazione (es. Tokyo, Kyoto)
     const groupedItems = recommended.reduce((acc, item) => {
-        const destination = item.destination || 'Generale';
+        const destination = item.destination;
         if (!acc[destination]) { acc[destination] = []; }
         acc[destination].push(item);
         return acc;
@@ -118,9 +114,10 @@ export default function RecommendedList() {
                                         key={item.id}
                                         icon={getCustomIcon(getIconByCategoryId(item.category))}
                                         title={item.title}
-                                        address={item.address ?? ''}
                                         subtitle={item.address}
                                         detailClick={appRoutes.recommendedDetails(trip?.id as string, item.id)}
+                                        latitude={item.latitude ?? 0}
+                                        longitude={item.longitude ?? 0}
                                         onDelete={() => handleOpenDeleteModal(item.id)}
                                         isOwner={isOwner}
                                     />

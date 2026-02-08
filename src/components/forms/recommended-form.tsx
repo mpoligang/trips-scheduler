@@ -19,8 +19,8 @@ import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
 import { hasRealContent } from '@/utils/fileSizeUtils';
-import { openDirectionLink } from '@/utils/open-link.utils';
 import { CATEGORY_OPTIONS } from '@/utils/recommended.utils';
+import { openLatLngLink } from '@/utils/open-link.utils';
 
 // Lista delle categorie consigliate
 
@@ -145,8 +145,8 @@ export default function RecommendedForm() {
                             label: 'Indicazioni',
                             icon: <FaMap />,
                             onClick: () => {
-                                if (location?.address) {
-                                    openDirectionLink(location.address);
+                                if (location?.lat && location?.lng) {
+                                    openLatLngLink(location.lat, location.lng);
                                 }
                             }
                         }

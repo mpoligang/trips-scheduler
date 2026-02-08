@@ -8,7 +8,7 @@ import { ImSpinner8 } from 'react-icons/im';
 interface DialogComponentProps {
     readonly isOpen: boolean;
     readonly onClose: () => void;
-    readonly onConfirm: () => void;
+    readonly onConfirm: (e: React.FormEvent) => void;
     readonly isLoading: boolean;
     readonly title: string;
     readonly children: ReactNode;

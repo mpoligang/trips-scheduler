@@ -12,9 +12,9 @@ interface ActionStickyBarProps {
 
 export default function ActionStickyBar({ handleCancel, isSubmitting, showCancel = true, actionLabel }: ActionStickyBarProps) {
 
-    const defaultActionLabel = actionLabel ? actionLabel : 'Salva';
+    const defaultActionLabel = actionLabel || 'Salva';
     return (
-        <div className='w-full bg-gray-900 shadow-md fixed bottom-0 z-10 left-0 h-20 flex items-center justify-end px-4
+        <div className='w-full bg-gray-900 shadow-md fixed bottom-0 z-28 left-0 h-20 flex items-center justify-end px-4
                     border-t border-gray-700
                     '>
             {showCancel && (

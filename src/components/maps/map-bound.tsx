@@ -18,7 +18,7 @@ import {
 } from 'react-icons/fa';
 import { appRoutes } from '@/utils/appRoutes';
 import { useRouter } from 'next/navigation';
-import { openDirectionLink } from '@/utils/open-link.utils';
+import { openLatLngLink } from '@/utils/open-link.utils';
 
 // --- CONFIGURAZIONE ICONE PERSONALIZZATE ---
 const createCustomIcon = (IconComponent: React.JSXElementConstructor<any>, color: string) => {
@@ -78,7 +78,7 @@ export default function TripMap() {
     // Calcoliamo la linea del percorso (unisce le tappe in ordine cronologico)
     const routePath = useMemo(() => {
         return stages
-            .sort((a, b) => new Date(a.arrival_date).getTime() - new Date(b.arrival_date).getTime())
+            .toSorted((a, b) => new Date(a.arrival_date).getTime() - new Date(b.arrival_date).getTime())
             .filter(s => s.lat && s.lng)
             .map(s => [s.lat, s.lng] as [number, number]);
     }, [stages]);
@@ -131,8 +131,8 @@ export default function TripMap() {
                     icon={icons.stage}
                 >
                     <Popup className="custom-popup">
-                        <PopupDetail title="Informazioni Tappa" name={stage.name} address={stage.address as string} navigateToDetail={() => {
-                            router.push(appRoutes.stageDetails(trip?.id as string, stage.id as string));
+                        <PopupDetail title="Informazioni Tappa" name={stage.name} address={stage.address as string} lat={stage.lat as number} lng={stage.lng as number} navigateToDetail={() => {
+                            router.push(appRoutes.stageDetails(trip?.id as string, stage.id));
                         }} />
                     </Popup>
                 </Marker>
@@ -146,7 +146,7 @@ export default function TripMap() {
                     icon={icons.accommodation}
                 >
                     <Popup>
-                        <PopupDetail title="Informazioni Alloggio" name={acc.name} address={acc.address} navigateToDetail={() => {
+                        <PopupDetail title="Informazioni Alloggio" name={acc.name} address={acc.address} lat={acc.lat as number} lng={acc.lng as number} navigateToDetail={() => {
                             router.push(appRoutes.accommodationDetails(trip?.id as string, acc.id as string));
                         }} />
                     </Popup>
@@ -160,11 +160,17 @@ export default function TripMap() {
                 <div key={`trans-group-${trans.id}`}>
 
                     {trans.dep_lat && (
-                        <Marker position={[trans.dep_lat as number, trans.dep_lng as number]} icon={getIconByTransportType(trans.type as TransportType)}>
+                        <Marker position={[trans.dep_lat, trans.dep_lng as number]} icon={getIconByTransportType(trans.type as TransportType)}>
                             <Popup>
-                                <PopupDetail title="Informazioni Trasporto" name={trans.title} address={trans.dep_address || ''} navigateToDetail={() => {
-                                    router.push(appRoutes.transportDetails(trip?.id as string, trans.id as string));
-                                }} />
+                                <PopupDetail
+                                    title="Informazioni Trasporto"
+                                    name={trans.title}
+                                    address={trans.dep_address || ''}
+                                    lat={trans.dep_lat}
+                                    lng={trans.dep_lng as number}
+                                    navigateToDetail={() => {
+                                        router.push(appRoutes.transportDetails(trip?.id as string, trans.id));
+                                    }} />
                             </Popup>
                         </Marker>
                     )}
@@ -179,11 +185,13 @@ export default function TripMap() {
 interface PopupDetailProps {
     title: string;
     name: string;
+    lat: number;
+    lng: number;
     address: string;
     navigateToDetail: () => void;
 }
 
-export const PopupDetail = ({ title, name, address, navigateToDetail }: PopupDetailProps) => {
+export const PopupDetail = ({ title, name, address, lat, lng, navigateToDetail }: PopupDetailProps) => {
     return (
         <FormSection title={title} >
             <div className="flex flex-col ">
@@ -200,7 +208,7 @@ export const PopupDetail = ({ title, name, address, navigateToDetail }: PopupDet
             </div>
             <div className="flex justify-start mt-4">
                 <Button size="sm" variant="secondary" onClick={() => {
-                    openDirectionLink(address);
+                    openLatLngLink(lat, lng);
                 }} >
                     <FaDirections size={10} className='mr-2' />
                     Indicazioni

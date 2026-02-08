@@ -27,8 +27,7 @@ import { appRoutes } from "@/utils/appRoutes";
 import { hasRealContent } from '@/utils/fileSizeUtils';
 import { AttachmentList } from '../cards/attachment-manager';
 import { upsertTransportAction } from '@/actions/transport-actions';
-import { openDirectionLink, openLatLngLink } from '@/utils/open-link.utils';
-import { de } from 'date-fns/locale';
+import { openLatLngLink } from '@/utils/open-link.utils';
 
 export default function TransportForm() {
     const { trip, transports, isOwner, refreshData } = useTrip();

@@ -23,7 +23,7 @@ import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
 import { AttachmentList } from '../cards/attachment-manager';
-import { openDirectionLink, openLatLngLink } from '@/utils/open-link.utils';
+import { openLatLngLink } from '@/utils/open-link.utils';
 
 export default function StageForm() {
     const router = useRouter();

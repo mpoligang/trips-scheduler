@@ -23,7 +23,7 @@ import RichTextInput from '../inputs/rich-text-editor';
 import { hasRealContent } from '@/utils/fileSizeUtils';
 import { AttachmentList } from '../cards/attachment-manager';
 import { upsertAccommodationAction } from '@/actions/accomodation-actions';
-import { openDirectionLink, openLatLngLink } from '@/utils/open-link.utils';
+import { openLatLngLink } from '@/utils/open-link.utils';
 
 export default function AccommodationForm() {
     const router = useRouter();

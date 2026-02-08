@@ -57,18 +57,14 @@ export const openDirectionLink = (address: string) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
     const newWindow = window.open('', '_blank');
     if (newWindow) {
-        newWindow.location.href = url;
+        newWindow.open(url, '_blank');
     }
-}
+};
 
 export const openLatLngLink = (lat: number, lng: number) => {
-    // Il formato corretto è: https://www.google.com/maps/search/?api=1&query=lat,lng
     const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-
     const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-
-    if (!newWindow) {
-        // Opzionale: fallback se il popup blocker blocca l'apertura
-        globalThis.location.href = url;
+    if (newWindow) {
+        newWindow.open(url, '_blank');
     }
 }

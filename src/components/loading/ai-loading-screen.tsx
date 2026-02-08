@@ -23,7 +23,6 @@ const AILoadingScreen = () => {
     return (
         <div className="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 z-[9999]">
             {/* Background Glows */}
-            <Logo className="absolute top-1/5 " />
             <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-600/20 rounded-full blur-[120px] animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[150px] animate-pulse delay-700"></div>
 
@@ -52,6 +51,7 @@ const AILoadingScreen = () => {
                 {/* Text and Progress */}
                 <div className="space-y-6 w-full mt-8">
                     <div className="space-y-2">
+                        <Logo />
                         <h2 className="text-2xl font-extrabold text-white tracking-tight">
                             Stiamo preparando la magia
                         </h2>

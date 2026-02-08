@@ -317,7 +317,7 @@ export default function ProfilePage() {
                                 id="aiActivated"
                                 label="API key"
                                 type="text"
-                                value={isReadOnly ? '*****************' : aiApiKey}
+                                value={isReadOnly && aiApiKey ? '*****************' : aiApiKey}
                                 readOnly={isReadOnly}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => setAiApiKey(e.target.value)}
                             />

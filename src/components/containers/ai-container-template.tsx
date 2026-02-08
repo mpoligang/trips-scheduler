@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { PathItem } from "@/models/PathItem";
 import GenericLayout from "./generic-container"; // Verifica il percorso
 import { useTrip } from "@/context/tripContext";
-import { BiBrain } from "react-icons/bi";
+import { BiBrain, BiTrip } from "react-icons/bi";
 import { EntityKeys } from "@/utils/entityKeys";
 import { appRoutes } from "@/utils/appRoutes";
 import { AISearchRequest } from "@/models/AIStageSuggestion";
@@ -13,6 +13,10 @@ import PlaceholderCard from "../cards/placeholder-card";
 import { FaKey } from "react-icons/fa";
 import HowToObtainAIApiKeyModal from "../modals/how-obtain-ai-api-key";
 import Button from "../actions/button";
+import { BsTruckFront } from "react-icons/bs";
+import { FiShoppingCart, FiMap } from "react-icons/fi";
+import { MdOutlineTipsAndUpdates } from "react-icons/md";
+import { RiHotelLine } from "react-icons/ri";
 
 interface AIContainerTemplateProps {
     readonly detailId?: string;
@@ -116,12 +120,23 @@ const AIContainerTemplate = ({ children, detailId, sectionPath }: AIContainerTem
         return { breadcrumb, backToLabel: secondLevel.label, backToHref: secondLevel.href };
     }, [trip, sectionPath, detailId]);
 
+    const mobileMenuItems = [
+        { id: 'itinerary', label: 'Itinerario', icon: BiTrip, href: appRoutes.stages(trip?.id || '') },
+        { id: 'accommodations', label: 'Alloggi', icon: RiHotelLine, href: appRoutes.accommodations(trip?.id || '') },
+        { id: 'transports', label: 'Trasporti', icon: BsTruckFront, href: appRoutes.transports(trip?.id || '') },
+        { id: 'recommended', label: 'Consigliati', icon: MdOutlineTipsAndUpdates, href: appRoutes.recommended(trip?.id || '') },
+        { id: 'expenses', label: 'Spese', icon: FiShoppingCart, href: appRoutes.expenses(trip?.id || '') },
+        { id: 'map', label: 'Mappa del Viaggio', icon: FiMap, href: appRoutes.mapTrip(trip?.id || '') },
+    ];
+
+
 
     return (
         <GenericLayout
             menuItems={menuItems}
             breadcrumb={navigationData.breadcrumb}
             backToItem={{ label: navigationData.backToLabel, href: navigationData.backToHref }}
+            mobileMenuItems={mobileMenuItems}
         >
             <>
                 {userData?.ai_api_key ? (

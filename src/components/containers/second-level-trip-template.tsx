@@ -1,9 +1,14 @@
 import { PathItem } from "@/models/PathItem";
 import GenericLayout from "./generic-container"
 import { useTrip } from "@/context/tripContext";
-import { BiDetail } from "react-icons/bi";
+import { BiDetail, BiTrip } from "react-icons/bi";
 import { ImAttachment } from "react-icons/im";
 import { PiBrain } from "react-icons/pi";
+import { appRoutes } from "@/utils/appRoutes";
+import { BsTruckFront } from "react-icons/bs";
+import { FiShoppingCart, FiMap } from "react-icons/fi";
+import { MdOutlineTipsAndUpdates } from "react-icons/md";
+import { RiHotelLine } from "react-icons/ri";
 
 
 
@@ -35,9 +40,19 @@ const SecondLevelTripTemplate = ({ breadcrumb, children, detailId, sectionPath, 
     }
 
 
+    const mobileMenuItems = [
+        { id: 'itinerary', label: 'Itinerario', icon: BiTrip, href: appRoutes.stages(trip?.id || '') },
+        { id: 'accommodations', label: 'Alloggi', icon: RiHotelLine, href: appRoutes.accommodations(trip?.id || '') },
+        { id: 'transports', label: 'Trasporti', icon: BsTruckFront, href: appRoutes.transports(trip?.id || '') },
+        { id: 'recommended', label: 'Consigliati', icon: MdOutlineTipsAndUpdates, href: appRoutes.recommended(trip?.id || '') },
+        { id: 'expenses', label: 'Spese', icon: FiShoppingCart, href: appRoutes.expenses(trip?.id || '') },
+        { id: 'map', label: 'Mappa del Viaggio', icon: FiMap, href: appRoutes.mapTrip(trip?.id || '') },
+    ];
+
+
 
     return (
-        <GenericLayout menuItems={menuItems} breadcrumb={breadcrumb} backToItem={backToItem}>
+        <GenericLayout menuItems={menuItems} breadcrumb={breadcrumb} backToItem={backToItem} mobileMenuItems={mobileMenuItems}>
             {children}
         </GenericLayout>
     );

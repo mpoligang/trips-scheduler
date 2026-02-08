@@ -31,31 +31,34 @@ const FirstLevelTripTemplate = ({ breadcrumb, children }: FirstLevelTripTemplate
 
     if (isNew) {
         menuItems.push(
-            { label: 'Aggiungi Viaggio', icon: FaPlus, href: appRoutes.settings('new') },
+            { id: 'add-trip', label: 'Aggiungi Viaggio', icon: FaPlus, href: appRoutes.settings('new') },
         );
 
     } else {
 
         menuItems.push(
-            { label: 'Itinerario', icon: BiTrip, href: appRoutes.stages(trip?.id || '') },
-            { label: 'Alloggi', icon: RiHotelLine, href: appRoutes.accommodations(trip?.id || '') },
-            { label: 'Trasporti', icon: BsTruckFront, href: appRoutes.transports(trip?.id || '') },
-            { label: 'Consigliati', icon: MdOutlineTipsAndUpdates, href: appRoutes.recommended(trip?.id || '') },
-            { label: 'Spese', icon: FiShoppingCart, href: appRoutes.expenses(trip?.id || '') },
-            { label: 'Mappa del Viaggio', icon: FiMap, href: appRoutes.mapTrip(trip?.id || '') },
+            { id: 'itinerary', label: 'Itinerario', icon: BiTrip, href: appRoutes.stages(trip?.id || '') },
+            { id: 'accommodations', label: 'Alloggi', icon: RiHotelLine, href: appRoutes.accommodations(trip?.id || '') },
+            { id: 'transports', label: 'Trasporti', icon: BsTruckFront, href: appRoutes.transports(trip?.id || '') },
+            { id: 'recommended', label: 'Consigliati', icon: MdOutlineTipsAndUpdates, href: appRoutes.recommended(trip?.id || '') },
+            { id: 'expenses', label: 'Spese', icon: FiShoppingCart, href: appRoutes.expenses(trip?.id || '') },
+            { id: 'map', label: 'Mappa del Viaggio', icon: FiMap, href: appRoutes.mapTrip(trip?.id || '') },
         );
 
         if (isOwner) {
             menuItems.push(
-                { label: 'Impostazioni', icon: HiOutlineCog6Tooth, href: appRoutes.settings(trip?.id || '') },
+                { id: 'settings', label: 'Impostazioni', icon: HiOutlineCog6Tooth, href: appRoutes.settings(trip?.id || '') },
             );
         }
     }
 
 
+    const mobileMenuItems = menuItems.filter(item => item.id !== 'add-trip' && item.id !== 'settings');
+
+
 
     return (
-        <GenericLayout menuItems={menuItems} breadcrumb={breadcrumb}
+        <GenericLayout menuItems={menuItems} breadcrumb={breadcrumb} mobileMenuItems={mobileMenuItems}
             backToItem={{ label: 'Torna alla Dashboard', href: appRoutes.home }}>
             {children}
         </GenericLayout>

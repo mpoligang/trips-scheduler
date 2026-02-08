@@ -7,7 +7,7 @@ import RichTextEditor from "@/components/inputs/rich-text-editor";
 import Tabs from "@/components/navigations/tabs";
 import { AISearchRequest, AIStageSuggestion, ReferenceEntity } from "@/models/AIStageSuggestion";
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FiMapPin } from "react-icons/fi";
 import LoaderIcon from "@/components/loading/loader-icon";
 import Button from "@/components/actions/button";
@@ -23,6 +23,7 @@ import Dropdown from "../inputs/dropdown";
 import { formatDateForPostgres, generateDateOptions, selectDateOption } from "@/utils/dateTripUtils";
 import { upsertStageAction } from "@/actions/stage-actions";
 import { INTEREST_MAP } from "@/utils/ai.utils";
+import Loader from "../loading/loader";
 
 
 const AISuggestionsMap = dynamic(
@@ -39,7 +40,7 @@ export default function AISuggestionsDetails({ search_results, reference }:
     }) {
 
     const router = useRouter();
-    const { trip, refreshData } = useTrip();
+    const { trip } = useTrip();
     const [isDeleteOpen, setIsDeleteOpen] = useState<boolean>(false);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
@@ -50,15 +51,8 @@ export default function AISuggestionsDetails({ search_results, reference }:
             const response = await deleteAISuggestions(search_results.id);
             if (response.success) {
                 toast.success("Suggerimenti eliminati con successo!");
-
-                // 1. Forza il refresh dei dati e attendi il completamento
-
-                // 2. Naviga solo DOPO che i dati sono stati rinfrescati
                 router.replace(appRoutes.aiInfo(trip?.id as string, reference.type, reference.id, 'new'));
-                refreshData(true);
-                // globalThis.location.reload(); // Ricarica la pagina per assicurarsi che lo stato sia aggiornato
-
-
+                location.reload();
             } else {
                 toast.error("Errore durante l'eliminazione.");
             }
@@ -69,6 +63,15 @@ export default function AISuggestionsDetails({ search_results, reference }:
             setIsDeleting(false);
             setIsDeleteOpen(false);
         }
+    }
+    useEffect(() => {
+        if (!search_results) {
+            router.replace(appRoutes.aiInfo(trip?.id as string, reference.type, reference.id, 'new'));
+        }
+    }, [search_results, router, trip?.id, reference]);
+
+    if (!search_results) {
+        return <Loader />;
     }
 
 
@@ -114,10 +117,7 @@ export default function AISuggestionsDetails({ search_results, reference }:
             ]} />
         </>
     );
-
-
-
-}
+};
 
 
 
@@ -195,7 +195,8 @@ export const SuggestedStagesList = ({ suggestions, reference }: { suggestions: A
                         icon={<FiMapPin />}
                         title={suggestion.name}
                         subtitle={suggestion.address}
-                        address={suggestion.address}
+                        latitude={suggestion.lat}
+                        longitude={suggestion.lng}
                         detailClick={() => {
                             setSelectedSuggestion(suggestion);
                             setSidebarOpen(true);

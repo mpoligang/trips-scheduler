@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -45,9 +45,6 @@ export default function AccommodationsList() {
         router.push(appRoutes.accommodationDetails(trip?.id as string, 'new'));
     };
 
-    /**
-     * ✅ REFACTORING: Chiamata alla Server Action con Toast
-     */
     const handleConfirmDelete = async () => {
         if (!deleteId || !trip?.id) return;
 
@@ -76,16 +73,16 @@ export default function AccommodationsList() {
         }
     };
 
-    // Logica di raggruppamento (invariata)
-    const groupedAccommodations = accommodations.reduce((acc, accommodation) => {
-        const destination = accommodation.destination || 'Altro';
-        if (!acc[destination]) acc[destination] = [];
-        acc[destination].push(accommodation);
-        return acc;
-    }, {} as Record<string, any[]>);
+    // ✅ ORDINAMENTO CRONOLOGICO (Senza Raggruppamento)
+    const sortedAccommodations = useMemo(() => {
+        return [...accommodations].sort((a, b) => {
+            const dateA = a.start_date ? new Date(a.start_date).getTime() : Infinity; // Infinity mette i senza data alla fine
+            const dateB = b.start_date ? new Date(b.start_date).getTime() : Infinity;
+            return dateA - dateB;
+        });
+    }, [accommodations]);
 
-    const sortedDestinations = Object.keys(groupedAccommodations).sort((a, b) => a.localeCompare(b));
-    const hasAccommodations = sortedDestinations.length > 0;
+    const hasAccommodations = sortedAccommodations.length > 0;
 
     return (
         <div>
@@ -109,29 +106,28 @@ export default function AccommodationsList() {
             </PageTitle>
 
             {hasAccommodations ? (
-                <div className="space-y-8">
-                    {sortedDestinations.map(destination => (
-                        <div key={destination}>
-                            <Badge text={destination} className='mb-4' />
-                            <div className="space-y-4 pl-4 border-l-2 border-gray-700">
-                                {groupedAccommodations[destination].map((accommodation) => (
-                                    <div key={accommodation.id} className="flex flex-col gap-1">
-
-                                        <FormSection title={formatStayPeriod(accommodation.start_date, accommodation.end_date)} className='capitalize'>
-                                            <DetailItemCard
-                                                icon={<RiHotelLine className="h-5 w-5" />}
-                                                title={accommodation.name}
-                                                detailClick={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
-                                                latitude={accommodation.latitude ?? 0}
-                                                longitude={accommodation.longitude ?? 0}
-                                                onDelete={() => handleOpenDeleteModal(accommodation.id)}
-                                                isOwner={isOwner}
-                                            />
-                                        </FormSection>
-                                    </div>
-                                ))}
+                <div className="space-y-6">
+                    {sortedAccommodations.map((accommodation) => (
+                        <FormSection
+                            key={accommodation.id}
+                            title={formatStayPeriod(accommodation.start_date, accommodation.end_date) || 'Date non definite'}
+                            className='capitalize'
+                        >
+                            <div className="relative pl-4 border-l-2 border-gray-700 hover:border-gray-500 transition-colors">
+                                <div className="mb-5">
+                                    <Badge text={accommodation.destination || 'Nessuna destinazione'} />
+                                </div>
+                                <DetailItemCard
+                                    icon={<RiHotelLine className="h-5 w-5" />}
+                                    title={accommodation.name}
+                                    detailClick={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
+                                    latitude={accommodation.lat ?? 0}
+                                    longitude={accommodation.lng ?? 0}
+                                    onDelete={() => handleOpenDeleteModal(accommodation.id)}
+                                    isOwner={isOwner}
+                                />
                             </div>
-                        </div>
+                        </FormSection>
                     ))}
                 </div>
             ) : (

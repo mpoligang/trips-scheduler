@@ -254,7 +254,6 @@ export default function TripForm() {
                 <ActionStickyBar
                     handleCancel={() => router.push(appRoutes.home)}
                     isSubmitting={isSubmitting}
-                    isNew={!isEditMode}
                 />
             </form>
         </div>

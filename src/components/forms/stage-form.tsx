@@ -230,7 +230,9 @@ export default function StageForm() {
 
 
                 {!isReadOnly && (
-                    <ActionStickyBar handleCancel={handleCancel} isSubmitting={isSubmitting} isNew={isNew} />
+                    <ActionStickyBar
+                        handleCancel={handleCancel}
+                        isSubmitting={isSubmitting} />
                 )}
             </form>
         </div>

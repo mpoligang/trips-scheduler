@@ -215,7 +215,6 @@ export default function RecommendedForm() {
                     <ActionStickyBar
                         handleCancel={handleCancel}
                         isSubmitting={isSubmitting}
-                        isNew={isNew}
                     />
                 )}
             </form>

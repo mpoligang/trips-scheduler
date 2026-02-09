@@ -247,7 +247,6 @@ export default function AccommodationForm() {
                     <ActionStickyBar
                         handleCancel={handleCancel}
                         isSubmitting={isSubmitting}
-                        isNew={isNew}
                     />
                 )}
             </form>

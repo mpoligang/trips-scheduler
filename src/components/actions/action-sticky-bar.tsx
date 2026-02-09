@@ -5,7 +5,6 @@ import { ImSpinner8 } from "react-icons/im";
 interface ActionStickyBarProps {
     readonly handleCancel: () => void;
     readonly isSubmitting: boolean;
-    readonly isNew?: boolean;
     readonly showCancel?: boolean;
     readonly actionLabel?: string;
 }
@@ -34,7 +33,7 @@ export default function ActionStickyBar({ handleCancel, isSubmitting, showCancel
             <Button className="ml-4 w-[100px]" type="submit" disabled={isSubmitting}>
                 <div className="flex items-center gap-2">
                     <ImSpinner8 className={`animate-spin mr-2 ${isSubmitting ? 'inline-block' : 'hidden'}`} />
-                    <FaCheck size={12} className={!isSubmitting ? 'inline-block' : 'hidden'} />
+                    <FaCheck size={12} className={isSubmitting ? 'hidden' : 'inline-block'} />
                     <span>{defaultActionLabel}</span>
                 </div>
             </Button>

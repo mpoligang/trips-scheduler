@@ -405,7 +405,6 @@ export default function ProfilePage() {
                         <ActionStickyBar
                             handleCancel={handleCancel}
                             isSubmitting={isUpdating}
-                            isNew={false}
                         />
                     )}
                 </form>

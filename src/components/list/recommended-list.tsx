@@ -116,8 +116,8 @@ export default function RecommendedList() {
                                         title={item.title}
                                         subtitle={item.address}
                                         detailClick={appRoutes.recommendedDetails(trip?.id as string, item.id)}
-                                        latitude={item.latitude ?? 0}
-                                        longitude={item.longitude ?? 0}
+                                        latitude={item.lat ?? 0}
+                                        longitude={item.lng ?? 0}
                                         onDelete={() => handleOpenDeleteModal(item.id)}
                                         isOwner={isOwner}
                                     />

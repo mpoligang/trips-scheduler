@@ -2,9 +2,12 @@
 
 import { createClient } from '@/lib/server';
 import { UserData } from '@/models/UserData';
+import { RoutingMode } from '@/models/StageLeg';
 import { EntityKeys } from '@/utils/entityKeys';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+
+import { recomputeAllTripLegsAction } from './legs-actions';
 
 
 export async function upsertTripAction(formData: {
@@ -14,6 +17,7 @@ export async function upsertTripAction(formData: {
     endDate: string;
     destinations: string[];
     participantIds: string[];
+    defaultRoutingMode?: RoutingMode;
 }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -59,7 +63,7 @@ export async function upsertTripAction(formData: {
     }
 
     // --- 2. PREPARAZIONE PAYLOAD ---
-    const tripPayload = {
+    const tripPayload: Record<string, unknown> = {
         name: formData.name,
         start_date: (formData.startDate),
         end_date: (formData.endDate),
@@ -67,12 +71,27 @@ export async function upsertTripAction(formData: {
         owner_id: user.id,
         updated_at: new Date().toISOString()
     };
+    if (formData.defaultRoutingMode) {
+        tripPayload.default_routing_mode = formData.defaultRoutingMode;
+    }
 
     let tripId = formData.id;
+    let modeChanged = false;
 
     // --- 3. SALVATAGGIO O UPDATE ---
     try {
         if (!isNewTrip) {
+            // Stato precedente, per capire se la modalità di spostamento è cambiata.
+            const { data: existing } = await supabase
+                .from(EntityKeys.tripsKey)
+                .select('default_routing_mode')
+                .eq('id', tripId)
+                .eq('owner_id', user.id)
+                .maybeSingle();
+
+            modeChanged = !!(formData.defaultRoutingMode
+                && existing?.default_routing_mode !== formData.defaultRoutingMode);
+
             // Update sicuro con controllo owner_id (IDOR protection)
             const { error } = await supabase
                 .from(EntityKeys.tripsKey)
@@ -94,6 +113,12 @@ export async function upsertTripAction(formData: {
         }
     } catch (error: any) {
         return { error: error.message || "Errore durante il salvataggio del viaggio" };
+    }
+
+    // Se la modalità è cambiata, ricalcoliamo tutte le legs del viaggio.
+    // 1 chiamata Stadia per ogni giornata con almeno 2 tappe geolocalizzate.
+    if (tripId && modeChanged) {
+        await recomputeAllTripLegsAction(tripId);
     }
 
     // --- 4. GESTIONE PARTECIPANTI ---
@@ -215,6 +240,7 @@ export async function getTripFullDataAction(tripId: string) {
                 accommodations(*, attachments(*)),
                 transports(*, attachments(*)),
                 recommended(*),
+                stage_legs(*),
                 expenses(
                     *,
                     profiles:paid_by (id, first_name, last_name, username),

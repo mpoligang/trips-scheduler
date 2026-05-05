@@ -1,22 +1,25 @@
-import { createClient } from '@/lib/server';
 import { NextResponse } from 'next/server';
 
+import { createClient } from '@/lib/server';
+import { searchPlaces, StadiaError } from '@/lib/maps/stadia';
+
+const RESULT_LIMIT = 8;
+
+interface LegacyLocationResult {
+    place_id: string;
+    lat: string;
+    lon: string;
+    display_name: string;
+}
+
 export async function GET(request: Request) {
-
-
-    // 1. Inizializza il client Supabase per i Route Handlers
     const supabase = await createClient();
-
-    // 2. Verifica l'autenticazione dell'utente
-    // Supabase recupera automaticamente il JWT dai cookie della sessione
     const { data: { user } } = await supabase.auth.getUser();
-
 
     if (!user) {
         return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
     }
 
-    // 3. Recupera i parametri dalla query string
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
 
@@ -24,29 +27,29 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Il parametro 'q' è obbligatorio" }, { status: 400 });
     }
 
-    const apiKey = process.env.LOCATIONIQ_API_KEY;
-
-    if (!apiKey) {
-        console.error("Errore: LOCATIONIQ_API_KEY non configurata.");
-        return NextResponse.json({ error: "Errore di configurazione server" }, { status: 500 });
-    }
-
-    // 4. Esegui la chiamata a LocationIQ (usiamo fetch nativo di Next.js)
-    const apiUrl = `https://us1.locationiq.com/v1/search?key=${apiKey}&q=${encodeURIComponent(query)}&format=json&accept-language=it,en`;
-
     try {
-        const response = await fetch(apiUrl);
+        const results = await searchPlaces(query, { limit: RESULT_LIMIT });
 
-        if (!response.ok) {
-            throw new Error(`LocationIQ ha risposto con status: ${response.status}`);
-        }
+        // Manteniamo lo shape storico (LocationIQ-like) per non toccare il client.
+        const legacy: LegacyLocationResult[] = results.map((r, idx) => ({
+            place_id: `stadia-${idx}-${r.lat},${r.lng}`,
+            lat: String(r.lat),
+            lon: String(r.lng),
+            display_name: r.address,
+        }));
 
-        const data = await response.json();
-
-        // Ritorna i dati al frontend
-        return NextResponse.json(data);
+        return NextResponse.json(legacy);
     } catch (error) {
-        console.error("Errore chiamata a LocationIQ:", error);
-        return NextResponse.json({ error: "Errore durante la ricerca della località" }, { status: 500 });
+        if (error instanceof StadiaError) {
+            console.error('Stadia geocoding error:', error.code, error.message);
+            // Errori upstream non devono mai abbattere il form: ritorniamo lista vuota
+            // tranne che per problemi di configurazione/auth, dove vogliamo evidenziarli.
+            if (error.code === 'unauthorized') {
+                return NextResponse.json({ error: 'Configurazione Stadia non valida' }, { status: 500 });
+            }
+            return NextResponse.json([]);
+        }
+        console.error('Errore inatteso geocoding:', error);
+        return NextResponse.json({ error: 'Errore durante la ricerca della località' }, { status: 500 });
     }
 }

@@ -6,6 +6,20 @@ import { Transport, TransportType } from '@/models/Transport';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { recomputeDayLegsAction } from './legs-actions';
+
+const dayPrefix = (timestamp: string | null | undefined): string | undefined =>
+    timestamp ? timestamp.split('T')[0] : undefined;
+
+const collectTransportDays = (...timestamps: (string | null | undefined)[]): string[] => {
+    const days = new Set<string>();
+    for (const ts of timestamps) {
+        const day = dayPrefix(ts);
+        if (day) days.add(day);
+    }
+    return Array.from(days);
+};
+
 const TransportSchema = z.object({
     // Permettiamo stringa vuota o null, ma se c'è deve essere UUID
     id: z.uuid().optional().nullable(),
@@ -39,8 +53,21 @@ export async function upsertTransportAction(data: Transport) {
 
     const { id, ...payload } = validated.data;
 
+    // Stato precedente: serve a sapere quali giornate vanno ricalcolate
+    // se il transport viene spostato da un giorno all'altro.
+    let previousDepDate: string | null | undefined;
+    let previousArrDate: string | null | undefined;
+
     let savedId = id;
     if (id) {
+        const { data: existing } = await supabase
+            .from(EntityKeys.transportsKey)
+            .select('dep_date, arr_date')
+            .eq('id', id)
+            .maybeSingle();
+        previousDepDate = existing?.dep_date as string | null | undefined;
+        previousArrDate = existing?.arr_date as string | null | undefined;
+
         const { error } = await supabase
             .from(EntityKeys.transportsKey)
             .update(payload)
@@ -54,6 +81,16 @@ export async function upsertTransportAction(data: Transport) {
             .single();
         if (error) return { success: false, error: error.message };
         savedId = data?.id;
+    }
+
+    // Un transport spezza/ricostruisce le catene di legs nel suo giorno (e in
+    // quello vecchio se è stato spostato). Ricalcoliamo le giornate impattate.
+    const affectedDays = collectTransportDays(
+        payload.dep_date, payload.arr_date,
+        previousDepDate, previousArrDate
+    );
+    for (const day of affectedDays) {
+        await recomputeDayLegsAction({ tripId: payload.trip_id, date: day });
     }
 
     revalidatePath(`/dashboard/trips/${payload.trip_id}`);
@@ -74,6 +111,17 @@ export async function deleteTransportAction(formData: { id: string, trip_id: str
     if (!validated.success) return { success: false, error: "Dati non validi." };
 
     try {
+        // 0. Salviamo i giorni del transport prima della cancellazione, per il ricalcolo legs.
+        const { data: existing } = await supabase
+            .from(EntityKeys.transportsKey)
+            .select('dep_date, arr_date')
+            .eq('id', validated.data.id)
+            .maybeSingle();
+        const affectedDays = collectTransportDays(
+            existing?.dep_date as string | null | undefined,
+            existing?.arr_date as string | null | undefined,
+        );
+
         // 1. Recupero path degli allegati collegati al trasporto
         const { data: attachments } = await supabase
             .from(EntityKeys.attachmentsKey)
@@ -95,7 +143,12 @@ export async function deleteTransportAction(formData: { id: string, trip_id: str
 
         if (error) throw error;
 
-        // 4. Revalidazione della cache per aggiornare la lista
+        // 4. Senza più il transport, le tappe potrebbero formare nuove coppie contigue.
+        for (const day of affectedDays) {
+            await recomputeDayLegsAction({ tripId: validated.data.trip_id, date: day });
+        }
+
+        // 5. Revalidazione della cache per aggiornare la lista
         revalidatePath(`/dashboard/trips/${validated.data.trip_id}`);
 
         return { success: true };

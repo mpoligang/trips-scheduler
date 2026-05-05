@@ -1,4 +1,11 @@
 import { appConfig } from "@/configs/app-config";
+import { RoutingMode } from "@/models/StageLeg";
+
+const GOOGLE_TRAVEL_MODE: Record<RoutingMode, string> = {
+    walking: 'walking',
+    cycling: 'bicycling',
+    driving: 'driving',
+};
 
 /**
  * Apre il client email predefinito dell'utente con campi precompilati.
@@ -68,3 +75,17 @@ export const openLatLngLink = (lat: number, lng: number) => {
         newWindow.open(url, '_blank');
     }
 }
+
+/**
+ * Apre Google Maps in modalità "Indicazioni" tra due coordinate, con la modalità
+ * di viaggio richiesta. Funziona sia da desktop sia da mobile (deep link nativo).
+ */
+export const openGoogleMapsDirections = (
+    from: { lat: number; lng: number },
+    to: { lat: number; lng: number },
+    mode: RoutingMode = 'walking'
+) => {
+    const travelmode = GOOGLE_TRAVEL_MODE[mode];
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${from.lat},${from.lng}&destination=${to.lat},${to.lng}&travelmode=${travelmode}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+};

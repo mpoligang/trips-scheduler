@@ -6,6 +6,37 @@ import { EntityKeys } from '@/utils/entityKeys';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { recomputeDayLegsAction } from './legs-actions';
+
+const dayPrefix = (timestamp: string | null | undefined): string | undefined =>
+    timestamp ? timestamp.split('T')[0] : undefined;
+
+interface AffectedDaysInput {
+    isInsert: boolean;
+    newArrival: string;
+    previousArrival?: string;
+    previousLat?: number | null;
+    previousLng?: number | null;
+    newLat: number;
+    newLng: number;
+}
+
+const computeAffectedDays = (input: AffectedDaysInput): string[] => {
+    const newDay = dayPrefix(input.newArrival);
+    if (input.isInsert) return newDay ? [newDay] : [];
+
+    const oldDay = dayPrefix(input.previousArrival);
+    const arrivalChanged = input.previousArrival !== input.newArrival;
+    const locationChanged = input.previousLat !== input.newLat || input.previousLng !== input.newLng;
+
+    if (!arrivalChanged && !locationChanged) return [];
+
+    const days = new Set<string>();
+    if (newDay) days.add(newDay);
+    if (oldDay && oldDay !== newDay) days.add(oldDay);
+    return Array.from(days);
+};
+
 const StageSchema = z.object({
     id: z.uuid().optional().nullable(),
     trip_id: z.uuid(),
@@ -34,8 +65,23 @@ export async function upsertStageAction(data: Stage) {
 
     const { id, ...payload } = validated.data;
 
+    // Per le update, leggiamo lo stato precedente: serve a capire quali giornate
+    // vanno ricalcolate (tipicamente la nuova; entrambe se cambia il giorno).
+    let previousArrival: string | undefined;
+    let previousLat: number | null | undefined;
+    let previousLng: number | null | undefined;
+
     let savedId = id;
     if (id) {
+        const { data: existing } = await supabase
+            .from(EntityKeys.stagesKey)
+            .select('arrival_date, lat, lng')
+            .eq('id', id)
+            .maybeSingle();
+        previousArrival = existing?.arrival_date as string | undefined;
+        previousLat = existing?.lat as number | null | undefined;
+        previousLng = existing?.lng as number | null | undefined;
+
         const { error } = await supabase
             .from(EntityKeys.stagesKey)
             .update(payload)
@@ -49,6 +95,20 @@ export async function upsertStageAction(data: Stage) {
             .single();
         if (error) return { success: false, error: error.message };
         savedId = data?.id;
+    }
+
+    // Ricalcolo non blocca il save: errori già loggati dentro l'action.
+    const affectedDays = computeAffectedDays({
+        isInsert: !id,
+        newArrival: payload.arrival_date,
+        previousArrival,
+        previousLat,
+        previousLng,
+        newLat: payload.lat,
+        newLng: payload.lng,
+    });
+    for (const day of affectedDays) {
+        await recomputeDayLegsAction({ tripId: payload.trip_id, date: day });
     }
 
     revalidatePath(`/dashboard/trips/${payload.trip_id}`);
@@ -68,6 +128,14 @@ export async function deleteStageAction(formData: { id: string, trip_id: string 
     if (!validated.success) return { success: false, error: "Dati non validi." };
 
     try {
+        // 0. Salviamo il giorno della tappa prima di cancellarla, per il ricalcolo legs.
+        const { data: stageRow } = await supabase
+            .from(EntityKeys.stagesKey)
+            .select('arrival_date')
+            .eq('id', validated.data.id)
+            .maybeSingle();
+        const affectedDay = dayPrefix(stageRow?.arrival_date as string | undefined);
+
         // 1. Recupero path degli allegati per pulizia Storage
         const { data: attachments } = await supabase
             .from(EntityKeys.attachmentsKey)
@@ -80,7 +148,7 @@ export async function deleteStageAction(formData: { id: string, trip_id: string 
             await supabase.storage.from(EntityKeys.attachmentsKey).remove(paths);
         }
 
-        // 2. Eliminazione record tappa (CASCADE gestisce i metadati attachments)
+        // 2. Eliminazione record tappa (CASCADE gestisce i metadati attachments e le legs).
         const { error } = await supabase
             .from(EntityKeys.stagesKey)
             .delete()
@@ -88,7 +156,13 @@ export async function deleteStageAction(formData: { id: string, trip_id: string 
 
         if (error) throw error;
 
-        // 3. Revalidazione della cache
+        // 3. Ricalcolo legs della giornata: i legs della tappa eliminata sono già caduti
+        //    via cascade, ma le tappe rimaste potrebbero formare nuove coppie contigue.
+        if (affectedDay) {
+            await recomputeDayLegsAction({ tripId: validated.data.trip_id, date: affectedDay });
+        }
+
+        // 4. Revalidazione della cache
         revalidatePath(`/dashboard/trips/${validated.data.trip_id}`);
 
         return { success: true };

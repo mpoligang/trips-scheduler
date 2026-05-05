@@ -91,7 +91,7 @@ export default function DetailItemCard({
                         </p>
                         {
                             subtitle && (
-                                <p className="text-gray-400 text-xs md:text-sm truncate">
+                                <p className="text-gray-400 text-xs md:text-sm truncate mt-1">
                                     {subtitle}
                                 </p>
                             )

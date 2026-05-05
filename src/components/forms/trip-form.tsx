@@ -12,6 +12,7 @@ import { appRoutes } from '@/utils/appRoutes';
 import DateRangePicker from '@/components/inputs/date-range-picker';
 import Button from '@/components/actions/button';
 import Input from '@/components/inputs/input';
+import Dropdown from '@/components/inputs/dropdown';
 import PageTitle from '@/components/generics/page-title';
 import Loader from '@/components/loading/loader';
 import UserSearch from '@/components/inputs/user-search';
@@ -22,9 +23,21 @@ import DialogComponent from '@/components/modals/confirm-modal';
 import { FaPlus, FaTrashAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { sendEmailToUpgrade } from '@/utils/open-link.utils';
 import { UserData } from '@/models/UserData';
+import { RoutingMode } from '@/models/StageLeg';
 import Badge from '../generics/badge';
 import toast from 'react-hot-toast';
 import { formatDateForPostgres } from '@/utils/dateTripUtils';
+
+interface RoutingModeOption {
+    id: RoutingMode;
+    name: string;
+}
+
+const ROUTING_MODE_OPTIONS: RoutingModeOption[] = [
+    { id: 'walking', name: 'A piedi' },
+    { id: 'cycling', name: 'In bici' },
+    { id: 'driving', name: 'In auto' },
+];
 
 export default function TripForm() {
     const { user, refreshUserData, userData } = useAuth();
@@ -40,6 +53,7 @@ export default function TripForm() {
     const [destinations, setDestinations] = useState<string[]>([]);
     const [currentDestination, setCurrentDestination] = useState('');
     const [participantsState, setParticipants] = useState<Partial<UserData>[]>([]);
+    const [routingMode, setRoutingMode] = useState<RoutingModeOption>(ROUTING_MODE_OPTIONS[0]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [limitError, setLimitError] = useState<{ title: string; message: string } | null>(null);
@@ -55,6 +69,8 @@ export default function TripForm() {
                     to: new Date(trip.end_date)
                 });
             }
+            const matched = ROUTING_MODE_OPTIONS.find(o => o.id === trip.default_routing_mode);
+            if (matched) setRoutingMode(matched);
         }
 
         // Sincronizza i partecipanti dal context allo stato locale
@@ -124,7 +140,8 @@ export default function TripForm() {
                 startDate: formatDateForPostgres(dateRange.from),
                 endDate: formatDateForPostgres(dateRange.to),
                 destinations,
-                participantIds: participantIds
+                participantIds: participantIds,
+                defaultRoutingMode: routingMode.id,
             });
 
             if (result.error === "limit_reached") {
@@ -186,6 +203,15 @@ export default function TripForm() {
                             required
                         />
                         <DateRangePicker value={dateRange} onChange={setDateRange} required />
+                        <Dropdown<RoutingModeOption>
+                            label="Modalità di spostamento"
+                            items={ROUTING_MODE_OPTIONS}
+                            selected={routingMode}
+                            onSelect={(val) => val && setRoutingMode(val)}
+                            optionValue="id"
+                            optionLabel="name"
+                            required
+                        />
                     </div>
                 </FormSection>
 

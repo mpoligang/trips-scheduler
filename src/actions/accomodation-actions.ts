@@ -30,28 +30,27 @@ export async function upsertAccommodationAction(data: z.infer<typeof Accommodati
 
     const { id, ...payload } = validated.data;
 
-    let error;
+    let savedId = id;
     if (id) {
-        // Update
         const { error: updateError } = await supabase
             .from(EntityKeys.accommodationsKey)
             .update(payload)
             .eq('id', id);
-        error = updateError;
+        if (updateError) return { success: false, error: updateError.message };
     } else {
-        // Insert
-        const { error: insertError } = await supabase
+        const { data, error: insertError } = await supabase
             .from(EntityKeys.accommodationsKey)
-            .insert([payload]);
-        error = insertError;
+            .insert([payload])
+            .select('id')
+            .single();
+        if (insertError) return { success: false, error: insertError.message };
+        savedId = data?.id;
     }
-
-    if (error) return { success: false, error: error.message };
 
     // 2. Revalidazione della cache di Next.js
     revalidatePath(`/dashboard/trips/${payload.trip_id}`);
 
-    return { success: true };
+    return { success: true, id: savedId };
 }
 
 

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { PathItem } from "@/models/PathItem";
 import GenericLayout from "./generic-container"; // Verifica il percorso
 import { useTrip } from "@/context/tripContext";
-import { BiBrain, BiTrip } from "react-icons/bi";
+import { BiBrain } from "react-icons/bi";
 import { EntityKeys } from "@/utils/entityKeys";
 import { appRoutes } from "@/utils/appRoutes";
 import { AISearchRequest } from "@/models/AIStageSuggestion";
@@ -10,7 +10,7 @@ import { LiaSmsSolid } from "react-icons/lia";
 import { formatDate } from "@/utils/dateTripUtils";
 import { useAuth } from "@/context/authProvider";
 import PlaceholderCard from "../cards/placeholder-card";
-import { FaKey } from "react-icons/fa";
+import { FaKey, FaMapMarkerAlt, FaRegCalendarAlt } from "react-icons/fa";
 import HowToObtainAIApiKeyModal from "../modals/how-obtain-ai-api-key";
 import Button from "../actions/button";
 import { BsTruckFront } from "react-icons/bs";
@@ -61,7 +61,7 @@ const AIContainerTemplate = ({ children, detailId, sectionPath }: AIContainerTem
         const historyItems = filteredRequests.map(req => ({
             label: formatDate(req.created_at),
             icon: LiaSmsSolid,
-            href: appRoutes.aiInfo(trip?.id as string, sectionPath as string, detailId as string, req.id as string)
+            href: appRoutes.aiInfo(trip?.id as string, sectionPath as string, detailId as string, req.id)
         }));
 
         // Unione menu fisso + storico
@@ -121,7 +121,8 @@ const AIContainerTemplate = ({ children, detailId, sectionPath }: AIContainerTem
     }, [trip, sectionPath, detailId]);
 
     const mobileMenuItems = [
-        { id: 'itinerary', label: 'Itinerario', icon: BiTrip, href: appRoutes.stages(trip?.id || '') },
+        { id: 'itinerary', label: 'Itinerario', icon: FaRegCalendarAlt, href: appRoutes.itinerary(trip?.id || '') },
+        { id: 'stages', label: 'Tappe', icon: FaMapMarkerAlt, href: appRoutes.stages(trip?.id || '') },
         { id: 'accommodations', label: 'Alloggi', icon: RiHotelLine, href: appRoutes.accommodations(trip?.id || '') },
         { id: 'transports', label: 'Trasporti', icon: BsTruckFront, href: appRoutes.transports(trip?.id || '') },
         { id: 'recommended', label: 'Consigliati', icon: MdOutlineTipsAndUpdates, href: appRoutes.recommended(trip?.id || '') },

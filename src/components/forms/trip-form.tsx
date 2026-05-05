@@ -98,6 +98,11 @@ export default function TripForm() {
             return;
         }
 
+        if (destinations.length === 0) {
+            toast.error("Aggiungi almeno una tappa al viaggio.");
+            return;
+        }
+
         setIsSubmitting(true);
         toast.dismiss();
 
@@ -193,6 +198,7 @@ export default function TripForm() {
                             onChange={(e) => setCurrentDestination(e.target.value)}
                             placeholder="Es. Parigi"
                             className="flex-grow"
+                            required
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddDestination(); } }}
                         />
                         <Button variant="secondary" type="button" onClick={handleAddDestination} size="sm" className='h-10'>

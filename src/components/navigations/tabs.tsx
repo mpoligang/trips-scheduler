@@ -10,11 +10,12 @@ export interface TabItem {
 
 interface TabsProps {
     tabs: TabItem[];
+    defaultIndex?: number;
 }
 
-export default function Tabs({ tabs }: Readonly<TabsProps>) {
+export default function Tabs({ tabs, defaultIndex }: Readonly<TabsProps>) {
     return (
-        <TabGroup as="div" className="w-full">
+        <TabGroup as="div" className="w-full" defaultIndex={defaultIndex}>
             <TabList className="
                 flex flex-nowrap overflow-x-auto 
                 border-b border-gray-700

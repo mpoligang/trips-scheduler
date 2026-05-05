@@ -55,11 +55,62 @@ export const selectDateOption = (date: Date | undefined | null, options: DateOpt
 };
 
 // utils/dateTripUtils.ts
-export const formatDateForPostgres = (date: Date): string => {
+export const formatDateForPostgres = (date: Date, time?: string): string => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+    const datePart = `${yyyy}-${mm}-${dd}`;
+    if (time && /^\d{2}:\d{2}$/.test(time)) {
+        // Il suffisso Z forza Postgres a memorizzare l'orario come UTC-naive,
+        // così il valore digitato dall'utente viene riletto identico indipendentemente dal fuso del browser.
+        return `${datePart}T${time}:00Z`;
+    }
+    return datePart;
+};
+
+/**
+ * Estrae l'orario (HH:mm) da una data salvata.
+ * Usa i getter UTC perché salviamo gli orari come UTC-naive (vedi formatDateForPostgres).
+ * Restituisce stringa vuota se l'orario è mezzanotte (interpretato come "nessun orario impostato").
+ */
+export const extractTimeFromDate = (date: Date | string | undefined | null): string => {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (Number.isNaN(d.getTime())) return '';
+    const h = d.getUTCHours();
+    const m = d.getUTCMinutes();
+    if (h === 0 && m === 0) return '';
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+};
+
+/**
+ * Costruisce un Date locale a mezzanotte a partire dal prefisso YYYY-MM-DD del timestamp salvato.
+ * Evita shift di giorno dovuti alla conversione di timezone quando l'orario è vicino alla mezzanotte.
+ */
+export const parseDateOnly = (dateString: string | undefined | null): Date | undefined => {
+    if (!dateString) return undefined;
+    const datePart = dateString.split('T')[0];
+    const [y, m, d] = datePart.split('-').map(Number);
+    if (!y || !m || !d) return undefined;
+    return new Date(y, m - 1, d);
+};
+
+/**
+ * Reinterpreta un timestamp UTC-naive (formato salvato con suffisso Z) come Date locale,
+ * preservando i componenti wall-clock. Utile per confrontare con `Date.now()`.
+ */
+export const parseDateTimeAsLocal = (dateString: string | undefined | null): Date | undefined => {
+    if (!dateString) return undefined;
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return undefined;
+    return new Date(
+        d.getUTCFullYear(),
+        d.getUTCMonth(),
+        d.getUTCDate(),
+        d.getUTCHours(),
+        d.getUTCMinutes(),
+        d.getUTCSeconds()
+    );
 };
 
 /**

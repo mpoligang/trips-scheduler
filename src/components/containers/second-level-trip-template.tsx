@@ -1,7 +1,8 @@
 import { PathItem } from "@/models/PathItem";
 import GenericLayout from "./generic-container"
 import { useTrip } from "@/context/tripContext";
-import { BiDetail, BiTrip } from "react-icons/bi";
+import { BiDetail } from "react-icons/bi";
+import { FaMapMarkerAlt, FaRegCalendarAlt } from "react-icons/fa";
 import { ImAttachment } from "react-icons/im";
 import { PiBrain } from "react-icons/pi";
 import { appRoutes } from "@/utils/appRoutes";
@@ -41,7 +42,8 @@ const SecondLevelTripTemplate = ({ breadcrumb, children, detailId, sectionPath, 
 
 
     const mobileMenuItems = [
-        { id: 'itinerary', label: 'Itinerario', icon: BiTrip, href: appRoutes.stages(trip?.id || '') },
+        { id: 'itinerary', label: 'Itinerario', icon: FaRegCalendarAlt, href: appRoutes.itinerary(trip?.id || '') },
+        { id: 'stages', label: 'Tappe', icon: FaMapMarkerAlt, href: appRoutes.stages(trip?.id || '') },
         { id: 'accommodations', label: 'Alloggi', icon: RiHotelLine, href: appRoutes.accommodations(trip?.id || '') },
         { id: 'transports', label: 'Trasporti', icon: BsTruckFront, href: appRoutes.transports(trip?.id || '') },
         { id: 'recommended', label: 'Consigliati', icon: MdOutlineTipsAndUpdates, href: appRoutes.recommended(trip?.id || '') },

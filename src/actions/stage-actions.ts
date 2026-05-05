@@ -34,22 +34,25 @@ export async function upsertStageAction(data: Stage) {
 
     const { id, ...payload } = validated.data;
 
-    let result;
+    let savedId = id;
     if (id) {
-        result = await supabase
+        const { error } = await supabase
             .from(EntityKeys.stagesKey)
             .update(payload)
             .eq('id', id);
+        if (error) return { success: false, error: error.message };
     } else {
-        result = await supabase
+        const { data, error } = await supabase
             .from(EntityKeys.stagesKey)
-            .insert([payload]);
+            .insert([payload])
+            .select('id')
+            .single();
+        if (error) return { success: false, error: error.message };
+        savedId = data?.id;
     }
 
-    if (result.error) return { success: false, error: result.error.message };
-
     revalidatePath(`/dashboard/trips/${payload.trip_id}`);
-    return { success: true };
+    return { success: true, id: savedId };
 }
 
 

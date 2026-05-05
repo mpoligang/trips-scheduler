@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { appRoutes } from '@/utils/appRoutes';
 import { deleteStageAction } from '@/actions/stage-actions';
 import { useTrip } from '@/context/tripContext';
+import { extractTimeFromDate } from '@/utils/dateTripUtils';
 
 import DialogComponent from '../modals/confirm-modal';
 import Button from '../actions/button';
@@ -70,7 +71,11 @@ export default function StagesList() {
         router.push(appRoutes.stageDetails(trip?.id as string, 'new'));
     };
 
-    const groupedStages = stages.reduce((acc, stage) => {
+    const sortedStages = [...stages].sort(
+        (a, b) => new Date(a.arrival_date).getTime() - new Date(b.arrival_date).getTime()
+    );
+
+    const groupedStages = sortedStages.reduce((acc, stage) => {
         const dateKey = stage.arrival_date ? stage.arrival_date.split('T')[0] : 'no-date';
         const destination = stage.destination || 'Non specificato';
         if (!acc[dateKey]) { acc[dateKey] = {}; }
@@ -115,18 +120,22 @@ export default function StagesList() {
                                         <div className='w-auto' key={destination}>
                                             <Badge text={destination} className='mb-4' />
                                             <ul className="space-y-4 pl-4 border-l-2 border-gray-600">
-                                                {groupedStages[date][destination].map((stage) => (
-                                                    <DetailItemCard
-                                                        key={stage.id}
-                                                        icon={<FaMapMarkerAlt className="h-5 w-5" />}
-                                                        title={stage.name}
-                                                        detailClick={appRoutes.stageDetails(trip?.id as string, stage.id)}
-                                                        latitude={stage.lat ?? 0}
-                                                        longitude={stage.lng ?? 0}
-                                                        onDelete={() => handleOpenDeleteModal(stage.id)}
-                                                        isOwner={isOwner}
-                                                    />
-                                                ))}
+                                                {groupedStages[date][destination].map((stage) => {
+                                                    const time = extractTimeFromDate(stage.arrival_date);
+                                                    return (
+                                                        <DetailItemCard
+                                                            key={stage.id}
+                                                            icon={<FaMapMarkerAlt className="h-5 w-5" />}
+                                                            title={stage.name}
+                                                            subtitle={time || undefined}
+                                                            detailClick={appRoutes.stageDetails(trip?.id as string, stage.id)}
+                                                            latitude={stage.lat ?? 0}
+                                                            longitude={stage.lng ?? 0}
+                                                            onDelete={() => handleOpenDeleteModal(stage.id)}
+                                                            isOwner={isOwner}
+                                                        />
+                                                    );
+                                                })}
                                             </ul>
                                         </div>
                                     ))}

@@ -10,12 +10,13 @@ import { useAuth } from '@/context/authProvider';
 import { upsertStageAction } from '@/actions/stage-actions';
 
 import { appRoutes } from '@/utils/appRoutes';
-import { formatDateForPostgres, generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
+import { extractTimeFromDate, formatDateForPostgres, generateDateOptions, parseDateOnly, selectDateOption } from '@/utils/dateTripUtils';
 import { Location } from '@/models/Location';
 import { hasRealContent } from '@/utils/fileSizeUtils';
 
 import Dropdown from '../inputs/dropdown';
 import Input from '../inputs/input';
+import TimeInput from '../inputs/time-input';
 import PageTitle from '../generics/page-title';
 import ContextMenu, { ContextMenuItem } from '../actions/context-menu';
 import SearchLocation from '../inputs/search-location';
@@ -45,6 +46,7 @@ export default function StageForm() {
     // Stati del form (Invariati)
     const [stageName, setStageName] = useState('');
     const [stageDate, setStageDate] = useState<Date | undefined>();
+    const [stageTime, setStageTime] = useState<string>('');
     const [stageLocation, setStageLocation] = useState<Location | null>(null);
     const [stageDestination, setStageDestination] = useState<{ id: string; name: string } | null>(null);
     const [additionalContents, setAdditionalContents] = useState<string>('');
@@ -63,7 +65,8 @@ export default function StageForm() {
         const stage = stages?.find(s => s.id === stageId);
         if (stage) {
             setStageName(stage.name);
-            setStageDate(new Date(stage.arrival_date));
+            setStageDate(parseDateOnly(stage.arrival_date));
+            setStageTime(extractTimeFromDate(stage.arrival_date));
             setStageLocation({
                 address: stage.address || '',
                 lat: stage.lat || 0,
@@ -79,6 +82,13 @@ export default function StageForm() {
     useEffect(() => {
         if (!isNew) populateForm();
     }, [populateForm, isNew]);
+
+    useEffect(() => {
+        if (!stageDestination && trip?.destinations?.length === 1) {
+            const only = trip.destinations[0];
+            setStageDestination({ id: only, name: only });
+        }
+    }, [trip?.destinations, stageDestination]);
 
     const handleCancel = () => {
         if (isNew) router.back();
@@ -102,7 +112,7 @@ export default function StageForm() {
             id: stageId, // La action gestirà il valore 'new'
             trip_id: tripId,
             name: stageName,
-            arrival_date: formatDateForPostgres(stageDate),
+            arrival_date: formatDateForPostgres(stageDate, stageTime),
             destination: stageDestination.name,
             address: stageLocation.address,
             lat: stageLocation.lat,
@@ -119,10 +129,9 @@ export default function StageForm() {
 
             await refreshData(true);
 
-            if (isNew) {
-                router.push(appRoutes.stages(tripId));
-            } else {
-                setIsReadOnly(true);
+            setIsReadOnly(true);
+            if (isNew && result.id) {
+                router.replace(appRoutes.stageDetails(tripId, result.id));
             }
         } catch (err: any) {
             toast.error(err.message || "Errore durante il salvataggio", { id: toastId });
@@ -197,17 +206,28 @@ export default function StageForm() {
                             placeholder="Cerca un indirizzo..."
                             required
                         />
-                        <Dropdown<{ id: string; name: string; date: Date }>
-                            label="Data della tappa"
-                            items={dateOptions}
-                            selected={selectedDateOption}
-                            onSelect={(val) => setStageDate(val?.date)}
-                            optionValue="id"
-                            optionLabel="name"
-                            placeholder="Seleziona data"
-                            readOnly={isReadOnly}
-                            required
-                        />
+                        <div className="grid grid-cols-[1fr_7rem] gap-3 items-start">
+                            <Dropdown<{ id: string; name: string; date: Date }>
+                                label="Data della tappa"
+                                items={dateOptions}
+                                selected={selectedDateOption}
+                                onSelect={(val) => setStageDate(val?.date)}
+                                optionValue="id"
+                                optionLabel="name"
+                                placeholder="Seleziona data"
+                                readOnly={isReadOnly}
+                                required
+                            />
+                            {(!isReadOnly || stageTime) && (
+                                <TimeInput
+                                    id="stage-time"
+                                    label="Ora"
+                                    value={stageTime}
+                                    onChange={setStageTime}
+                                    readOnly={isReadOnly}
+                                />
+                            )}
+                        </div>
                     </div>
                 </FormSection>
 

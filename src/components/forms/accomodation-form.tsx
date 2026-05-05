@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'; // Installalo se non lo hai: npm install re
 import { useTrip } from '@/context/tripContext';
 
 import { appRoutes } from '@/utils/appRoutes';
-import { formatDateForPostgres, generateDateOptions, selectDateOption } from '@/utils/dateTripUtils';
+import { extractTimeFromDate, formatDateForPostgres, generateDateOptions, parseDateOnly, selectDateOption } from '@/utils/dateTripUtils';
 import { Location } from '@/models/Location';
 
 import ContextMenu from '@/components/actions/context-menu';
@@ -17,6 +17,7 @@ import LinkPreview from '../inputs/link-preview';
 import SearchLocation from '../inputs/search-location';
 import Dropdown from '../inputs/dropdown';
 import Input from '../inputs/input';
+import TimeInput from '../inputs/time-input';
 import ActionStickyBar from '../actions/action-sticky-bar';
 import FormSection from '../generics/form-section';
 import RichTextInput from '../inputs/rich-text-editor';
@@ -48,6 +49,8 @@ export default function AccommodationForm() {
     const [notes, setNotes] = useState<string>('');
     const [startDate, setStartDate] = useState<Date | undefined>();
     const [endDate, setEndDate] = useState<Date | undefined>();
+    const [checkInTime, setCheckInTime] = useState<string>('');
+    const [checkOutTime, setCheckOutTime] = useState<string>('');
 
     const dateOptions = useMemo(() => {
         if (!trip?.start_date || !trip?.end_date) return [];
@@ -69,13 +72,22 @@ export default function AccommodationForm() {
             setLink(acc.link || '');
             setNotes(acc.notes || '');
             setLocation({ address: acc.address || '', lat: acc.lat || 0, lng: acc.lng || 0 });
-            setStartDate(acc.start_date ? new Date(acc.start_date) : undefined);
-            setEndDate(acc.end_date ? new Date(acc.end_date) : undefined);
+            setStartDate(parseDateOnly(acc.start_date));
+            setEndDate(parseDateOnly(acc.end_date));
+            setCheckInTime(extractTimeFromDate(acc.start_date));
+            setCheckOutTime(extractTimeFromDate(acc.end_date));
             if (acc.destination) setAccommodationDestination({ id: acc.destination, name: acc.destination });
         }
     }, [accommodations, accommodationId]);
 
     useEffect(() => { if (!isNew) populateForm(); }, [populateForm, isNew]);
+
+    useEffect(() => {
+        if (!accommodationDestination && trip?.destinations?.length === 1) {
+            const only = trip.destinations[0];
+            setAccommodationDestination({ id: only, name: only });
+        }
+    }, [trip?.destinations, accommodationDestination]);
 
     const handleCancel = () => {
         if (isNew) router.back();
@@ -108,8 +120,8 @@ export default function AccommodationForm() {
                 address: location.address,
                 lat: location.lat,
                 lng: location.lng,
-                start_date: formatDateForPostgres(startDate),
-                end_date: formatDateForPostgres(endDate),
+                start_date: formatDateForPostgres(startDate, checkInTime),
+                end_date: formatDateForPostgres(endDate, checkOutTime),
                 link,
                 notes,
             });
@@ -122,10 +134,10 @@ export default function AccommodationForm() {
 
             await refreshData(true);
 
-            if (isNew) {
-                router.push(appRoutes.accommodations(tripId));
+            setIsReadOnly(true);
+            if (isNew && result.id) {
+                router.replace(appRoutes.accommodationDetails(tripId, result.id));
             }
-            else { setIsReadOnly(true); }
 
         } catch (err: any) {
             toast.error(err.message || "Qualcosa è andato storto", { id: toastId });
@@ -206,26 +218,48 @@ export default function AccommodationForm() {
 
                 <FormSection title='Dettagli Soggiorno'>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Dropdown
-                            label="Check-in"
-                            items={dateOptions}
-                            selected={selectedStartDateOption}
-                            onSelect={(val) => setStartDate(val?.date)}
-                            optionLabel="name"
-                            optionValue='id'
-                            readOnly={isReadOnly}
-                            required
-                        />
-                        <Dropdown
-                            label="Check-out"
-                            items={dateOptions}
-                            selected={selectedEndDateOption}
-                            onSelect={(val) => setEndDate(val?.date)}
-                            optionLabel="name"
-                            optionValue='id'
-                            readOnly={isReadOnly}
-                            required
-                        />
+                        <div className="grid grid-cols-[1fr_7rem] gap-3 items-start">
+                            <Dropdown
+                                label="Check-in"
+                                items={dateOptions}
+                                selected={selectedStartDateOption}
+                                onSelect={(val) => setStartDate(val?.date)}
+                                optionLabel="name"
+                                optionValue='id'
+                                readOnly={isReadOnly}
+                                required
+                            />
+                            {(!isReadOnly || checkInTime) && (
+                                <TimeInput
+                                    id="checkin-time"
+                                    label="Ora"
+                                    value={checkInTime}
+                                    onChange={setCheckInTime}
+                                    readOnly={isReadOnly}
+                                />
+                            )}
+                        </div>
+                        <div className="grid grid-cols-[1fr_7rem] gap-3 items-start">
+                            <Dropdown
+                                label="Check-out"
+                                items={dateOptions}
+                                selected={selectedEndDateOption}
+                                onSelect={(val) => setEndDate(val?.date)}
+                                optionLabel="name"
+                                optionValue='id'
+                                readOnly={isReadOnly}
+                                required
+                            />
+                            {(!isReadOnly || checkOutTime) && (
+                                <TimeInput
+                                    id="checkout-time"
+                                    label="Ora"
+                                    value={checkOutTime}
+                                    onChange={setCheckOutTime}
+                                    readOnly={isReadOnly}
+                                />
+                            )}
+                        </div>
                     </div>
                 </FormSection>
 

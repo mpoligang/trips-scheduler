@@ -39,23 +39,25 @@ export async function upsertTransportAction(data: Transport) {
 
     const { id, ...payload } = validated.data;
 
-    let result;
-    // Se l'ID esiste ed è un UUID valido, facciamo UPDATE
+    let savedId = id;
     if (id) {
-        result = await supabase
+        const { error } = await supabase
             .from(EntityKeys.transportsKey)
             .update(payload)
             .eq('id', id);
+        if (error) return { success: false, error: error.message };
     } else {
-        result = await supabase
+        const { data, error } = await supabase
             .from(EntityKeys.transportsKey)
-            .insert([payload]);
+            .insert([payload])
+            .select('id')
+            .single();
+        if (error) return { success: false, error: error.message };
+        savedId = data?.id;
     }
 
-    if (result.error) return { success: false, error: result.error.message };
-
     revalidatePath(`/dashboard/trips/${payload.trip_id}`);
-    return { success: true };
+    return { success: true, id: savedId };
 }
 
 

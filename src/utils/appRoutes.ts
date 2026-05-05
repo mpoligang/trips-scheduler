@@ -26,6 +26,7 @@ export const appRoutes = {
     aiInfo: (tripId: string, reference_name: string, reference_id: string, ai_id: string) => `${tripDetails(tripId)}/${reference_name}/${reference_id}/ai/${ai_id}`,
     recommended: (tripId: string) => `${tripDetails(tripId)}/recommended`,
     stages: (tripId: string) => `${tripDetails(tripId)}/stages`,
+    itinerary: (tripId: string) => `${tripDetails(tripId)}/itinerary`,
     settings: (tripId: string) => `${tripDetails(tripId)}/settings`,
     members: (tripId: string) => `${tripDetails(tripId)}/members`,
     accommodationDetails: (tripId: string, accommodationId: string = 'new') => `${tripDetails(tripId)}/accommodations/${accommodationId}/details`,

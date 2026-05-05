@@ -2,11 +2,10 @@ import { PathItem } from "@/models/PathItem";
 import GenericLayout from "./generic-container"
 import { useTrip } from "@/context/tripContext";
 import { RiHotelLine } from "react-icons/ri";
-import { BiTrip } from "react-icons/bi";
 import { BsTruckFront } from "react-icons/bs";
 import { FiMap, FiShoppingCart } from "react-icons/fi";
 import { appRoutes } from "@/utils/appRoutes";
-import { FaPlus } from "react-icons/fa";
+import { FaMapMarkerAlt, FaPlus, FaRegCalendarAlt } from "react-icons/fa";
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import { MdOutlineTipsAndUpdates } from "react-icons/md";
 
@@ -37,7 +36,8 @@ const FirstLevelTripTemplate = ({ breadcrumb, children }: FirstLevelTripTemplate
     } else {
 
         menuItems.push(
-            { id: 'itinerary', label: 'Itinerario', icon: BiTrip, href: appRoutes.stages(trip?.id || '') },
+            { id: 'itinerary', label: 'Itinerario', icon: FaRegCalendarAlt, href: appRoutes.itinerary(trip?.id || '') },
+            { id: 'stages', label: 'Tappe', icon: FaMapMarkerAlt, href: appRoutes.stages(trip?.id || '') },
             { id: 'accommodations', label: 'Alloggi', icon: RiHotelLine, href: appRoutes.accommodations(trip?.id || '') },
             { id: 'transports', label: 'Trasporti', icon: BsTruckFront, href: appRoutes.transports(trip?.id || '') },
             { id: 'recommended', label: 'Consigliati', icon: MdOutlineTipsAndUpdates, href: appRoutes.recommended(trip?.id || '') },

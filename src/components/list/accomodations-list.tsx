@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 
 import { useTrip } from '@/context/tripContext';
 import { appRoutes } from '@/utils/appRoutes';
+import { extractTimeFromDate, parseDateTimeAsLocal } from '@/utils/dateTripUtils';
 
 import DialogComponent from '../modals/confirm-modal';
 import Button from '../actions/button';
@@ -26,6 +27,20 @@ const formatStayPeriod = (start: string | undefined, end: string | undefined) =>
 
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
     return `${startDate.toLocaleDateString('it-IT', options)} - ${endDate.toLocaleDateString('it-IT', options)}`;
+};
+
+/**
+ * Mostra "Check-in" prima dell'arrivo, "Check-out" una volta superato il check-in.
+ * Aggiunge l'orario se è stato impostato sulla tappa corrispondente.
+ */
+const buildStaySubtitle = (start: string | undefined, end: string | undefined): string | undefined => {
+    if (!start) return undefined;
+    const checkIn = parseDateTimeAsLocal(start);
+    if (!checkIn) return undefined;
+    const showCheckOut = Date.now() > checkIn.getTime();
+    const label = showCheckOut ? 'Check-out' : 'Check-in';
+    const time = extractTimeFromDate(showCheckOut ? end : start);
+    return time ? `${label}: ${time}` : label;
 };
 
 export default function AccommodationsList() {
@@ -120,6 +135,7 @@ export default function AccommodationsList() {
                                 <DetailItemCard
                                     icon={<RiHotelLine className="h-5 w-5" />}
                                     title={accommodation.name}
+                                    subtitle={buildStaySubtitle(accommodation.start_date, accommodation.end_date)}
                                     detailClick={appRoutes.accommodationDetails(trip?.id as string, accommodation.id)}
                                     latitude={accommodation.lat ?? 0}
                                     longitude={accommodation.lng ?? 0}

@@ -227,10 +227,9 @@ export default function TransportForm() {
 
             toast.success("Trasporto salvato!", { id: toastId });
             await refreshData(true);
-            if (isNew) {
-                router.push(appRoutes.transports(tripId));
-            } else {
-                setIsReadOnly(true);
+            setIsReadOnly(true);
+            if (isNew && res.id) {
+                router.replace(appRoutes.transportDetails(tripId, res.id));
             }
         } catch (err: unknown) {
             toast.error((err as Error).message || "Impossibile salvare", { id: toastId });

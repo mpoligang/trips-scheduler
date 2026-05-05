@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {
     FaMapMarkedAlt, FaUserFriends, FaBed, FaPlane, FaFileAlt,
-    FaCheckCircle, FaRobot, FaBriefcase,
+    FaRobot, FaBriefcase,
     FaShoppingCart,
 } from 'react-icons/fa';
 import Logo from '@/components/generics/logo';

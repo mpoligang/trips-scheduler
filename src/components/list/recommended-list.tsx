@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaPlus, FaStar } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 import { appRoutes } from '@/utils/appRoutes';

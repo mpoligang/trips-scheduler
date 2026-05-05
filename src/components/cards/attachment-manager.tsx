@@ -16,7 +16,6 @@ import { useAuth } from '@/context/authProvider';
 import { sendEmailToUpgrade } from '@/utils/open-link.utils';
 import ContextMenu from '../actions/context-menu';
 import { downloadAttachment, getFileUrl } from '@/actions/files-actions';
-import Image from 'next/image';
 import toast from 'react-hot-toast';
 
 // --- MODALE AGGIUNTA ALLEGATO ---
@@ -308,7 +307,6 @@ export default function AttachmentsManager({
                 attachments={attachments}
                 setDeleteId={setDeleteId}
                 isReadOnly={isReadOnly}
-                isProcessing={isProcessing}
             />
 
 
@@ -317,11 +315,10 @@ export default function AttachmentsManager({
 }
 
 
-export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnly, isProcessing = false }: {
+export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnly }: {
     attachments: Attachment[],
     setDeleteId?: (id: string | null) => void,
     isReadOnly: boolean,
-    isProcessing?: boolean
 }) => {
 
     const handleDownload = async (attachmentPath: string, fileName: string) => {
@@ -374,7 +371,7 @@ export const AttachmentList = ({ attachments, setDeleteId = () => { }, isReadOnl
                                         {
                                             label: 'Scarica',
                                             icon: <FaDownload />,
-                                            onClick: async (e: MouseEvent | undefined) => {
+                                            onClick: async () => {
                                                 handleDownload(att.storage_path as string, att.name);
                                             }
                                         },

@@ -23,7 +23,6 @@ import toast from "react-hot-toast";
 import Dropdown from "@/components/inputs/dropdown";
 import HowToObtainAIApiKeyModal from "@/components/modals/how-obtain-ai-api-key";
 import { AIModels, AIModelsOptions } from "@/utils/ai.utils";
-import { set } from "zod";
 
 export default function ProfilePage() {
     const supabase = createClient();

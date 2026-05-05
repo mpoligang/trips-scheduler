@@ -5,6 +5,7 @@ const GOOGLE_TRAVEL_MODE: Record<RoutingMode, string> = {
     walking: 'walking',
     cycling: 'bicycling',
     driving: 'driving',
+    transit: 'transit',
 };
 
 /**

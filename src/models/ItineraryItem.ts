@@ -2,6 +2,8 @@ export type ItineraryKind =
     | 'stage'
     | 'accommodation-checkin'
     | 'accommodation-checkout'
+    | 'accommodation-stay-start'
+    | 'accommodation-stay-end'
     | 'transport-departure'
     | 'transport-arrival';
 

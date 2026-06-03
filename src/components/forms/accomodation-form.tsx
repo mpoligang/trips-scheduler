@@ -51,6 +51,7 @@ export default function AccommodationForm() {
     const [endDate, setEndDate] = useState<Date | undefined>();
     const [checkInTime, setCheckInTime] = useState<string>('');
     const [checkOutTime, setCheckOutTime] = useState<string>('');
+    const [arrivalTime, setArrivalTime] = useState<string>('');
 
     const dateOptions = useMemo(() => {
         if (!trip?.start_date || !trip?.end_date) return [];
@@ -76,6 +77,7 @@ export default function AccommodationForm() {
             setEndDate(parseDateOnly(acc.end_date));
             setCheckInTime(extractTimeFromDate(acc.start_date));
             setCheckOutTime(extractTimeFromDate(acc.end_date));
+            setArrivalTime(acc.arrival_time || '');
             if (acc.destination) setAccommodationDestination({ id: acc.destination, name: acc.destination });
         }
     }, [accommodations, accommodationId]);
@@ -122,6 +124,7 @@ export default function AccommodationForm() {
                 lng: location.lng,
                 start_date: formatDateForPostgres(startDate, checkInTime),
                 end_date: formatDateForPostgres(endDate, checkOutTime),
+                arrival_time: arrivalTime,
                 link,
                 notes,
             });
@@ -261,6 +264,17 @@ export default function AccommodationForm() {
                             )}
                         </div>
                     </div>
+                    {(!isReadOnly || arrivalTime) && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <TimeInput
+                                id="arrival-time"
+                                label="Orario di arrivo"
+                                value={arrivalTime}
+                                onChange={setArrivalTime}
+                                readOnly={isReadOnly}
+                            />
+                        </div>
+                    )}
                 </FormSection>
 
 

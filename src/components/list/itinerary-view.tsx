@@ -21,6 +21,8 @@ const ICON_BY_KIND: Record<ItineraryKind, ReactNode> = {
     'stage': <FaMapMarkerAlt className="h-5 w-5" />,
     'accommodation-checkin': <RiHotelLine className="h-5 w-5" />,
     'accommodation-checkout': <RiHotelLine className="h-5 w-5" />,
+    'accommodation-stay-start': <RiHotelLine className="h-5 w-5" />,
+    'accommodation-stay-end': <RiHotelLine className="h-5 w-5" />,
     'transport-departure': <BsTruckFront className="h-5 w-5" />,
     'transport-arrival': <BsTruckFront className="h-5 w-5" />,
 };

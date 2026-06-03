@@ -11,6 +11,7 @@ export interface Accommodation {
     lng: number | null; // double precision -> number
     start_date: string;
     end_date: string;
+    arrival_time: string | null; // Orario di arrivo, formato HH:mm
     link: string | null;
     notes: string | null;
     created_at?: string;

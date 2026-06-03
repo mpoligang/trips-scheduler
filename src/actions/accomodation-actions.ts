@@ -15,6 +15,7 @@ const AccommodationSchema = z.object({
     lng: z.number(),
     start_date: z.string(), // Formato YYYY-MM-DD
     end_date: z.string(),
+    arrival_time: z.string().optional().or(z.literal('')), // Orario di arrivo, formato HH:mm
     link: z.url().optional().or(z.literal('')),
     notes: z.string().optional(),
 });

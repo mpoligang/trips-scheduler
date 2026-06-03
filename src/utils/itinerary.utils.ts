@@ -4,6 +4,10 @@ import { extractTimeFromDate, generateDateOptions, toLocalISOString } from './da
 import { appRoutes } from './appRoutes';
 
 const NO_TIME_SORT_KEY = 24 * 60;
+// Marcatori del soggiorno nei giorni intermedi: l'inizio sta prima di ogni orario,
+// la fine dopo qualunque attività (anche quelle senza orario).
+const STAY_START_SORT_KEY = -1;
+const STAY_END_SORT_KEY = NO_TIME_SORT_KEY + 1;
 
 const dateKeyFromTimestamp = (timestamp: string | undefined | null): string | undefined => {
     if (!timestamp) return undefined;
@@ -22,23 +26,9 @@ const tabLabelForDate = (dateKey: string): string => {
     return `${d}/${m}`;
 };
 
-export const buildItinerary = (trip: Trip | null | undefined): ItineraryDay[] => {
-    if (!trip?.start_date || !trip?.end_date) return [];
+type PushItem = (dateKey: string | undefined, item: ItineraryItem) => void;
 
-    const dateOptions = generateDateOptions(new Date(trip.start_date), new Date(trip.end_date));
-
-    const buckets = new Map<string, ItineraryItem[]>();
-    for (const opt of dateOptions) {
-        buckets.set(opt.id, []);
-    }
-
-    const pushItem = (dateKey: string | undefined, item: ItineraryItem) => {
-        if (!dateKey) return;
-        const list = buckets.get(dateKey);
-        if (!list) return;
-        list.push(item);
-    };
-
+const collectStageItems = (trip: Trip, pushItem: PushItem) => {
     for (const stage of trip.stages || []) {
         const dateKey = dateKeyFromTimestamp(stage.arrival_date);
         const time = extractTimeFromDate(stage.arrival_date);
@@ -53,23 +43,28 @@ export const buildItinerary = (trip: Trip | null | undefined): ItineraryDay[] =>
             lng: stage.lng ?? 0,
         });
     }
+};
 
+const collectAccommodationItems = (trip: Trip, dayKeys: string[], pushItem: PushItem) => {
     for (const acc of trip.accommodations || []) {
         const startKey = dateKeyFromTimestamp(acc.start_date);
         const endKey = dateKeyFromTimestamp(acc.end_date);
-        const startTime = extractTimeFromDate(acc.start_date);
         const endTime = extractTimeFromDate(acc.end_date);
+        // Sul primo giorno l'alloggio si posiziona secondo l'orario di arrivo, se impostato;
+        // altrimenti ricade sull'ora di check-in.
+        const arrivalSortTime = acc.arrival_time || extractTimeFromDate(acc.start_date);
+        const href = appRoutes.accommodationDetails(trip.id, acc.id);
+        const lat = acc.lat ?? 0;
+        const lng = acc.lng ?? 0;
 
         pushItem(startKey, {
             kind: 'accommodation-checkin',
             id: acc.id,
             title: acc.name,
             label: 'Check-in',
-            time: startTime || undefined,
-            sortKey: sortKeyFromTime(startTime),
-            href: appRoutes.accommodationDetails(trip.id, acc.id),
-            lat: acc.lat ?? 0,
-            lng: acc.lng ?? 0,
+            time: arrivalSortTime || undefined,
+            sortKey: sortKeyFromTime(arrivalSortTime),
+            href, lat, lng,
         });
 
         if (endKey) {
@@ -80,18 +75,45 @@ export const buildItinerary = (trip: Trip | null | undefined): ItineraryDay[] =>
                 label: 'Check-out',
                 time: endTime || undefined,
                 sortKey: sortKeyFromTime(endTime),
-                href: appRoutes.accommodationDetails(trip.id, acc.id),
-                lat: acc.lat ?? 0,
-                lng: acc.lng ?? 0,
+                href, lat, lng,
+            });
+        }
+
+        // Giorni intermedi pieni (tra check-in e check-out esclusi): l'alloggio
+        // compare a inizio (mattina) e a fine (notte) di ogni giornata.
+        const startIdx = startKey ? dayKeys.indexOf(startKey) : -1;
+        const endIdx = endKey ? dayKeys.indexOf(endKey) : -1;
+        if (startIdx === -1 || endIdx === -1) continue;
+        for (let i = startIdx + 1; i < endIdx; i++) {
+            pushItem(dayKeys[i], {
+                kind: 'accommodation-stay-start',
+                id: acc.id,
+                title: acc.name,
+                label: 'Soggiorno',
+                sortKey: STAY_START_SORT_KEY,
+                href, lat, lng,
+            });
+            pushItem(dayKeys[i], {
+                kind: 'accommodation-stay-end',
+                id: acc.id,
+                title: acc.name,
+                label: 'Pernottamento',
+                sortKey: STAY_END_SORT_KEY,
+                href, lat, lng,
             });
         }
     }
+};
 
+const collectTransportItems = (trip: Trip, pushItem: PushItem) => {
     for (const transport of trip.transports || []) {
         const depKey = dateKeyFromTimestamp(transport.dep_date);
         const arrKey = dateKeyFromTimestamp(transport.arr_date);
         const depTime = extractTimeFromDate(transport.dep_date);
         const arrTime = extractTimeFromDate(transport.arr_date);
+        const href = appRoutes.transportDetails(trip.id, transport.id);
+        const lat = transport.dep_lat ?? 0;
+        const lng = transport.dep_lng ?? 0;
 
         pushItem(depKey, {
             kind: 'transport-departure',
@@ -100,9 +122,7 @@ export const buildItinerary = (trip: Trip | null | undefined): ItineraryDay[] =>
             label: 'Partenza',
             time: depTime || undefined,
             sortKey: sortKeyFromTime(depTime),
-            href: appRoutes.transportDetails(trip.id, transport.id),
-            lat: transport.dep_lat ?? 0,
-            lng: transport.dep_lng ?? 0,
+            href, lat, lng,
         });
 
         if (arrKey && arrKey !== depKey) {
@@ -113,12 +133,33 @@ export const buildItinerary = (trip: Trip | null | undefined): ItineraryDay[] =>
                 label: 'Arrivo',
                 time: arrTime || undefined,
                 sortKey: sortKeyFromTime(arrTime),
-                href: appRoutes.transportDetails(trip.id, transport.id),
-                lat: transport.dep_lat ?? 0,
-                lng: transport.dep_lng ?? 0,
+                href, lat, lng,
             });
         }
     }
+};
+
+export const buildItinerary = (trip: Trip | null | undefined): ItineraryDay[] => {
+    if (!trip?.start_date || !trip?.end_date) return [];
+
+    const dateOptions = generateDateOptions(new Date(trip.start_date), new Date(trip.end_date));
+
+    const buckets = new Map<string, ItineraryItem[]>();
+    const dayKeys = dateOptions.map(opt => opt.id);
+    for (const opt of dateOptions) {
+        buckets.set(opt.id, []);
+    }
+
+    const pushItem: PushItem = (dateKey, item) => {
+        if (!dateKey) return;
+        const list = buckets.get(dateKey);
+        if (!list) return;
+        list.push(item);
+    };
+
+    collectStageItems(trip, pushItem);
+    collectAccommodationItems(trip, dayKeys, pushItem);
+    collectTransportItems(trip, pushItem);
 
     return dateOptions.map(opt => ({
         date: opt.id,
